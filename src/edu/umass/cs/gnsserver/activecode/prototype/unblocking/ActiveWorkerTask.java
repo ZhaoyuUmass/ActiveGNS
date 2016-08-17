@@ -1,14 +1,11 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
-import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.script.ScriptException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
-import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 
 /**
  * @author gaozy

@@ -80,7 +80,7 @@ public class ActiveDatagramChannel implements Channel {
 	}
 
 	@Override
-	public void shutdown() {
+	public void close() {
 		socket.close();		
 	}
 

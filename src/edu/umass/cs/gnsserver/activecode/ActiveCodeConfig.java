@@ -38,6 +38,11 @@ public class ActiveCodeConfig {
 	  public static int activeWorkerThreads = 5;
 	  
 	  /**
+	   * switch between blocking and non-blocking design
+	   */
+	  public static boolean acitveCodeBlockingEnabled = false;
+	  
+	  /**
 	   * Number of spare workers.
 	   */
 	  public static int activeCodeSpareWorker = 0;
@@ -46,6 +51,7 @@ public class ActiveCodeConfig {
 	   * True if timeout is enabled, i.e., ActiveCodeGuardian thread will run.
 	   */
 	  public static boolean activeCodeEnableTimeout = true;
+	  
 	  /**
 	   * Enable debug message in active code package
 	   */
@@ -55,6 +61,8 @@ public class ActiveCodeConfig {
 	  private static final String ACTIVE_CODE_WORKER_COUNT = "ACTIVE_CODE_WORKER_COUNT";
 	  
 	  private static final String ACTIVE_WORKER_THREADS = "ACTIVE_WORKER_THREADS";
+	  
+	  private static final String ACTIVE_CODE_BLOCKING_ENABLED = "ACTIVE_CODE_BLOCKING_ENABLED"; 
 	  
 	  private static final String ACTIVE_CODE_SPARE_WORKER = "ACTIVE_CODE_SPARE_WORKER";
 	  
@@ -85,6 +93,9 @@ public class ActiveCodeConfig {
 		    
 		    if (allValues.containsKey(ACTIVE_CODE_ENABLE_DEBUGGING)) {
 		    	activeCodeEnableDebugging = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_ENABLE_DEBUGGING));
+		    }
+		    if(allValues.containsKey(ACTIVE_CODE_BLOCKING_ENABLED)) {
+		    	acitveCodeBlockingEnabled = true;
 		    }
 	  }
 	 

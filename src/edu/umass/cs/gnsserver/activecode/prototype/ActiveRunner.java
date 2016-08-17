@@ -36,12 +36,12 @@ public class ActiveRunner {
 	private final HashMap<String, ScriptContext> contexts = new HashMap<String, ScriptContext>();
 	private final HashMap<String, Integer> codeHashes = new HashMap<String, Integer>();
 	
-	private ActiveQuerier querier;
+	private Querier querier;
 	
 	/**
 	 * @param querier
 	 */
-	public ActiveRunner(ActiveQuerier querier){
+	public ActiveRunner(Querier querier){
 		this.querier = querier;
 		
 		engine = new ScriptEngineManager().getEngineByName("nashorn");
@@ -86,8 +86,11 @@ public class ActiveRunner {
 		return valuesMap;
 	}
 	
+	/**
+	 * @param am
+	 */
 	public void release(ActiveMessage am){
-		querier.release(am, true);
+		((ActiveQuerier) querier).release(am, true);
 	}
 	
 	private static class SimpleTask implements Callable<ValuesMap>{
@@ -163,7 +166,7 @@ public class ActiveRunner {
 		String chain_code = null;
 		try {
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));
-			chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/mal.js")));
+			chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/testLoad.js")));
 		} catch (IOException e) {
 			e.printStackTrace();

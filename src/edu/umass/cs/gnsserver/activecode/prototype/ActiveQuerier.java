@@ -46,6 +46,7 @@ public class ActiveQuerier implements Querier {
 	/**
 	 * @param guid
 	 * @param ttl
+	 * @param id 
 	 */
 	protected void resetQuerier(String guid, int ttl, long id){
 		this.currentGuid = guid;

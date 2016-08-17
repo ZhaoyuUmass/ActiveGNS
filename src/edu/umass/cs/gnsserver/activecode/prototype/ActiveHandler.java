@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 
+import edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingClient;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
@@ -44,12 +45,13 @@ public class ActiveHandler {
 	
 	
 	/**
-	 * Initialize handler with multi-process multi-threaded workers.
+	 * Initialize handler with clients and workers.
 	 * @param app 
 	 * @param numProcess
 	 * @param numThread 
+	 * @param blocking blocking client or not
 	 */
-	public ActiveHandler(ActiveDBInterface app, int numProcess, int numThread){
+	public ActiveHandler(ActiveDBInterface app, int numProcess, int numThread, boolean blocking){
 		final String fileTestForPipe = "/tmp/test";
 		try {
 			Runtime.getRuntime().exec("mkfifo "+fileTestForPipe);			
@@ -63,14 +65,22 @@ public class ActiveHandler {
 		this.numProcess = numProcess;
 		
 		// initialize single clients and workers
-		clientPool = new ActiveNonBlockingClient[numProcess];
+		clientPool = new Client[numProcess];
 		for (int i=0; i<numProcess; i++){
-			if(pipeEnable){
-				clientPool[i] = new ActiveNonBlockingClient(app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
-			} else {
-				clientPool[i] = new ActiveNonBlockingClient(app, clientPort+i, workerPort+i, i, numThread);
+			if(blocking){
+				if(pipeEnable){
+					clientPool[i] = new ActiveBlockingClient(app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
+				}else{
+					clientPool[i] = new ActiveBlockingClient(app, clientPort+i, workerPort+i, i, numThread);
+				}
+			}else{
+				if(pipeEnable){
+					clientPool[i] = new ActiveNonBlockingClient(app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
+				} else {
+					clientPool[i] = new ActiveNonBlockingClient(app, clientPort+i, workerPort+i, i, numThread);
+				}
+				new Thread((ActiveNonBlockingClient) clientPool[i]).start();
 			}
-			new Thread((ActiveNonBlockingClient) clientPool[i]).start();
 		}
 		
 	}
@@ -81,7 +91,7 @@ public class ActiveHandler {
 	 * @param numProcess
 	 */
 	public ActiveHandler(ActiveDBInterface app, int numProcess){
-		this(app, numProcess, 1);
+		this(app, numProcess, 1, false);
 	}
 	
 	/**
@@ -119,13 +129,12 @@ public class ActiveHandler {
 	public static void main(String[] args) throws JSONException, InterruptedException, ExecutionException{
 		int numProcess = Integer.parseInt(args[0]);
 		int numThread = Integer.parseInt(args[1]);
-
+		boolean blocking = Boolean.parseBoolean(args[2]);
 		if(numProcess <= 0){
 			System.out.println("Number of clients must be larger than 0.");
 			System.exit(0);
 		}
-		
-		
+				
 		final ThreadPoolExecutor executor;		
 		
 		executor = new ThreadPoolExecutor(numProcess*numThread, numProcess*numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());		
@@ -143,7 +152,7 @@ public class ActiveHandler {
 		value.put("string", "hello world");
 		
 		// initialize a handler
-		ActiveHandler handler = new ActiveHandler(null, numProcess, numThread);
+		ActiveHandler handler = new ActiveHandler(null, numProcess, numThread, blocking);
 		ArrayList<Future<ValuesMap>> tasks = new ArrayList<Future<ValuesMap>>();
 		
 		int n = 1000000;

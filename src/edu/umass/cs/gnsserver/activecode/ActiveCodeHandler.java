@@ -59,7 +59,6 @@ public class ActiveCodeHandler {
 	
 	/**
 	 * Initializes an ActiveCodeHandler
-	 * @param app
 	 */
 	public ActiveCodeHandler() {
 		String configFile = System.getProperty("activeFile");
@@ -71,7 +70,7 @@ public class ActiveCodeHandler {
 			}
 		}
 		
-		handler = new ActiveHandler(new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads);
+		handler = new ActiveHandler(new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.acitveCodeBlockingEnabled);
 	}
 	
 	

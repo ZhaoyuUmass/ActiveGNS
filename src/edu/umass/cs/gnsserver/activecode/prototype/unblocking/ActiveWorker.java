@@ -66,15 +66,13 @@ public class ActiveWorker {
 			e.printStackTrace();
 			// close the channel and exit
 		}finally{
-			channel.shutdown();
+			channel.close();
 		}
 		
 	}
 
 	
-	private void runWorker() throws JSONException, IOException {	
-		while(!((ActiveNamedPipe) channel).getReady())
-			;
+	private void runWorker() throws JSONException, IOException {
 		
 		ActiveMessage msg = null;
 		while(!Thread.currentThread().isInterrupted()){

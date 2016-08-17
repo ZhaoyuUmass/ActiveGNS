@@ -221,7 +221,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 			(new File(ofile)).delete();
 		}
 		
-		channel.shutdown();
+		channel.close();
 	}
 	
 	/**
