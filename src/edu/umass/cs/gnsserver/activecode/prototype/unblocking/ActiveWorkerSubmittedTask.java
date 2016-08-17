@@ -1,4 +1,4 @@
-package edu.umass.cs.gnsserver.activecode.prototype.unblockingworker;
+package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 
 /**

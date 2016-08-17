@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.junit.Test;
 
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 /**

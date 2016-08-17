@@ -1,4 +1,4 @@
-package edu.umass.cs.gnsserver.activecode.prototype.unblockingworker;
+package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,8 +10,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.JSONException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveNamedPipe;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveQuerier;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
+import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 
 /**

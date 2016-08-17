@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.JSONException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.utils.ValuesMap;

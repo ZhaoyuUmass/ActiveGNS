@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import org.json.JSONException;
 import org.junit.Test;
 
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 /**

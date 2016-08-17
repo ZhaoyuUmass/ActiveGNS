@@ -1,4 +1,4 @@
-package edu.umass.cs.gnsserver.activecode.prototype;
+package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 
 import java.io.File;
@@ -12,7 +12,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveQueryHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
+import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveDatagramChannel;
+import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
@@ -236,7 +241,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xmx"+heapSize+"m");
 	    command.add("-cp");
 	    command.add(classpath);
-	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblockingworker.ActiveWorker");
+	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveWorker");
 	    command.add(ifile);
 	    command.add(ofile);
 	    command.add(""+id);
@@ -270,7 +275,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xmx"+heapSize+"m");
 	    command.add("-cp");
 	    command.add(classpath);
-	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblockingworker.ActiveWorker");
+	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveWorker");
 	    command.add(""+port1);
 	    command.add(""+port2);
 	    command.add(""+id);

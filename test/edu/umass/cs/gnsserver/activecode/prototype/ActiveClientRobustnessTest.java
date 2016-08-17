@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import org.json.JSONException;
 import org.junit.Test;
 
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 public class ActiveClientRobustnessTest {

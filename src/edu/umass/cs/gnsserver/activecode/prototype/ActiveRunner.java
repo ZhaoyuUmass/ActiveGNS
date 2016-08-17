@@ -1,4 +1,4 @@
-package edu.umass.cs.gnsserver.activecode.prototype.unblockingworker;
+package edu.umass.cs.gnsserver.activecode.prototype;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +21,6 @@ import javax.script.SimpleScriptContext;
 
 import org.json.JSONException;
 
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
@@ -87,7 +86,7 @@ public class ActiveRunner {
 		return valuesMap;
 	}
 	
-	protected void release(ActiveMessage am){
+	public void release(ActiveMessage am){
 		querier.release(am, true);
 	}
 	
