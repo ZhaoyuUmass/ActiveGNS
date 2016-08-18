@@ -30,17 +30,17 @@ public class ActiveCodeConfig {
 	 /**
 	   * Number of active code worker.
 	   */
-	  public static int activeCodeWorkerCount = 4;
+	  public static int activeCodeWorkerCount = 2;
 	  
 	  /**
 	   * Number of threads running in each worker
 	   */
-	  public static int activeWorkerThreads = 5;
+	  public static int activeWorkerThreads = 1;
 	  
 	  /**
 	   * switch between blocking and non-blocking design
 	   */
-	  public static boolean acitveCodeBlockingEnabled = false;
+	  public static boolean acitveCodeBlockingEnabled = true;
 	  
 	  /**
 	   * Number of spare workers.

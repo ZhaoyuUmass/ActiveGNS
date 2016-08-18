@@ -39,6 +39,9 @@ public class ActiveCodeHelloWorldExample {
 		}
 		
 		String codeFile = "scripts/activeCode/noop.js";
+		if(System.getProperty("codeFile")!=null){
+			codeFile = System.getProperty("codeFile");
+		}
 		if(args.length > 0){
 			codeFile = args[0];
 		}
@@ -62,6 +65,8 @@ public class ActiveCodeHelloWorldExample {
 		client.fieldUpdate(entry,  field, value);
 		client.fieldUpdate(entry, depth_field, depth_result);
 		
+		client.activeCodeClear(entry.getGuid(), ActiveCode.READ_ACTION, entry);
+		
 		// get the value of the field
 		String response = client.fieldRead(entry, field);
 		
@@ -72,11 +77,9 @@ public class ActiveCodeHelloWorldExample {
 		
 		// set up the code for on read operation
 		if(isRead){
-			client.activeCodeClear(entry.getGuid(), ActiveCode.READ_ACTION, entry);
 			if(update)
 				client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
 		} else {
-			client.activeCodeClear(entry.getGuid(), ActiveCode.WRITE_ACTION, entry);
 			if(update)
 				client.activeCodeSet(entry.getGuid(), ActiveCode.WRITE_ACTION, code, entry);
 		}

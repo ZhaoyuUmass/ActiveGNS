@@ -402,7 +402,7 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
             || Config.getGlobalString(GNSConfig.GNSC.DNS_SERVER_NODES).contains(nodeID)) {
       startDNS();
     }
-    this.activeCodeHandler = AppOptionsOld.enableActiveCode ? new ActiveCodeHandler() : null;
+    this.activeCodeHandler = AppOptionsOld.enableActiveCode ? new ActiveCodeHandler(nodeID) : null;
 
     // context service init
     if (AppOptionsOld.enableContextService) {

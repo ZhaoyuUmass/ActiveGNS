@@ -39,6 +39,7 @@ public class ActiveQueryHandler {
 	 * @return an ActiveMessage being sent back to worker as a response to the query
 	 */
 	public ActiveMessage handleQuery(ActiveMessage am, InternalRequestHeader header){
+		System.out.println(">>>>>>>>>>>>>>>"+this+" receives query "+am);
 		ActiveMessage response;
 		if(am.type == ActiveMessage.Type.READ_QUERY)
 			response = handleReadQuery(am, header);
@@ -90,6 +91,10 @@ public class ActiveQueryHandler {
 		return resp;
 	}
 	
+	public String toString(){
+		return this.getClass().getSimpleName();
+	}
+	
 	/**
 	 * @param args
 	 * @throws JSONException
@@ -108,7 +113,7 @@ public class ActiveQueryHandler {
 		ValuesMap value = new ValuesMap();
 		value.put("nextGuid", "alvin");
 		
-		ActiveHandler handler = new ActiveHandler(null, 1);
+		ActiveHandler handler = new ActiveHandler("", null, 1);
 		
 		int n = 1000000;
 		

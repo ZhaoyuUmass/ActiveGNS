@@ -48,6 +48,7 @@ public class ActiveBlockingClient implements Client {
 	
 	private ActiveQueryHandler queryHandler;
 	
+	private final String nodeId;
 	private Channel channel;
 	private final String ifile;
 	private final String ofile;
@@ -79,6 +80,7 @@ public class ActiveBlockingClient implements Client {
 	}
 	
 	/**
+	 * @param nodeId 
 	 * @param app 
 	 * @param ifile
 	 * @param ofile
@@ -86,7 +88,8 @@ public class ActiveBlockingClient implements Client {
 	 * @param workerNumThread 
 	 * @param heapSize 
 	 */
-	public ActiveBlockingClient(ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread, int heapSize){
+	public ActiveBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread, int heapSize){
+		this.nodeId = nodeId;
 		this.id = id;
 		this.ifile = ifile;
 		this.ofile = ofile;
@@ -106,9 +109,10 @@ public class ActiveBlockingClient implements Client {
 	 * @param ofile
 	 * @param id
 	 * @param workerNumThread
+	 * @param nodeId 
 	 */
-	public ActiveBlockingClient(ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread){
-		this(app, ifile, ofile, id, workerNumThread, DEFAULT_HEAP_SIZE);
+	public ActiveBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread){
+		this(nodeId, app, ifile, ofile, id, workerNumThread, DEFAULT_HEAP_SIZE);
 	}
 	
 	private void initializeChannelAndStartWorker(){
@@ -129,13 +133,15 @@ public class ActiveBlockingClient implements Client {
 	
 	/**
 	 * Initialize a client with a UDP channel
+	 * @param nodeId 
 	 * @param app
 	 * @param port
 	 * @param serverPort
 	 * @param id
 	 * @param workerNumThread
 	 */
-	public ActiveBlockingClient(ActiveDBInterface app, int port, int serverPort, int id, int workerNumThread){
+	public ActiveBlockingClient(String nodeId, ActiveDBInterface app, int port, int serverPort, int id, int workerNumThread){
+		this.nodeId = nodeId;
 		this.pipeEnable = false;
 		this.id = id;
 		this.workerNumThread = workerNumThread;
@@ -160,8 +166,8 @@ public class ActiveBlockingClient implements Client {
 	 * @param ifile
 	 * @param ofile
 	 */
-	public ActiveBlockingClient(ActiveDBInterface app, String ifile, String ofile){
-		this(app, ifile, ofile, 0, 1);
+	public ActiveBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile){
+		this(nodeId, app, ifile, ofile, 0, 1);
 	}
 	
 	/**
@@ -207,6 +213,8 @@ public class ActiveBlockingClient implements Client {
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
 	    command.add(Boolean.toString(pipeEnable));
+	    command.add("ReconfigurableNode");
+	    command.add(nodeId);
 	    
 	    ProcessBuilder builder = new ProcessBuilder(command);
 		builder.directory(new File(System.getProperty("user.dir")));
@@ -241,7 +249,9 @@ public class ActiveBlockingClient implements Client {
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
 		command.add(Boolean.toString(pipeEnable));
-		
+		command.add("ReconfigurableNode");
+	    command.add(nodeId);
+	    
 	    ProcessBuilder builder = new ProcessBuilder(command);
 		builder.directory(new File(System.getProperty("user.dir")));
 		
@@ -370,7 +380,7 @@ public class ActiveBlockingClient implements Client {
 			codeFile = System.getProperty("codeFile");
 		}
 		
-		ActiveBlockingClient client = new ActiveBlockingClient(null, cfile, sfile, 0, numThread);
+		ActiveBlockingClient client = new ActiveBlockingClient("", null, cfile, sfile, 0, numThread);
 		
 		String guid = "guid";
 		String field = "name";

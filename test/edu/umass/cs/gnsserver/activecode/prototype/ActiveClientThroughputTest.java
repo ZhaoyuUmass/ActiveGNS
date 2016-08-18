@@ -76,7 +76,7 @@ public class ActiveClientThroughputTest {
 		/**
 		 * Test client performance with named pipe channel
 		 */
-		ActiveNonBlockingClient client = new ActiveNonBlockingClient(null, cfile, sfile, 0, numThread, 1024);
+		ActiveNonBlockingClient client = new ActiveNonBlockingClient("", null, cfile, sfile, 0, numThread, 1024);
 		Thread th = new Thread(client);
 		th.start();
 		

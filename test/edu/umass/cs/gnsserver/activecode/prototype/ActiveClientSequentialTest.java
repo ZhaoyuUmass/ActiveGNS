@@ -56,7 +56,7 @@ public class ActiveClientSequentialTest {
 		/**
 		 * Test client performance with named pipe channel
 		 */
-		ActiveNonBlockingClient client = new ActiveNonBlockingClient(null, cfile, sfile, 0, numThread);
+		ActiveNonBlockingClient client = new ActiveNonBlockingClient("", null, cfile, sfile, 0, numThread);
 		Thread th = new Thread(client);
 		th.start();
 		

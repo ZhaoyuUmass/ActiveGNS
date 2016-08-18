@@ -44,7 +44,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	private final static int DEFAULT_HEAP_SIZE = 128;
 	
 	private ActiveQueryHandler queryHandler;
-	
+	private final String nodeId;
 	private Channel channel;
 	private final String ifile;
 	private final String ofile;
@@ -80,6 +80,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	}
 	
 	/**
+	 * @param nodeId 
 	 * @param app 
 	 * @param ifile
 	 * @param ofile
@@ -87,7 +88,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	 * @param workerNumThread 
 	 * @param heapSize 
 	 */
-	public ActiveNonBlockingClient(ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread, int heapSize){
+	public ActiveNonBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread, int heapSize){
+		this.nodeId = nodeId;
 		this.id = id;
 		this.ifile = ifile;
 		this.ofile = ofile;
@@ -102,14 +104,15 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	}
 	
 	/**
+	 * @param nodeId 
 	 * @param app
 	 * @param ifile
 	 * @param ofile
 	 * @param id
 	 * @param workerNumThread
 	 */
-	public ActiveNonBlockingClient(ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread){
-		this(app, ifile, ofile, id, workerNumThread, DEFAULT_HEAP_SIZE);
+	public ActiveNonBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile, int id, int workerNumThread){
+		this(nodeId, app, ifile, ofile, id, workerNumThread, DEFAULT_HEAP_SIZE);
 	}
 	
 	private void initializeChannelAndStartWorker(){
@@ -130,13 +133,15 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	
 	/**
 	 * Initialize a client with a UDP channel
+	 * @param nodeId 
 	 * @param app
 	 * @param port
 	 * @param serverPort
 	 * @param id
 	 * @param workerNumThread
 	 */
-	public ActiveNonBlockingClient(ActiveDBInterface app, int port, int serverPort, int id, int workerNumThread){
+	public ActiveNonBlockingClient(String nodeId, ActiveDBInterface app, int port, int serverPort, int id, int workerNumThread){
+		this.nodeId = nodeId;
 		this.pipeEnable = false;
 		this.id = id;
 		this.workerNumThread = workerNumThread;
@@ -157,12 +162,13 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	}
 	
 	/**
+	 * @param nodeId 
 	 * @param app 
 	 * @param ifile
 	 * @param ofile
 	 */
-	public ActiveNonBlockingClient(ActiveDBInterface app, String ifile, String ofile){
-		this(app, ifile, ofile, 0, 1);
+	public ActiveNonBlockingClient(String nodeId, ActiveDBInterface app, String ifile, String ofile){
+		this(nodeId, app, ifile, ofile, 0, 1);
 	}
 	
 	@Override
@@ -247,6 +253,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
 	    command.add(Boolean.toString(pipeEnable));
+	    command.add("ReconfigurableNode");
+	    command.add(nodeId);
 	    
 	    ProcessBuilder builder = new ProcessBuilder(command);
 		builder.directory(new File(System.getProperty("user.dir")));
@@ -281,7 +289,9 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
 		command.add(Boolean.toString(pipeEnable));
-		
+		command.add("ReconfigurableNode");
+	    command.add(nodeId);
+	    
 	    ProcessBuilder builder = new ProcessBuilder(command);
 		builder.directory(new File(System.getProperty("user.dir")));
 		

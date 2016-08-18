@@ -14,12 +14,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 
+import edu.umass.cs.gigapaxos.PaxosConfig;
+import edu.umass.cs.gigapaxos.PaxosConfig.PC;
 import edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingClient;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.reconfiguration.ReconfigurableNode;
+import edu.umass.cs.utils.Config;
 
 /**
  * @author gaozy
@@ -31,7 +36,7 @@ public class ActiveHandler {
 	
 	private final static String cfilePrefix = "/tmp/client_";
 	private final static String sfilePrefix = "/tmp/server_";
-	private final static String suffix = "_pipe";
+	private final String suffix;
 	private final static int clientPort = 50000;
 	private final static int workerPort = 60000;
 	
@@ -46,12 +51,15 @@ public class ActiveHandler {
 	
 	/**
 	 * Initialize handler with clients and workers.
+	 * @param nodeID 
 	 * @param app 
 	 * @param numProcess
 	 * @param numThread 
 	 * @param blocking blocking client or not
 	 */
-	public ActiveHandler(ActiveDBInterface app, int numProcess, int numThread, boolean blocking){
+	public ActiveHandler(String nodeID, ActiveDBInterface app, int numProcess, int numThread, boolean blocking){
+		this.suffix = nodeID;
+		
 		final String fileTestForPipe = "/tmp/test";
 		try {
 			Runtime.getRuntime().exec("mkfifo "+fileTestForPipe);			
@@ -69,29 +77,31 @@ public class ActiveHandler {
 		for (int i=0; i<numProcess; i++){
 			if(blocking){
 				if(pipeEnable){
-					clientPool[i] = new ActiveBlockingClient(app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
+					clientPool[i] = new ActiveBlockingClient(nodeID, app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
 				}else{
-					clientPool[i] = new ActiveBlockingClient(app, clientPort+i, workerPort+i, i, numThread);
+					clientPool[i] = new ActiveBlockingClient(nodeID, app, clientPort+i, workerPort+i, i, numThread);
 				}
 			}else{
 				if(pipeEnable){
-					clientPool[i] = new ActiveNonBlockingClient(app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
+					clientPool[i] = new ActiveNonBlockingClient(nodeID, app, cfilePrefix+i+suffix, sfilePrefix+i+suffix, i, numThread);
 				} else {
-					clientPool[i] = new ActiveNonBlockingClient(app, clientPort+i, workerPort+i, i, numThread);
+					clientPool[i] = new ActiveNonBlockingClient(nodeID, app, clientPort+i, workerPort+i, i, numThread);
 				}
 				new Thread((ActiveNonBlockingClient) clientPool[i]).start();
 			}
 		}
-		
+		System.out.println("ActiveHandler has been started with "+numProcess+"("+numThread+" threads) "
+				+(blocking?"blocking":"nonblocking")+" worker processes.");
 	}
 	
 	/**
 	 * Initialize a handler with multi-process single-threaded workers.
+	 * @param nodeId 
 	 * @param app
 	 * @param numProcess
 	 */
-	public ActiveHandler(ActiveDBInterface app, int numProcess){
-		this(app, numProcess, 1, false);
+	public ActiveHandler(String nodeId, ActiveDBInterface app, int numProcess){
+		this(nodeId, app, numProcess, 1, false);
 	}
 	
 	/**
@@ -116,7 +126,9 @@ public class ActiveHandler {
 	 * @throws ActiveException 
 	 */
 	public ValuesMap runCode(InternalRequestHeader header, String guid, String field, String code, ValuesMap value, int ttl) throws ActiveException{
-		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 2000);
+		System.out.println("Running request with guid "+guid+" on field "+field+" for value "+value);
+		
+		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 500);
 	}
 	
 	/***************** Test methods ****************/	
@@ -149,10 +161,10 @@ public class ActiveHandler {
 			e.printStackTrace();
 		} 
 		ValuesMap value = new ValuesMap();
-		value.put("string", "hello world");
+		value.put(field, "hello world");
 		
 		// initialize a handler
-		ActiveHandler handler = new ActiveHandler(null, numProcess, numThread, blocking);
+		ActiveHandler handler = new ActiveHandler("", null, numProcess, numThread, blocking);
 		ArrayList<Future<ValuesMap>> tasks = new ArrayList<Future<ValuesMap>>();
 		
 		int n = 1000000;

@@ -48,6 +48,8 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 public class ActiveCodeHandler {
 	
+	private final String nodeId;
+	
 	private static final Logger logger = Logger.getLogger("ActiveGNS");
 	
 	private static ActiveHandler handler;
@@ -59,8 +61,10 @@ public class ActiveCodeHandler {
 	
 	/**
 	 * Initializes an ActiveCodeHandler
+	 * @param nodeId 
 	 */
-	public ActiveCodeHandler() {
+	public ActiveCodeHandler(String nodeId) {
+		this.nodeId = nodeId;
 		String configFile = System.getProperty("activeFile");
 		if(configFile != null){
 			try {
@@ -70,7 +74,7 @@ public class ActiveCodeHandler {
 			}
 		}
 		
-		handler = new ActiveHandler(new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.acitveCodeBlockingEnabled);
+		handler = new ActiveHandler(nodeId, new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.acitveCodeBlockingEnabled);
 	}
 	
 	
@@ -124,7 +128,7 @@ public class ActiveCodeHandler {
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws InterruptedException, ExecutionException, IOException, JSONException {
-		new ActiveCodeHandler();
+		new ActiveCodeHandler("Test");
 		
 		// initialize the parameters used in the test 
 		JSONObject obj = new JSONObject();
