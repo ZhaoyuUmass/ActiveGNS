@@ -124,7 +124,7 @@ public class FieldAccess {
     }
     ValuesMap valuesMap;
     try {
-      valuesMap = NSFieldAccess.lookupJSONFieldLocalNoAuth(header, guid, field, handler.getApp());
+      valuesMap = NSFieldAccess.lookupJSONFieldLocally(header, guid, field, handler.getApp());
       if (reader != null) {
         // read is null means a magic internal request so we
         // only strip internal fields when read is not null
@@ -266,7 +266,7 @@ public class FieldAccess {
     String resultString;
     GNSResponseCode responseCode;
     try {
-      ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldLocalNoAuth(header, guid, GNSCommandProtocol.ALL_FIELDS, handler.getApp());
+      ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldLocally(header, guid, GNSCommandProtocol.ALL_FIELDS, handler.getApp());
       if (valuesMap != null) {
         resultString = valuesMap.removeInternalFields().toString();
         responseCode = GNSResponseCode.NO_ERROR;
@@ -341,7 +341,7 @@ public class FieldAccess {
     String resultString;
     GNSResponseCode responseCode;
     try {
-      ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldLocalNoAuth(null, guid,
+      ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldLocally(null, guid,
               GNSCommandProtocol.ALL_FIELDS, handler.getApp());
       if (valuesMap != null) {
         resultString = valuesMap.removeInternalFields().toJSONObjectFirstOnes().toString();
@@ -672,8 +672,6 @@ public class FieldAccess {
     return new CommandResponse(GNSResponseCode.NO_ERROR, EMPTY_JSON_ARRAY_STRING);
   }
 
-  private static final int OLD_COMMAND_TIME = -30; // how far back is old?
-
   public static GNSResponseCode signatureAndACLCheckForRead(String guid,
           String field, List<String> fields,
           String reader, String signature, String message,
@@ -690,7 +688,8 @@ public class FieldAccess {
       }
       // Check for stale commands.
       if (timestamp != null) {
-        if (timestamp.before(DateUtils.addMinutes(new Date(), OLD_COMMAND_TIME))) {
+        if (timestamp.before(DateUtils.addMinutes(new Date(), 
+                -Config.getGlobalInt(GNSConfig.GNSC.STALE_COMMAND_INTERVAL_IN_MINUTES)))) {
           errorCode = GNSResponseCode.STALE_COMMAND_VALUE;
         }
       }
