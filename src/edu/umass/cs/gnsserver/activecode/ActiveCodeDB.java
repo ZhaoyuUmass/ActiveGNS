@@ -45,7 +45,9 @@ public class ActiveCodeDB implements ActiveDBInterface {
 	@Override
 	public void write(InternalRequestHeader header, String targetGUID, String field, JSONObject valuesMap) 
 			throws InternalRequestException, ClientException{
-			System.out.println(">>>>>>>>>>>>>>Call client to write "+valuesMap+" into the field "+field+" of guid "+targetGUID);
+			
+			if(header.hasBeenCoordinatedOnce())
+				throw new InternalRequestException("too many coordinated requests");
 			client.write(header, targetGUID, field, valuesMap);		
 	}
 }

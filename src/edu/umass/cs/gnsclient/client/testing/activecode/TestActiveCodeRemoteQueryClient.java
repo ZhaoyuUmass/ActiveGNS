@@ -117,6 +117,7 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		Thread.sleep(1000);
 		*/
+		
 		/*
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
