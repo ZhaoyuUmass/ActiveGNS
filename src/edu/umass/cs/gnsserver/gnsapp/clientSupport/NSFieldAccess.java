@@ -314,8 +314,14 @@ public class NSFieldAccess {
 	  if(!AppOptionsOld.enableActiveCode) return originalValues;
 	  
     ValuesMap newResult = originalValues;
+    //FIXME: field could be null and it's an internalField, then a bug is triggered
+	  // This is a temporary fix to the problem
+    if(field==null){
+		 field = (String) originalValues.keys().next();
+	}
+    
     // Only do this for user fields.
-    if (field == null || !InternalField.isInternalField(field)) {
+    if ( !InternalField.isInternalField(field) ) {
       int hopLimit = 1;
       // Grab the code because it is of a different type
       NameRecord codeRecord = null;

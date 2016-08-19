@@ -172,7 +172,13 @@ public class NSUpdateSupport {
 
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, JSONException {
     // Only do active field handling for user fields.
-    if (field == null || !InternalField.isInternalField(field)) {
+	  //FIXME: field could be null and it's an internalField, then a bug is triggered
+	  //This is a temporary fix to the problem
+	  if(field==null){
+		 field = (String) userJSON.keys().next();
+	  }
+	  
+    if ( !InternalField.isInternalField(field) ) {
       NameRecord activeCodeNameRecord = null;
       try {
         activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,

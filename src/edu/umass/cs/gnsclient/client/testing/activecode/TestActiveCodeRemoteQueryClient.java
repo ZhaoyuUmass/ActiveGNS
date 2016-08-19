@@ -37,6 +37,8 @@ public class TestActiveCodeRemoteQueryClient {
 	private final static String depthField = "depthField";
 	private final static String depthResult = "Depth test succeeds";
 	
+	
+	
 	private static void setupClientsAndGuids() throws Exception{
 		client = new GNSClientCommands();
 		entries = new GuidEntry[2];
@@ -78,18 +80,17 @@ public class TestActiveCodeRemoteQueryClient {
 			codeFile = "scripts/activeCode/remoteQuery.js";
 		
 		String code = new String(Files.readAllBytes(Paths.get(codeFile)));
-		code = code.replace("//substitute this line with the targetGuid", "var targetGuid=\""+targetGuid+"\";");
+		String read_code = code.replace("//substitute this line with the targetGuid", "var targetGuid=\""+targetGuid+"\";");
 		String noop_code = new String(Files.readAllBytes(Paths.get("scripts/activeCode/noop.js")));
 		
-		System.out.println("The new code is:\n"+code);
+		System.out.println("The new code is:\n"+read_code);
 		
-		//deploy code for read
-		
+		//test read after a read		
 		try {
-			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, code, entries[0]);
+			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
+			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
 			
-			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);		
+			//client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);		
 			client.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]);
 		} catch (ClientException e) {
 			e.printStackTrace();
@@ -102,43 +103,48 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		}
 		assertEquals(depthResult, response);		
-		System.out.println("Depth query test(a read followed by a read) succeeds!");
-		
-		Thread.sleep(1000);
+		System.out.println("Depth query test(a read followed by a read) succeeds!");		
 		
 		
-		
-		// test one write followed by a read
-		
+		// test write followed by a read
+		/*
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, code, entries[0]);
+			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
 			
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		
+		Thread.sleep(1000);
+		*/
+		/*
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
-			//response = client.fieldRead(entries[0], someField);
+			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//assertEquals(depthResult, response);
+		assertEquals(depthResult, response);
 		System.out.println("Depth query test(a read followed by a write) succeeds!");
 		
-		Thread.sleep(1000);
+		// reset the state
 		
-		
-		// test a read followed by a write 
-		/*
-		code = code.replace("value.put(field, querier.readGuid(targetGuid, \"depthField\").get(\"depthField\"));", 
-				"querier.writeGuid(targetGuid, \"someField\", value);");
-		
-		System.out.println("The new code is:\n"+code);
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, code, entries[0]);
+			client.fieldUpdate(entries[0], someField, someValue);
+		} catch (ClientException | JSONException e) {
+			e.printStackTrace();
+		}*/
+				
+		// test a read followed by a write 
+		/*
+		String write_code = code.replace("value.put(field, querier.readGuid(targetGuid, \"depthField\").get(\"depthField\"));", 
+				"querier.writeGuid(targetGuid, \"someField\", value);");
+		
+		System.out.println("The new code is:\n"+write_code);
+		try {
+			
+			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);
 			
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);		
 			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);
@@ -146,12 +152,18 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		
+		Thread.sleep(1000);
 		
 		try {
 			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+		assertEquals(someValue, response);
+		try {
+			response = client.fieldRead(entries[1], someField);
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 		assertEquals(someValue, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
@@ -176,6 +188,25 @@ public class TestActiveCodeRemoteQueryClient {
 		}	
 		System.out.println("Depth query test(a write followed by a write) succeeds!");
 		*/
+		
+		try {
+			cleanup();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+	}
+	
+	private static void cleanup() throws Exception{
+		try {
+			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
+			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
+			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
+			client.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]);
+		} catch (ClientException e) {
+			e.printStackTrace();
+		}
+		
+		
 		client.close();
 	}
 	

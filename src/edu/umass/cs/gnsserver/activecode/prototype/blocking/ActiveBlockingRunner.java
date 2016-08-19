@@ -87,13 +87,6 @@ public class ActiveBlockingRunner {
 		return valuesMap;
 	}
 	
-	/**
-	 * @param am
-	 */
-	public void release(ActiveMessage am){
-		((ActiveBlockingQuerier) querier).release(am, true);
-	}
-	
 	private static class SimpleTask implements Callable<ValuesMap>{
 		
 		ActiveBlockingRunner runner;

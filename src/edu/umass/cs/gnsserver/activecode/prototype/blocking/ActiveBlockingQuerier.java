@@ -22,8 +22,6 @@ public class ActiveBlockingQuerier implements Querier {
 	private String currentGuid;
 	private long currentID;
 	
-	private Monitor monitor;
-	
 	/**
 	 * @param channel
 	 * @param ttl 
@@ -34,7 +32,6 @@ public class ActiveBlockingQuerier implements Querier {
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
 		
-		monitor = new Monitor();
 	}
 	
 	
@@ -105,6 +102,7 @@ public class ActiveBlockingQuerier implements Querier {
 				throw new ActiveException();
 			}
 			value = response.getValue();
+			System.out.println("Returned value to querier for read is "+value);
 		} catch(IOException e) {
 			throw new ActiveException();
 		}
@@ -120,7 +118,7 @@ public class ActiveBlockingQuerier implements Querier {
 				channel.sendMessage(am);
 				System.out.println(">>>>>>>>>>>>>>The message has been sent out!");
 				ActiveMessage response = (ActiveMessage) channel.receiveMessage();
-				System.out.println("The response is "+response);
+				System.out.println("Returned value to querier for read is "+value);
 				
 				if(response == null){
 					throw new ActiveException();
@@ -131,34 +129,6 @@ public class ActiveBlockingQuerier implements Querier {
 			} catch (IOException e) {
 				throw new ActiveException();
 			}
-	}
-	
-	protected void release(ActiveMessage response, boolean isDone){
-		monitor.setResult(response, isDone);
-	}
-	
-	private static class Monitor {
-		boolean isDone;
-		ActiveMessage response;
-		
-		Monitor(){
-			this.isDone = false;
-		}
-		
-		boolean getDone(){
-			return isDone;
-		}
-		
-		synchronized void setResult(ActiveMessage response, boolean isDone){
-			assert(response.type == Type.RESPONSE):"This is not a response!";
-			this.response = response;
-			this.isDone = isDone;	
-			notifyAll();
-		}
-		
-		ActiveMessage getResult(){
-			return response;
-		}
 	}
 	
 	/**
