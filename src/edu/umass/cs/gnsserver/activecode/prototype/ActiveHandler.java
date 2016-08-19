@@ -126,9 +126,8 @@ public class ActiveHandler {
 	 * @throws ActiveException 
 	 */
 	public ValuesMap runCode(InternalRequestHeader header, String guid, String field, String code, ValuesMap value, int ttl) throws ActiveException{
-		System.out.println("Running request with guid "+guid+" on field "+field+" for value "+value);
-		
-		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 500);
+		System.out.println("Running request for guid "+guid+" on field "+field+" with value "+value);	
+		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 5000);
 	}
 	
 	/***************** Test methods ****************/	

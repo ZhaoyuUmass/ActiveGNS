@@ -39,7 +39,6 @@ public class ActiveQueryHandler {
 	 * @return an ActiveMessage being sent back to worker as a response to the query
 	 */
 	public ActiveMessage handleQuery(ActiveMessage am, InternalRequestHeader header){
-		System.out.println(">>>>>>>>>>>>>>>"+this+" receives query "+am);
 		ActiveMessage response;
 		if(am.type == ActiveMessage.Type.READ_QUERY)
 			response = handleReadQuery(am, header);
@@ -80,6 +79,7 @@ public class ActiveQueryHandler {
 	 */
 	public ActiveMessage handleWriteQuery(ActiveMessage am, InternalRequestHeader header) {
 		ActiveMessage resp;
+		System.out.println(">>>>>>>>>>>>>>>>>>>>>>> received update request "+am);
 		try {
 			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
 			resp = new ActiveMessage(am.getId(), new ValuesMap(), null);

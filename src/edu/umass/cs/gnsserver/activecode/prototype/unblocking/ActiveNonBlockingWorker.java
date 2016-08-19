@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.JSONException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveQuerier;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
 import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
@@ -20,10 +18,10 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
  * @author gaozy
  *
  */
-public class ActiveWorker {
+public class ActiveNonBlockingWorker {
 	
 	
-	private final ActiveRunner[] runners;
+	private final ActiveNonBlockingRunner[] runners;
 	
 	private final Channel channel;
 	private final int id;
@@ -31,7 +29,7 @@ public class ActiveWorker {
 	
 	private final ThreadPoolExecutor executor;
 	private final ThreadPoolExecutor taskExecutor;
-	private final ConcurrentHashMap<Long, ActiveRunner> map = new ConcurrentHashMap<Long, ActiveRunner>();
+	private final ConcurrentHashMap<Long, ActiveNonBlockingRunner> map = new ConcurrentHashMap<Long, ActiveNonBlockingRunner>();
 	private final AtomicInteger counter = new AtomicInteger(0);	
 	
 	
@@ -44,7 +42,7 @@ public class ActiveWorker {
 	 * @param numThread 
 	 * @param isTest
 	 */
-	protected ActiveWorker(String ifile, String ofile, int id, int numThread) {
+	protected ActiveNonBlockingWorker(String ifile, String ofile, int id, int numThread) {
 		this.id = id;
 		this.numThread = numThread;
 		
@@ -54,10 +52,10 @@ public class ActiveWorker {
 		taskExecutor.prestartAllCoreThreads();
 		
 		channel = new ActiveNamedPipe(ifile, ofile);
-		runners = new ActiveRunner[numThread];
+		runners = new ActiveNonBlockingRunner[numThread];
 		
 		for (int i=0; i<numThread; i++){
-			runners[i] = new ActiveRunner(new ActiveQuerier(channel));
+			runners[i] = new ActiveNonBlockingRunner(new ActiveNonBlockingQuerier(channel));
 		}		
 
 		try {
@@ -78,13 +76,13 @@ public class ActiveWorker {
 		while(!Thread.currentThread().isInterrupted()){
 			if((msg = (ActiveMessage) channel.receiveMessage()) != null){
 				if(msg.type == Type.REQUEST){
-					ActiveRunner runner = runners[counter.getAndIncrement()%numThread];
+					ActiveNonBlockingRunner runner = runners[counter.getAndIncrement()%numThread];
 					map.put(msg.getId(), runner);
 					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel, map));
 					
 				} else if (msg.type == Type.RESPONSE ){
-					map.get(msg.getId()).release(msg);
-				}
+					map.get(msg.getId()).release(msg);					
+				} 
 			}else{
 				// The client is shutdown
 				break;
@@ -109,7 +107,7 @@ public class ActiveWorker {
 			int id = Integer.parseInt(args[2]);
 			int numThread = Integer.parseInt(args[3]);
 			
-			new ActiveWorker(cfile, sfile, id, numThread);
+			new ActiveNonBlockingWorker(cfile, sfile, id, numThread);
 		}
 	}
 }

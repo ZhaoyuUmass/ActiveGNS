@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 import javax.script.ScriptException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingRunner;
 
 /**
  * @author gaozy
@@ -13,10 +13,10 @@ import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
  */
 public class ActiveWorkerBlockingTask implements Callable<ActiveMessage> {
 	
-	final ActiveRunner runner;
+	final ActiveBlockingRunner runner;
 	final ActiveMessage request;
 	
-	ActiveWorkerBlockingTask(ActiveRunner runner, ActiveMessage request){
+	ActiveWorkerBlockingTask(ActiveBlockingRunner runner, ActiveMessage request){
 		this.runner = runner;
 		this.request = request;
 	}

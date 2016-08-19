@@ -247,7 +247,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xmx"+heapSize+"m");
 	    command.add("-cp");
 	    command.add(classpath);
-	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveWorker");
+	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
 	    command.add(ifile);
 	    command.add(ofile);
 	    command.add(""+id);
@@ -283,7 +283,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xmx"+heapSize+"m");
 	    command.add("-cp");
 	    command.add(classpath);
-	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveWorker");
+	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
 	    command.add(""+port1);
 	    command.add(""+port2);
 	    command.add(""+id);

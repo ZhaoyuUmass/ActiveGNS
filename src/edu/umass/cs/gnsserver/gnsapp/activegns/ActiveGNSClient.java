@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umass.cs.gigapaxos.interfaces.Request;
 import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnscommon.GNSResponseCode;
@@ -14,6 +15,7 @@ import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.packets.PacketUtils;
 import edu.umass.cs.gnsserver.gnsapp.GNSCommandInternal;
+import edu.umass.cs.gnsserver.gnsapp.packet.InternalCommandPacket;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
@@ -45,8 +47,10 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	public void write(InternalRequestHeader header, String targetGUID,
 			String field, JSONObject value) throws ClientException, InternalRequestException {
 		try {
-			this.execute(GNSCommandInternal.fieldUpdate(targetGUID, field,
+			Request request = this.executeCommand(GNSCommandInternal.fieldUpdate(targetGUID, field,
 					value, header));
+			InternalCommandPacket packet = (InternalCommandPacket) request;
+			System.out.println(">>>>>>>>>>>>>>>>>>Response packet is "+packet);
 		} catch (IOException | JSONException e) {
 			throw new ClientException(e);
 		}
@@ -56,9 +60,11 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	public JSONObject read(InternalRequestHeader header, String targetGUID,
 			String field) throws ClientException, InternalRequestException {
 		try {
-			return this.execute(
-					GNSCommandInternal.fieldRead(targetGUID, field, header))
-					.getResultJSONObject();
+			Request request = this.executeCommand(
+					GNSCommandInternal.fieldRead(targetGUID, field, header));
+			InternalCommandPacket packet = (InternalCommandPacket) request;
+			
+			return packet.getResultJSONObject();
 		} catch (IOException | JSONException e) {
 			throw new ClientException(e);
 		}
@@ -68,9 +74,9 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	public JSONObject read(InternalRequestHeader header, String targetGUID,
 			ArrayList<String> fields) throws ClientException, InternalRequestException {
 		try {
-			return this.execute(
-					GNSCommandInternal.fieldRead(targetGUID, fields, header))
-					.getResultJSONObject();
+			Request request = this.execute(
+					GNSCommandInternal.fieldRead(targetGUID, fields, header));
+			return ((InternalCommandPacket) request).getResultJSONObject();
 		} catch (IOException | JSONException e) {
 			throw new ClientException(e);
 		}
@@ -80,7 +86,7 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	 * request checks that can only be determined with a {@link GNSClient}
 	 * instance, e.g, dynamically force-coordinated read requests.
 	 */
-	public GNSCommand execute(CommandPacket commandPacket) throws IOException,
+	public Request executeCommand(CommandPacket commandPacket) throws IOException,
 			ClientException {
 		if (((GNSCommandInternal) commandPacket).hasBeenCoordinatedOnce()
 				&& (commandPacket.needsCoordination() || this
@@ -90,6 +96,6 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 					GNSResponseCode.INTERNAL_REQUEST_EXCEPTION,
 					"Attempting a second coordinated request in a chain with "
 							+ commandPacket.getSummary()));
-		return super.execute(commandPacket);
+		return super.sendSync(commandPacket); //(commandPacket);
 	}
 }

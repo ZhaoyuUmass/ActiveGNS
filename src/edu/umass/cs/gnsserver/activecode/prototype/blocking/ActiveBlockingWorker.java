@@ -13,10 +13,10 @@ import org.json.JSONException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveQuerier;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingQuerier;
+import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingRunner;
 
 /**
  * @author gaozy
@@ -25,7 +25,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 public class ActiveBlockingWorker {
 	
 	
-	private final ActiveRunner runner;
+	private final ActiveBlockingRunner runner;
 	
 	private final Channel channel;
 	private final int id;
@@ -46,7 +46,7 @@ public class ActiveBlockingWorker {
 		this.id = id;
 		
 		channel = new ActiveNamedPipe(ifile, ofile);
-		runner = new ActiveRunner(new ActiveQuerier(channel));
+		runner = new ActiveBlockingRunner(new ActiveBlockingQuerier(channel));
 		
 		executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();	
@@ -84,9 +84,7 @@ public class ActiveBlockingWorker {
 					// send back response
 					channel.sendMessage(response);
 					counter.getAndIncrement();
-				} else if(msg.type == Type.RESPONSE){
-					runner.release(msg);
-				}				
+				}			
 			}else{
 				// The client is shutdown, let's exit this loop and return
 				break;

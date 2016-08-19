@@ -17,6 +17,7 @@ public class ActiveCodeConfig {
 	 * @throws IOException
 	 */
 	public ActiveCodeConfig(String propFileName) throws IOException{
+		System.out.println("Initial active code options...");
 		Properties prop = new Properties();
 		InputStream inputStream = new FileInputStream(new File(propFileName));
 		if(inputStream != null){
@@ -40,7 +41,7 @@ public class ActiveCodeConfig {
 	  /**
 	   * switch between blocking and non-blocking design
 	   */
-	  public static boolean acitveCodeBlockingEnabled = true;
+	  public static boolean acitveCodeBlockingEnabled = false;
 	  
 	  /**
 	   * Number of spare workers.
@@ -95,7 +96,7 @@ public class ActiveCodeConfig {
 		    	activeCodeEnableDebugging = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_ENABLE_DEBUGGING));
 		    }
 		    if(allValues.containsKey(ACTIVE_CODE_BLOCKING_ENABLED)) {
-		    	acitveCodeBlockingEnabled = true;
+		    	acitveCodeBlockingEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_BLOCKING_ENABLED));
 		    }
 	  }
 	 

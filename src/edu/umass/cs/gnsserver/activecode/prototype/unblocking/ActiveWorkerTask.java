@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import javax.script.ScriptException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 
 /**
  * @author gaozy
@@ -13,10 +12,10 @@ import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
  */
 public class ActiveWorkerTask implements Callable<ActiveMessage>  {
 	
-	final ActiveRunner runner;
+	final ActiveNonBlockingRunner runner;
 	final ActiveMessage request;
 	
-	ActiveWorkerTask(ActiveRunner runner, ActiveMessage request){
+	ActiveWorkerTask(ActiveNonBlockingRunner runner, ActiveMessage request){
 		this.runner = runner;
 		this.request = request;
 	}

@@ -19,6 +19,7 @@
  */
 package edu.umass.cs.gnsserver.activecode;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -66,7 +67,7 @@ public class ActiveCodeHandler {
 	public ActiveCodeHandler(String nodeId) {
 		this.nodeId = nodeId;
 		String configFile = System.getProperty("activeFile");
-		if(configFile != null){
+		if(configFile != null && new File(configFile).exists()){
 			try {
 				new ActiveCodeConfig(configFile);
 			} catch (IOException e1) {

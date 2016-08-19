@@ -1,4 +1,4 @@
-package edu.umass.cs.gnsserver.activecode.prototype;
+package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +21,7 @@ import javax.script.SimpleScriptContext;
 
 import org.json.JSONException;
 
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
@@ -28,7 +29,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  * @author gaozy
  *
  */
-public class ActiveRunner {
+public class ActiveBlockingRunner {
 	
 	private ScriptEngine engine;
 	private Invocable invocable;
@@ -41,7 +42,7 @@ public class ActiveRunner {
 	/**
 	 * @param querier
 	 */
-	public ActiveRunner(Querier querier){
+	public ActiveBlockingRunner(Querier querier){
 		this.querier = querier;
 		
 		engine = new ScriptEngineManager().getEngineByName("nashorn");
@@ -78,7 +79,7 @@ public class ActiveRunner {
 	public synchronized ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
-		if(querier != null) ((ActiveQuerier) querier).resetQuerier(guid, ttl, id);
+		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);
 		ValuesMap valuesMap = null;
 		
 		valuesMap = (ValuesMap) invocable.invokeFunction("run", value, field, querier);
@@ -90,15 +91,15 @@ public class ActiveRunner {
 	 * @param am
 	 */
 	public void release(ActiveMessage am){
-		((ActiveQuerier) querier).release(am, true);
+		((ActiveBlockingQuerier) querier).release(am, true);
 	}
 	
 	private static class SimpleTask implements Callable<ValuesMap>{
 		
-		ActiveRunner runner;
+		ActiveBlockingRunner runner;
 		ActiveMessage am;
 		
-		SimpleTask(ActiveRunner runner, ActiveMessage am){
+		SimpleTask(ActiveBlockingRunner runner, ActiveMessage am){
 			this.runner = runner;
 			this.am = am;
 		}
@@ -120,9 +121,9 @@ public class ActiveRunner {
 	public static void main(String[] args) throws JSONException, InterruptedException, ExecutionException{
 		
 		int numThread = 10; 		
-		final ActiveRunner[] runners = new ActiveRunner[numThread];
+		final ActiveBlockingRunner[] runners = new ActiveBlockingRunner[numThread];
 		for (int i=0; i<numThread; i++){
-			runners[i] = new ActiveRunner(null);
+			runners[i] = new ActiveBlockingRunner(null);
 		}
 		
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
@@ -162,7 +163,7 @@ public class ActiveRunner {
 		/**
 		 * Test runner's protected method
 		 */
-		ActiveRunner runner = new ActiveRunner(new ActiveQuerier(null));
+		ActiveBlockingRunner runner = new ActiveBlockingRunner(new ActiveBlockingQuerier(null));
 		String chain_code = null;
 		try {
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));

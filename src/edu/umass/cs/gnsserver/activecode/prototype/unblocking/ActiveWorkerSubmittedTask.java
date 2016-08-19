@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveRunner;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 
 /**
@@ -19,13 +18,13 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 public class ActiveWorkerSubmittedTask implements Runnable {
 	
 	final ThreadPoolExecutor executor;
-	final ActiveRunner runner;
+	final ActiveNonBlockingRunner runner;
 	final ActiveMessage request;
 	final Channel channel;
-	final ConcurrentHashMap<Long, ActiveRunner> map;
+	final ConcurrentHashMap<Long, ActiveNonBlockingRunner> map;
 	
-	ActiveWorkerSubmittedTask(ThreadPoolExecutor executor, ActiveRunner runner, ActiveMessage request, 
-			Channel channel, ConcurrentHashMap<Long, ActiveRunner> map){
+	ActiveWorkerSubmittedTask(ThreadPoolExecutor executor, ActiveNonBlockingRunner runner, ActiveMessage request, 
+			Channel channel, ConcurrentHashMap<Long, ActiveNonBlockingRunner> map){
 		this.executor = executor;
 		this.runner = runner;
 		this.request = request;

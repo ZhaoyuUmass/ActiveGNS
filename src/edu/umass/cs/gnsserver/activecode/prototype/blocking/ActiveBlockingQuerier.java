@@ -1,7 +1,9 @@
-package edu.umass.cs.gnsserver.activecode.prototype;
+package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.io.IOException;
 
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
@@ -14,7 +16,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  * @author gaozy
  *
  */
-public class ActiveQuerier implements Querier {
+public class ActiveBlockingQuerier implements Querier {
 	private Channel channel;
 	private int currentTTL;
 	private String currentGuid;
@@ -27,7 +29,7 @@ public class ActiveQuerier implements Querier {
 	 * @param ttl 
 	 * @param guid 
 	 */
-	public ActiveQuerier(Channel channel, int ttl, String guid){
+	public ActiveBlockingQuerier(Channel channel, int ttl, String guid){
 		this.channel = channel;
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
@@ -39,7 +41,7 @@ public class ActiveQuerier implements Querier {
 	/**
 	 * @param channel
 	 */
-	public ActiveQuerier(Channel channel){
+	public ActiveBlockingQuerier(Channel channel){
 		this(channel, 0, null);
 	}
 	
@@ -79,6 +81,7 @@ public class ActiveQuerier implements Querier {
 	public void writeGuid(String queriedGuid, String field, ValuesMap value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
+		System.out.println(">>>>>>>>>>>>>>>> Write "+value+" into field "+field);
 		if(queriedGuid==null)
 			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL--);
 		else
@@ -91,18 +94,9 @@ public class ActiveQuerier implements Querier {
 		ValuesMap value = null;
 		try{
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
-			synchronized(monitor){
-				while(!monitor.getDone()){				
-					try {
-						channel.sendMessage(am);
-						monitor.wait();
-					} catch (InterruptedException e) {
-						//e.printStackTrace();
-					}
-				}
-			}
-						
-			ActiveMessage response = monitor.getResult();
+			channel.sendMessage(am);
+			ActiveMessage response = (ActiveMessage) channel.receiveMessage();
+			
 			if(response == null){
 				throw new ActiveException();
 			}
@@ -117,24 +111,16 @@ public class ActiveQuerier implements Querier {
 		return value;
 	}
 
-	private void writeValueIntoField(String querierGuid, String queriedGuid, String field, ValuesMap value, int ttl)
+	private void writeValueIntoField(String querierGuid, String targetGuid, String field, ValuesMap value, int ttl)
 			throws ActiveException {
 		
-			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);
+			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, targetGuid, value, currentID);
+			System.out.println(">>>>>>>>>>>>>>>>The write query sent to client is "+am);
 			try {
-				
-				while(!monitor.getDone()){
-					synchronized(monitor){
-						try {
-							channel.sendMessage(am);
-							monitor.wait();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-				
-				ActiveMessage response = monitor.getResult();
+				channel.sendMessage(am);
+				System.out.println(">>>>>>>>>>>>>>The message has been sent out!");
+				ActiveMessage response = (ActiveMessage) channel.receiveMessage();
+				System.out.println("The response is "+response);
 				
 				if(response == null){
 					throw new ActiveException();
@@ -179,7 +165,7 @@ public class ActiveQuerier implements Querier {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		ActiveQuerier querier = new ActiveQuerier(null);
+		ActiveBlockingQuerier querier = new ActiveBlockingQuerier(null);
 		int ttl = 1;
 		String guid = "Zhaoyu Gao";			
 		
