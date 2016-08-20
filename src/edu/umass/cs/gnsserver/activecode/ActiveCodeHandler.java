@@ -87,10 +87,14 @@ public class ActiveCodeHandler {
 	 */
 	public static boolean hasCode(ValuesMap valuesMap, String action) {
 		try {
-            return valuesMap.has(ActiveCode.getCodeField(action));
+            if(valuesMap.get(ActiveCode.getCodeField(action))!=null){
+            	//System.out.println(">>>>>>>>>>>Retrived code is "+valuesMap.get(ActiveCode.getCodeField(action)));
+            	return true;
+            }
 		} catch (Exception e) {
 			return false;
 		}
+		return false;
 	}
 	
 	

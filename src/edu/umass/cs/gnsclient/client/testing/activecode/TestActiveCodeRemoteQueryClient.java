@@ -127,12 +127,11 @@ public class TestActiveCodeRemoteQueryClient {
 		assertEquals(depthResult, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
-		// reset the state		
+		// reset the state
+		/*
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
-			
-			Thread.sleep(10000);
 			client.fieldUpdate(entries[0], someField, someValue);
 			response = client.fieldRead(entries[0], someField);
 			System.out.println("The response after code being cleared is "+response);
@@ -140,11 +139,10 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		
+		}		
 		
 		// test a read followed by a write 
-		/*
+		
 		codeFile = System.getProperty("activeWriteCode");
 		if(codeFile == null)
 			codeFile = "scripts/activeCode/remoteWriteQuery.js";		

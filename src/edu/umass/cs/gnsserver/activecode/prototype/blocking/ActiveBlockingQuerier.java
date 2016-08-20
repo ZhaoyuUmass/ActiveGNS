@@ -102,7 +102,6 @@ public class ActiveBlockingQuerier implements Querier {
 				throw new ActiveException();
 			}
 			value = response.getValue();
-			System.out.println("Returned value to querier for read is "+value);
 		} catch(IOException e) {
 			throw new ActiveException();
 		}
