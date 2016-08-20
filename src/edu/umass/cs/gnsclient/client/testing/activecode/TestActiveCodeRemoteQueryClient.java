@@ -131,7 +131,8 @@ public class TestActiveCodeRemoteQueryClient {
 		// reset the state
 		
 		try {
-			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
+			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
+			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
 			client.fieldUpdate(entries[0], someField, someValue);
 		} catch (ClientException | JSONException e) {
 			e.printStackTrace();
@@ -145,9 +146,7 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("The new code is:\n"+write_code);
 		try {
 			
-			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);
-			
-			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);		
+			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);					
 			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);
 			
 		} catch (ClientException e) {

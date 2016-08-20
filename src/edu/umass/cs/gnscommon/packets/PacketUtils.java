@@ -36,7 +36,7 @@ public class PacketUtils {
 	 * @return The originatingGUID for {@code CommandPacket}.
 	 */
 	public static String getOriginatingGUID(CommandPacket commandPacket) {
-			return commandPacket.getServiceName();
+		return commandPacket!=null?commandPacket.getServiceName():null;
 	}
 
 	/**
@@ -73,6 +73,16 @@ public class PacketUtils {
 
 					@Override
 					public String getOriginatingGUID() {
+						try {
+							return commandPacket.getCommand().has(
+									GNSProtocol.ORIGINATING_GUID.toString()) ? commandPacket
+									.getCommand().getString(
+											GNSProtocol.ORIGINATING_GUID
+													.toString())
+									: PacketUtils.getOriginatingGUID(commandPacket);
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
 						return PacketUtils.getOriginatingGUID(commandPacket);
 					}
 
