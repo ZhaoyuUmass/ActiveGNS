@@ -75,9 +75,9 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		
 		System.out.println(">>>>>>>>>> Testing >>>>>>>>>>");
-		String codeFile = System.getProperty("activeCode");
+		String codeFile = System.getProperty("activeReadCode");
 		if(codeFile == null)
-			codeFile = "scripts/activeCode/remoteQuery.js";
+			codeFile = "scripts/activeCode/remoteReadQuery.js";
 		
 		String code = new String(Files.readAllBytes(Paths.get(codeFile)));
 		String read_code = code.replace("//substitute this line with the targetGuid", "var targetGuid=\""+targetGuid+"\";");
@@ -107,7 +107,6 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		
 		// test write followed by a read
-		/*
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
@@ -116,9 +115,9 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		}
 		Thread.sleep(1000);
-		*/
 		
-		/*
+		
+		
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			response = client.fieldRead(entries[0], someField);
@@ -126,29 +125,36 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		}
 		assertEquals(depthResult, response);
-		System.out.println("Depth query test(a read followed by a write) succeeds!");
+		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
-		// reset the state
-		
+		// reset the state		
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
+			
+			Thread.sleep(10000);
 			client.fieldUpdate(entries[0], someField, someValue);
+			response = client.fieldRead(entries[0], someField);
+			System.out.println("The response after code being cleared is "+response);
 		} catch (ClientException | JSONException e) {
 			e.printStackTrace();
-		}*/
-				
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
 		// test a read followed by a write 
 		/*
-		String write_code = code.replace("value.put(field, querier.readGuid(targetGuid, \"depthField\").get(\"depthField\"));", 
-				"querier.writeGuid(targetGuid, \"someField\", value);");
-		
+		codeFile = System.getProperty("activeWriteCode");
+		if(codeFile == null)
+			codeFile = "scripts/activeCode/remoteWriteQuery.js";		
+		code = new String(Files.readAllBytes(Paths.get(codeFile)));
+		String write_code = code.replace("//substitute this line with the targetGuid", "var targetGuid=\""+targetGuid+"\";");
 		System.out.println("The new code is:\n"+write_code);
-		try {
-			
+		
+		try {			
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);					
-			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);
-			
+			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);			
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
