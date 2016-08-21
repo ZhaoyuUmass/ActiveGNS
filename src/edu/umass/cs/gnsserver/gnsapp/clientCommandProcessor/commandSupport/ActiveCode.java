@@ -115,7 +115,7 @@ public class ActiveCode {
     String field = getCodeField(action);
 
     GNSResponseCode response = FieldAccess.update(null, guid, field, "", null, -1,
-            UpdateOperation.SINGLE_FIELD_REMOVE, writer, signature, 
+            UpdateOperation.SINGLE_FIELD_REMOVE_FIELD, writer, signature, 
             message, timestamp, handler);
     return response;
   }

@@ -114,7 +114,7 @@ public class ActiveCodeHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return valuesMap;
+		return null;
 	}
 	
 	/**
