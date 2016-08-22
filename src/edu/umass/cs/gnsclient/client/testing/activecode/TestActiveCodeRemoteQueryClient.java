@@ -52,7 +52,7 @@ public class TestActiveCodeRemoteQueryClient {
 		// initialize the fields for each guid
 		
 		client.fieldUpdate(entries[0], someField, someValue);
-		client.fieldUpdate(entries[1], someField, someValue);
+		client.fieldUpdate(entries[1], someField, depthResult);
 		client.fieldUpdate(entries[1], depthField, depthResult);
 		
 		// set the target guid to the second one and put it into the code
@@ -127,22 +127,19 @@ public class TestActiveCodeRemoteQueryClient {
 		assertEquals(depthResult, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
-		// reset the state
-		/*
+		// reset the state		
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
 			client.fieldUpdate(entries[0], someField, someValue);
-			response = client.fieldRead(entries[0], someField);
-			System.out.println("The response after code being cleared is "+response);
 		} catch (ClientException | JSONException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}		
+		}
 		
-		// test a read followed by a write 
 		
+		// test a read followed by a write 		
 		codeFile = System.getProperty("activeWriteCode");
 		if(codeFile == null)
 			codeFile = "scripts/activeCode/remoteWriteQuery.js";		
@@ -173,7 +170,7 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
 		Thread.sleep(1000);
-		*/
+		
 		
 		// test a write followed by a write
 		/*

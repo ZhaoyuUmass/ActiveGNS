@@ -200,7 +200,7 @@ public class NSUpdateSupport {
               && activeCodeHandler.hasCode(codeMap, ActiveCode.WRITE_ACTION)) {
         String code = codeMap.getString(ActiveCode.ON_WRITE);
         ValuesMap packetValuesMap = userJSON;
-        ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}", new Object[]{guid, field, packetValuesMap.toReasonableString()});
+        //ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}", new Object[]{guid, field, packetValuesMap.toReasonableString()});
         return activeCodeHandler.runCode(header, code, guid, field, "write", packetValuesMap, hopLimit);
       }
     }

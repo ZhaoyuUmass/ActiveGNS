@@ -83,6 +83,7 @@ public class ActiveQueryHandler {
 		try {
 			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
 			resp = new ActiveMessage(am.getId(), new ValuesMap(), null);
+			System.out.println("The response by query handler "+resp);
 		} catch (ClientException | InternalRequestException e) {
 			e.printStackTrace();
 			resp = new ActiveMessage(am.getId(), null, "Write failed");
