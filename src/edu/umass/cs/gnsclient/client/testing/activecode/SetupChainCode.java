@@ -29,7 +29,7 @@ public class SetupChainCode {
 			depth = Integer.parseInt(System.getProperty("depth"));
 		}
 		
-		String codeFile = "scripts/ativeCode/depth.js";
+		String codeFile = "scripts/activeCode/depth.js";
 		if(System.getProperty("codeFile")!=null){
 			codeFile = System.getProperty("codeFile");
 		}
@@ -51,7 +51,7 @@ public class SetupChainCode {
 		nextGuid[depth-1] = successResult;
 		
 		for(int i=0; i<depth; i++){
-			client.activeCodeClear(entries[i].getGuid(), ActiveCode.ON_READ, entries[i]);
+			client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
 		}
 		
 		for(int i=0; i<depth; i++){
@@ -59,12 +59,14 @@ public class SetupChainCode {
 		}
 		
 		for(int i=0; i<depth; i++){
-			client.activeCodeSet(entries[i].getGuid(), ActiveCode.ON_READ, code, entries[i]);
+			client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
 		}
 		
 		String response = client.fieldRead(entries[0], targetGuidField);
-		
+				
 		assert(response.equals(successResult));
 		System.out.println("Response is "+response+", depth query code chain has been successfully set up!");
+		
+		System.exit(0);
 	}
 }
