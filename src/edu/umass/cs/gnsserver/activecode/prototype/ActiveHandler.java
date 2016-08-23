@@ -25,6 +25,7 @@ import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 import edu.umass.cs.reconfiguration.ReconfigurableNode;
 import edu.umass.cs.utils.Config;
+import edu.umass.cs.utils.DelayProfiler;
 
 /**
  * @author gaozy
@@ -151,8 +152,8 @@ public class ActiveHandler {
 		executor = new ThreadPoolExecutor(numProcess*numThread, numProcess*numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());		
 		executor.prestartAllCoreThreads();
 		
-		String guid = "zhaoyu";
-		String field = "gao";
+		String guid = "4B48F507395639FD806459281C3C09BCBB16FDFF";
+		String field = "someField";
 		String noop_code = "";
 		try {
 			noop_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/noop.js")));
@@ -160,7 +161,7 @@ public class ActiveHandler {
 			e.printStackTrace();
 		} 
 		ValuesMap value = new ValuesMap();
-		value.put(field, "hello world");
+		value.put(field, "someValue");
 		
 		// initialize a handler
 		ActiveHandler handler = new ActiveHandler("", null, numProcess, numThread, blocking);
@@ -182,6 +183,8 @@ public class ActiveHandler {
 		System.out.println("The throughput is "+n*1000.0/elapsed);
 		handler.shutdown();
 		
+		System.out.println(DelayProfiler.getStats());
+		System.exit(0);
 	}
 	
 }
