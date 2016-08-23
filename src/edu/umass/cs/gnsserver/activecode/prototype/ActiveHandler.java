@@ -22,6 +22,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingC
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.utils.Util;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 import edu.umass.cs.reconfiguration.ReconfigurableNode;
 import edu.umass.cs.utils.Config;
@@ -180,7 +181,7 @@ public class ActiveHandler {
 		
 		long elapsed = System.currentTimeMillis() - t1;
 		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
-		System.out.println("The throughput is "+n*1000.0/elapsed);
+		System.out.println("The throughput is "+Util.df(n*1000.0/elapsed)+"reqs/sec");
 		handler.shutdown();
 		
 		System.out.println(DelayProfiler.getStats());

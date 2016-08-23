@@ -54,9 +54,9 @@ public class ActiveBlockingWorker {
 		try {
 			runWorker();
 		} catch (JSONException | IOException e) {
-			e.printStackTrace();
-			// close the channel and exit
+			// e.printStackTrace();			
 		}finally{
+			// close the channel and exit
 			channel.close();
 		}
 		
@@ -76,7 +76,7 @@ public class ActiveBlockingWorker {
 					try {
 						response = future.get(msg.getBudget(), TimeUnit.MILLISECONDS);
 					} catch (InterruptedException | ExecutionException | TimeoutException e) {
-						e.printStackTrace();
+						// e.printStackTrace();
 						// construct a response with an error and cancel this task
 						future.cancel(true);
 						response = new ActiveMessage(msg.getId(), null, e.getMessage());

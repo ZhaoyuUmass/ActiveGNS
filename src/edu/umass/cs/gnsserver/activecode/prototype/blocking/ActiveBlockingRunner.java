@@ -77,6 +77,7 @@ public class ActiveBlockingRunner {
 	 * @throws NoSuchMethodException
 	 */
 	public synchronized ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+		long t = System.nanoTime();
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);

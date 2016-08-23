@@ -82,7 +82,7 @@ public class ActiveNamedPipe implements Channel {
 			try {
 				am = new ActiveMessage(buffer);
 			} catch (JSONException e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 		}
 		
