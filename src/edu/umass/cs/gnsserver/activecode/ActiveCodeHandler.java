@@ -30,13 +30,17 @@ import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.umass.cs.gigapaxos.PaxosConfig;
+import edu.umass.cs.gigapaxos.PaxosConfig.PC;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveHandler;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.Config;
 
 /**
  * This class is the entry of activecode, it provides
@@ -60,13 +64,15 @@ public class ActiveCodeHandler {
 	 */
 	public static final boolean enableDebugging = false; 
 	
+	private static String gigapaxoConfig = PaxosConfig.GIGAPAXOS_CONFIG_FILE_KEY;
+	
 	/**
 	 * Initializes an ActiveCodeHandler
 	 * @param nodeId 
 	 */
 	public ActiveCodeHandler(String nodeId) {
 		this.nodeId = nodeId;
-		String configFile = System.getProperty("activeFile");
+		String configFile = System.getProperty(gigapaxoConfig);
 		if(configFile != null && new File(configFile).exists()){
 			try {
 				new ActiveCodeConfig(configFile);
