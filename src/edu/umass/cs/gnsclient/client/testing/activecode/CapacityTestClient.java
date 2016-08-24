@@ -108,6 +108,7 @@ public class CapacityTestClient extends DefaultTest {
 	 * 
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
+		
 		for(int i=0; i<numClients; i++){
 			executor.execute(new SingleGNSClientTask(clients[i], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		}
