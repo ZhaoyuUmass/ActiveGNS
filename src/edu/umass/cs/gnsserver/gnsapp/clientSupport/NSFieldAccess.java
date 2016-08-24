@@ -311,6 +311,7 @@ public class NSFieldAccess {
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String field, String guid,
           ValuesMap originalValues, GNSApplicationInterface<String> gnsApp)
           throws FailedDBOperationException {
+	  long t = System.nanoTime();
 	  if(!AppOptionsOld.enableActiveCode) return originalValues;
 	  
     ValuesMap newResult = originalValues;
@@ -356,6 +357,7 @@ public class NSFieldAccess {
         }
       }
     }
+    DelayProfiler.updateDelayNano("activeTotal", t);
     return newResult;
   }
 }

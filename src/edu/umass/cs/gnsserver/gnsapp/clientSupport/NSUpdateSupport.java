@@ -26,6 +26,8 @@ import edu.umass.cs.gnsserver.utils.ResultValue;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 import edu.umass.cs.utils.Config;
+import edu.umass.cs.utils.DelayProfiler;
+
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -175,6 +177,7 @@ public class NSUpdateSupport {
     // Only do active field handling for user fields.
 	  //FIXME: field could be null and it's an internalField, then a bug is triggered
 	  //This is a temporary fix to the problem
+	  long t = System.nanoTime();
 	  if(field==null){
 		 field = (String) userJSON.keys().next();
 	  }
@@ -204,6 +207,7 @@ public class NSUpdateSupport {
         return activeCodeHandler.runCode(header, code, guid, field, "write", packetValuesMap, hopLimit);
       }
     }
+    DelayProfiler.updateDelayNano("activeTotal", t);
     return null;
   }
 
