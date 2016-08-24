@@ -80,7 +80,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	}
 
 	private static void initStaticParams() {
-		accountGUIDPrefix = Config.getGlobalString(GNSTC.ACCOUNT_GUID_PREFIX);
+		accountGUIDPrefix = Config.getGlobalString(TC.TEST_GUID_PREFIX);
 		numGuidsPerAccount = Config.getGlobalInt(GNSTC.NUM_GUIDS_PER_ACCOUNT);
 		accountGuidsOnly = Config.getGlobalBoolean(GNSTC.ACCOUNT_GUIDS_ONLY);
 		numClients = Config.getGlobalInt(TC.NUM_CLIENTS);
