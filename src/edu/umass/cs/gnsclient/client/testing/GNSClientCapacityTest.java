@@ -91,9 +91,9 @@ public class GNSClientCapacityTest extends DefaultTest {
 		guidEntries = new GuidEntry[numGuids];
 		if(System.getProperty("isRead")!=null){
 			isRead = Boolean.parseBoolean(System.getProperty("isRead"));
-			System.out.println("Set to write operation!");
+			
 		}
-		
+		System.out.println(isRead?"Set to read operation!":"Set to write operation");
 	}
 
 	private static void setupClientsAndGuids() throws Exception {
