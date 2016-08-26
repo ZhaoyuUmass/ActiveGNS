@@ -120,7 +120,7 @@ public class CapacityTestClient extends DefaultTest {
 	 * 
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
-		long t = System.currentTimeMillis();
+		
 		for(int i=0; i<numClients; i++){
 			executor.execute(new SingleGNSClientTask(clients[i], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		}
@@ -131,7 +131,7 @@ public class CapacityTestClient extends DefaultTest {
 			e.printStackTrace();
 		}
 		executor.shutdown();
-		System.out.println("It takes "+(System.currentTimeMillis()-t)+"ms to send all requests.");
+		
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
@@ -188,6 +188,7 @@ public class CapacityTestClient extends DefaultTest {
 			/**
 			 * 2nd round
 			 */
+			long t1 = System.currentTimeMillis();
 			System.out.println("Start running with 2nd round");
 			for (int i=0; i<total; i++){
 				if(!executor.isShutdown()){
@@ -199,7 +200,7 @@ public class CapacityTestClient extends DefaultTest {
 			while(getRcvd() < total){
 				;
 			}
-			
+			System.out.println("It takes "+(System.currentTimeMillis()-t1)+"ms to send all requests.");
 		}		
 	}
 	
