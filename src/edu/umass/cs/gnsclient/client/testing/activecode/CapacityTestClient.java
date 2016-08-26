@@ -153,12 +153,13 @@ public class CapacityTestClient extends DefaultTest {
 			 * warm up for 1 round
 			 */
 			System.out.println("Start running with 1st round");
-			for (int i=0; i<total; i++){
+			long t = System.currentTimeMillis();
+			for (int i=0; i<rate*10; i++){
 				executor.submit(isRead?new ReadTask(client, entry, withSignature, true):new WriteTask(client, entry, withSignature, true));
 				rateLimiter.record();
 			}
 			
-			while(getRcvd() <total){
+			while(getRcvd() <rate*10){
 				System.out.println("Received "+getRcvd()+" requests, waiting for the rest");
 				try {
 					Thread.sleep(1000);
@@ -168,6 +169,15 @@ public class CapacityTestClient extends DefaultTest {
 			}
 			System.out.println("1st round: "+received+" requests, "+Util.df(elapsed/received)+"us");
 			reset();
+			long wait = 20000 - (System.currentTimeMillis() - t);
+			// let the second round start roughly at the same time
+			if(wait >0){
+				try {
+					Thread.sleep(wait);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 			
 			/**
 			 * 2nd round
