@@ -154,7 +154,7 @@ public class CapacityTestClient extends DefaultTest {
 			 */
 			System.out.println("Start running with 1st round");
 			for (int i=0; i<total; i++){
-				executor.submit(isRead?new ReadTask(client, entry, withSignature, false):new WriteTask(client, entry, withSignature, false));
+				executor.submit(isRead?new ReadTask(client, entry, withSignature, true):new WriteTask(client, entry, withSignature, true));
 				rateLimiter.record();
 			}
 			
