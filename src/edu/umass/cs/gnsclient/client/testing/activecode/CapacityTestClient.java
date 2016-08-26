@@ -121,7 +121,7 @@ public class CapacityTestClient extends DefaultTest {
 		}
 		
 		try {
-			executor.awaitTermination(DURATION*3, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION*2, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -182,6 +182,7 @@ public class CapacityTestClient extends DefaultTest {
 			/**
 			 * 2nd round
 			 */
+			t = System.currentTimeMillis();
 			System.out.println("Start running with 2nd round");
 			for (int i=0; i<total; i++){
 				if(!executor.isShutdown()){
@@ -193,6 +194,7 @@ public class CapacityTestClient extends DefaultTest {
 			while(getRcvd() <total){
 				;
 			}
+			System.out.println("It takes "+(System.currentTimeMillis()-t)+"ms to send all requests.");
 		}		
 	}
 	
