@@ -101,7 +101,7 @@ public class CapacityTestClient extends DefaultTest {
 		entry = new GuidEntry(input);
 		assert(entry != null);
 		
-		executor = Executors.newFixedThreadPool(100);
+		executor = Executors.newFixedThreadPool(20);
 		
 		clients = new GNSClientCommands[numClients];
 		for (int i=0; i<numClients; i++){
