@@ -48,11 +48,18 @@ public class CapacityTestClient extends DefaultTest {
 	
 	private static ExecutorService executor;
 	
-	private static int total = 0;
+	private static int received = 0;
 	private static long elapsed = 0;
 	static synchronized void increaseLatency(long lat){
-		total++;
+		received++;
 		elapsed += lat;
+	}
+	static synchronized void reset(){
+		received = 0;
+		elapsed = 0;
+	}
+	static int getRcvd(){
+		return received;
 	}
 	
 	/**
@@ -114,7 +121,7 @@ public class CapacityTestClient extends DefaultTest {
 		}
 		
 		try {
-			executor.awaitTermination(DURATION+5000, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION*3, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -140,19 +147,45 @@ public class CapacityTestClient extends DefaultTest {
 		
 		@Override
 		public void run() {
+			
 			RateLimiter rateLimiter = new RateLimiter(rate);
 			/**
-			 * warm up
+			 * warm up for 1 round
 			 */
-			for (int i=0; i<rate; i++){
+			System.out.println("Start running with 1st round");
+			for (int i=0; i<total; i++){
 				executor.submit(isRead?new ReadTask(client, entry, withSignature, false):new WriteTask(client, entry, withSignature, false));
 				rateLimiter.record();
 			}
 			
+			while(getRcvd() <total){
+				System.out.println("Received "+getRcvd()+" requests, waiting for the rest");
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			System.out.println("1st round: "+received+" requests, "+Util.df(elapsed/received)+"us");
+			reset();
+			
+			/**
+			 * 2nd round
+			 */
+			System.out.println("Start running with 2nd round");
 			for (int i=0; i<total; i++){
 				if(!executor.isShutdown()){
 					executor.submit(isRead?new ReadTask(client, entry, withSignature, true):new WriteTask(client, entry, withSignature, true));
 					rateLimiter.record();
+				}
+			}
+			
+			while(getRcvd() <total){
+				System.out.println("Received "+getRcvd()+" requests, waiting for the rest");
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 		}		
@@ -243,10 +276,10 @@ public class CapacityTestClient extends DefaultTest {
 		for (long lat:latency){
 			writer.write(lat+"\n");			
 		}*/
-		writer.write(total+" "+elapsed/total+"\n");
+		writer.write(received+" "+elapsed/received+"\n");
 		writer.flush();
 		writer.close();
-		System.out.println("There are "+total+" requests, and average latency is "+Util.df(elapsed/total)+"us");
+		System.out.println("There are "+received+" requests, and average latency is "+Util.df(elapsed/received)+"us");
 	}
 	
 	/**
