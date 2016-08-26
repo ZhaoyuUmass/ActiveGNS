@@ -181,12 +181,7 @@ public class CapacityTestClient extends DefaultTest {
 			}
 			
 			while(getRcvd() <total){
-				System.out.println("Received "+getRcvd()+" requests, waiting for the rest");
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				;
 			}
 		}		
 	}
