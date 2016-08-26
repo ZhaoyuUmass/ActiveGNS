@@ -121,17 +121,15 @@ public class CapacityTestClient extends DefaultTest {
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
 		
-		for(int i=0; i<numClients; i++){
-			executor.execute(new SingleGNSClientTask(clients[i], entry, ((Integer) RATE).doubleValue(), TOTAL));
-		}
-		
+		new Thread(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL)).start();
+		/*
 		try {
 			executor.awaitTermination(DURATION*2, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		executor.shutdown();
-		
+		*/
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
