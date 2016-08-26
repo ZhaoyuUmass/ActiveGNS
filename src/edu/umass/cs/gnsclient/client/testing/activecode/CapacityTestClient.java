@@ -33,6 +33,7 @@ public class CapacityTestClient extends DefaultTest {
 	 * Test for 1 min
 	 */
 	private final static int DURATION = 60*1000;
+	private static int NUM_THREAD = 20;
 	
 	private static int numClients;
 	private static String someField = "someField";
@@ -93,6 +94,10 @@ public class CapacityTestClient extends DefaultTest {
 			isRead = Boolean.parseBoolean(System.getProperty("isRead"));
 		}
 		
+		if(System.getProperty("numThread")!=null){
+			NUM_THREAD = Integer.parseInt(System.getProperty("numThread"));
+		}
+		
 		String keyFile = "guid";
 		if(System.getProperty("keyFile")!= null){
 			keyFile = System.getProperty("keyFile");
@@ -101,7 +106,7 @@ public class CapacityTestClient extends DefaultTest {
 		entry = new GuidEntry(input);
 		assert(entry != null);
 		
-		executor = Executors.newFixedThreadPool(20);
+		executor = Executors.newFixedThreadPool(NUM_THREAD);
 		
 		clients = new GNSClientCommands[numClients];
 		for (int i=0; i<numClients; i++){
