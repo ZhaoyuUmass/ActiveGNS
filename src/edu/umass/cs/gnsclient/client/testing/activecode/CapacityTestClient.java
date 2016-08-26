@@ -121,15 +121,15 @@ public class CapacityTestClient extends DefaultTest {
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
 		
-		new Thread(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL)).start();
-		/*
+		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
+		
 		try {
-			executor.awaitTermination(DURATION*2, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION+15000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		executor.shutdown();
-		*/
+		
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
@@ -173,7 +173,7 @@ public class CapacityTestClient extends DefaultTest {
 			}
 			System.out.println("1st round: "+received+" requests, "+Util.df(elapsed/received)+"us");
 			reset();
-			long wait = 20000 - (System.currentTimeMillis() - t);
+			long wait = 12000 - (System.currentTimeMillis() - t);
 			// let the second round start roughly at the same time
 			if(wait >0){
 				try {
