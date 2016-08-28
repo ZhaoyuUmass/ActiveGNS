@@ -43,18 +43,24 @@ public class ActiveCodeConfig {
 	   */
 	  public static boolean acitveCodeBlockingEnabled = false;
 	  
+	  
+	  /**
+	   * Worker heap size
+	   */
+	  public static int activeWorkerHeapSize = 128;
+	  
 	  /**
 	   * Number of spare workers.
 	   */
 	  public static int activeCodeSpareWorker = 0;
 	  
 	  /**
-	   * True if timeout is enabled, i.e., ActiveCodeGuardian thread will run.
+	   * Deprecated: True if timeout is enabled, i.e., ActiveCodeGuardian thread will run.
 	   */
 	  public static boolean activeCodeEnableTimeout = true;
 	  
 	  /**
-	   * Enable debug message in active code package
+	   * Deprecated: Enable debug message in active code package
 	   */
 	  public static boolean activeCodeEnableDebugging = false;
 	  
@@ -64,6 +70,8 @@ public class ActiveCodeConfig {
 	  private static final String ACTIVE_WORKER_THREADS = "ACTIVE_WORKER_THREADS";
 	  
 	  private static final String ACTIVE_CODE_BLOCKING_ENABLED = "ACTIVE_CODE_BLOCKING_ENABLED"; 
+	  
+	  private static final String ACTIVE_WORKER_HEAP_SIZE = "ACTIVE_WORKER_HEAP_SIZE";
 	  
 	  private static final String ACTIVE_CODE_SPARE_WORKER = "ACTIVE_CODE_SPARE_WORKER";
 	  
@@ -95,8 +103,13 @@ public class ActiveCodeConfig {
 		    if (allValues.containsKey(ACTIVE_CODE_ENABLE_DEBUGGING)) {
 		    	activeCodeEnableDebugging = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_ENABLE_DEBUGGING));
 		    }
+		    
 		    if(allValues.containsKey(ACTIVE_CODE_BLOCKING_ENABLED)) {
 		    	acitveCodeBlockingEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_BLOCKING_ENABLED));
+		    }
+		    
+		    if(allValues.containsKey(ACTIVE_WORKER_HEAP_SIZE)){
+		    	activeWorkerHeapSize = Integer.parseInt(ACTIVE_WORKER_HEAP_SIZE);
 		    }
 	  }
 	 
@@ -106,6 +119,7 @@ public class ActiveCodeConfig {
 	 */
 	public static void main(String[] args) throws IOException{
 		
+		@SuppressWarnings("unused")
 		ActiveCodeConfig conf = new ActiveCodeConfig("conf/activeCode/active.properties");
 		System.out.println(activeCodeWorkerCount+" "+activeWorkerThreads);
 		

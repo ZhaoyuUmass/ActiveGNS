@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 
+import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveQueryHandler;
@@ -41,7 +42,7 @@ import edu.umass.cs.utils.DelayProfiler;
  */
 public class ActiveNonBlockingClient implements Runnable,Client {
 	
-	private final static int DEFAULT_HEAP_SIZE = 128;
+	private final static int DEFAULT_HEAP_SIZE = ActiveCodeConfig.activeWorkerHeapSize;
 	
 	private ActiveQueryHandler queryHandler;
 	private final String nodeId;
