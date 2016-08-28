@@ -31,7 +31,7 @@ public class ActiveCodeConfig {
 	 /**
 	   * Number of active code worker.
 	   */
-	  public static int activeCodeWorkerCount = 2;
+	  public static int activeCodeWorkerCount = 1;
 	  
 	  /**
 	   * Number of threads running in each worker
@@ -109,7 +109,7 @@ public class ActiveCodeConfig {
 		    }
 		    
 		    if(allValues.containsKey(ACTIVE_WORKER_HEAP_SIZE)){
-		    	activeWorkerHeapSize = Integer.parseInt(ACTIVE_WORKER_HEAP_SIZE);
+		    	activeWorkerHeapSize = Integer.parseInt(allValues.getProperty(ACTIVE_WORKER_HEAP_SIZE));
 		    }
 	  }
 	 
