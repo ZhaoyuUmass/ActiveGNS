@@ -124,7 +124,7 @@ public class CapacityTestClient extends DefaultTest {
 		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		
 		try {
-			executor.awaitTermination(DURATION+15000, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION*2, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

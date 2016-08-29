@@ -113,7 +113,7 @@ public class ActiveCodeHandler {
 	 * @param activeCodeTTL current default is 10
 	 * @return executed result
 	 */
-	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
+	public ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
 		} catch (Exception e) {
@@ -138,7 +138,7 @@ public class ActiveCodeHandler {
 	 * @throws JSONException 
 	 */
 	public static void main(String[] args) throws InterruptedException, ExecutionException, IOException, JSONException {
-		new ActiveCodeHandler("Test");
+		ActiveCodeHandler handler = new ActiveCodeHandler("Test");
 		
 		// initialize the parameters used in the test 
 		JSONObject obj = new JSONObject();
@@ -150,12 +150,12 @@ public class ActiveCodeHandler {
 		
 		String noop_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/noop.js"))); 
 		String noop_code64 = Base64.encodeToString(noop_code.getBytes("utf-8"), true);
-		ActiveCodeHandler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
+		handler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
 		
 		int n = 1000000;
 		long t = System.currentTimeMillis();
 		for(int i=0; i<n; i++){
-			ActiveCodeHandler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
+			handler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
 		}
 		long elapsed = System.currentTimeMillis() - t;
 		System.out.println(String.format("it takes %d ms, avg_latency = %f us", elapsed, elapsed*1000.0/n));
