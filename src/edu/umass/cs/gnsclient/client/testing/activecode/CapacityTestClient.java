@@ -124,7 +124,7 @@ public class CapacityTestClient extends DefaultTest {
 		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		
 		try {
-			executor.awaitTermination(DURATION*2, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION+20000, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -156,31 +156,9 @@ public class CapacityTestClient extends DefaultTest {
 			/**
 			 * warm up for 1 round
 			 */
-			System.out.println("Start running with 1st round");
-			long t = System.currentTimeMillis();
 			for (int i=0; i<rate*10; i++){
-				executor.submit(isRead?new ReadTask(client, entry, withSignature, true):new WriteTask(client, entry, withSignature, true));
+				executor.submit(isRead?new ReadTask(client, entry, withSignature, false):new WriteTask(client, entry, withSignature, false));
 				rateLimiter.record();
-			}
-			
-			while(getRcvd() <rate*10){
-				System.out.println("Received "+getRcvd()+" requests, waiting for the rest");
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			System.out.println("1st round: "+received+" requests, "+Util.df(elapsed/received)+"us");
-			reset();
-			long wait = 12000 - (System.currentTimeMillis() - t);
-			// let the second round start roughly at the same time
-			if(wait >0){
-				try {
-					Thread.sleep(wait);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 			}
 			
 			/**
