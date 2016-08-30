@@ -43,7 +43,7 @@ public class CapacityTestClient extends DefaultTest {
 	private static String resultFile;
 	private static int TOTAL;
 	private static boolean isRead;
-	
+	private static int EXTRA_WAIT_TIME; // second
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
 	
@@ -89,6 +89,11 @@ public class CapacityTestClient extends DefaultTest {
 		}
 		TOTAL = RATE*DURATION/1000;
 		
+		EXTRA_WAIT_TIME = 0;
+		if(System.getProperty("extraTime") != null){
+			EXTRA_WAIT_TIME = 1000*Integer.parseInt(System.getProperty("extraTime"));
+		}
+		
 		isRead = true;
 		if(System.getProperty("isRead")!=null){
 			isRead = Boolean.parseBoolean(System.getProperty("isRead"));
@@ -124,7 +129,7 @@ public class CapacityTestClient extends DefaultTest {
 		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		
 		try {
-			executor.awaitTermination(DURATION+12000, TimeUnit.MILLISECONDS);
+			executor.awaitTermination(DURATION+15000+EXTRA_WAIT_TIME, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
