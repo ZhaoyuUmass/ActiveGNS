@@ -310,12 +310,9 @@ public class ActiveBlockingClient implements Client {
 	public synchronized ValuesMap runCode(InternalRequestHeader header, String guid, String field, 
 			String code, ValuesMap valuesMap, int ttl, long budget) throws ActiveException {
 		
-		long t1 = System.nanoTime();
 		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
 		sendMessage(msg);
-		DelayProfiler.updateDelayNano("activeSendMessage", t1);
 		
-		long t2 = System.nanoTime();
 		ActiveMessage response = null;
 		while( true ){
 			try {
@@ -348,8 +345,6 @@ public class ActiveBlockingClient implements Client {
 			throw new ActiveException();
 		}
 		counter.getAndIncrement();
-			
-		DelayProfiler.updateDelayNano("activeGetResult", t2);
 		
 		return response.getValue();
 	}

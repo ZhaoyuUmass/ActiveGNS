@@ -350,26 +350,23 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	public ValuesMap runCode(InternalRequestHeader header, String guid, String field, 
 			String code, ValuesMap valuesMap, int ttl, long budget) throws ActiveException {
 		
-		long t1 = System.nanoTime();
 		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
 		Monitor monitor = new Monitor();
 		tasks.put(msg.getId(), monitor);
 		
-		long t2 = 0;
 		ActiveMessage response = null;
 		synchronized(monitor){
 			while( !monitor.getDone() ){				
 				try {
 					if(!monitor.getWait()){
 						sendMessage(msg);
-						DelayProfiler.updateDelayNano("activeSendMessage", t1);
 						monitor.setWait();
 					}					
 					monitor.wait();
 				} catch (InterruptedException e) {
 					// this thread is interrupted, do nothing
 				}				
-				t2 = System.nanoTime();
+				
 				response = monitor.getResult();	
 				
 				if(response == null){
@@ -390,8 +387,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 			throw new ActiveException();
 		}
 		counter.getAndIncrement();
-		tasks.remove(response.getId());		
-		DelayProfiler.updateDelayNano("activeGetResult", t2);
+		tasks.remove(response.getId());
 		
 		return response.getValue();
 	}

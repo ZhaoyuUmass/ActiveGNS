@@ -139,8 +139,7 @@ public class NSFieldAccess {
   public static ValuesMap lookupFieldsLocalNoAuth(InternalRequestHeader header, String guid, List<String> fields,
           ColumnFieldType returnFormat, ClientRequestHandlerInterface handler)
           throws FailedDBOperationException {
-	  return lookupFieldsLocalNoAuth(header, guid, fields, returnFormat, handler);
-	  
+	  return lookupFieldsLocalNoAuth(header, guid, fields, returnFormat, handler, true);  
   }
 
   public static ValuesMap lookupFieldsLocalNoAuth(InternalRequestHeader header, String guid, List<String> fields,

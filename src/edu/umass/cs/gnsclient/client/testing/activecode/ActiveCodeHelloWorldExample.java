@@ -65,7 +65,9 @@ public class ActiveCodeHelloWorldExample {
 		client.fieldUpdate(entry,  field, value);
 		client.fieldUpdate(entry, depth_field, depth_result);
 		
+		// clear code for both read and write action
 		client.activeCodeClear(entry.getGuid(), ActiveCode.READ_ACTION, entry);
+		client.activeCodeClear(entry.getGuid(), ActiveCode.WRITE_ACTION, entry);
 		
 		// get the value of the field
 		String response = client.fieldRead(entry, field);
