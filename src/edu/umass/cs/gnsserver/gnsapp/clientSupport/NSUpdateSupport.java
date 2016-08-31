@@ -17,6 +17,7 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Activ
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.InternalField;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.MetaDataTypeName;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.UpdateOperation;
+import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
@@ -150,7 +151,7 @@ public class NSUpdateSupport {
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException {
-    ValuesMap newValue = null;
+    ValuesMap newValue = userJSON;
     if (activeCodeHandler != null) {
       try {
         newValue = handleActiveCode(header, guid, field, userJSON, db, activeCodeHandler);
@@ -159,10 +160,7 @@ public class NSUpdateSupport {
                 "JSON problem while handling active code: {0}", e);
       }
     }
-    if (newValue == null) {
-      newValue = userJSON;
-    }
-    // END ACTIVE CODE HANDLING
+    
     if (field != null) {
       ClientSupportConfig.getLogger().log(Level.FINE,
               "field={0}, operation={1}, value={2}, name_record={3}",
@@ -174,14 +172,16 @@ public class NSUpdateSupport {
   }
 
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, JSONException {
-    // Only do active field handling for user fields.
+	  long t = System.nanoTime();
+	  if(!AppOptionsOld.enableActiveCode) return userJSON;
+	  // Only do active field handling for user fields.
 	  //FIXME: field could be null and it's an internalField, then a bug is triggered
 	  //This is a temporary fix to the problem
-	  long t = System.nanoTime();
 	  if(field==null){
 		 field = (String) userJSON.keys().next();
 	  }
 	  
+	ValuesMap newResult = userJSON;
     if ( !InternalField.isInternalField(field) ) {
       NameRecord activeCodeNameRecord = null;
       try {
@@ -199,16 +199,16 @@ public class NSUpdateSupport {
         // do nothing
       }
       int hopLimit = 1;
+      
       if (activeCodeNameRecord != null
               && activeCodeHandler.hasCode(codeMap, ActiveCode.WRITE_ACTION)) {
         String code = codeMap.getString(ActiveCode.ON_WRITE);
-        ValuesMap packetValuesMap = userJSON;
         //ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}", new Object[]{guid, field, packetValuesMap.toReasonableString()});
-        return activeCodeHandler.runCode(header, code, guid, field, "write", packetValuesMap, hopLimit);
+        newResult = activeCodeHandler.runCode(header, code, guid, field, "write", userJSON, hopLimit);
       }
     }
     DelayProfiler.updateDelayNano("activeTotal", t);
-    return null;
+    return newResult;
   }
 
 }
