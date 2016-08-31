@@ -113,7 +113,7 @@ public class ActiveCodeHandler {
 	 * @param activeCodeTTL current default is 10
 	 * @return executed result
 	 */
-	public ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
+	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
 		} catch (Exception e) {

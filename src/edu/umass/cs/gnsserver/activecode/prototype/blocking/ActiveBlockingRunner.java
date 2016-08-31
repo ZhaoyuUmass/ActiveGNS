@@ -66,6 +66,15 @@ public class ActiveBlockingRunner {
 	}
 	
 	/**
+	 * This method first update the cache of code, 
+	 * then set the context with the cached code 
+	 * for the script engine, finally invokes the
+	 * "run" method.
+	 * 
+	 * <p>Based on the answer of Nashorn builder on stackoverflow:
+	 * http://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424
+	 * there is no need to make this method synchronized any more.
+	 * 
 	 * @param guid
 	 * @param field
 	 * @param code
@@ -76,8 +85,7 @@ public class ActiveBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public synchronized ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
-		long t = System.nanoTime();
+	public ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);
