@@ -146,6 +146,8 @@ public class GNSCommandInternal extends InternalCommandPacket {
 	 * operations, we need the identity of {@code querierGUID} to perform ACL
 	 * checks or to "charge" it an operation for accounting purposes, but we
 	 * don't need to generate or verify its signatures.
+	 * FIXME: field is not needed as it will go through the userJSON branch in
+	 * edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.data.AbstractUpdate
 	 * 
 	 * @param header
 	 * 
@@ -161,8 +163,7 @@ public class GNSCommandInternal extends InternalCommandPacket {
 			JSONObject value, InternalRequestHeader header)
 			throws JSONException, InternalRequestException {
 		return getCommand(CommandType.ReplaceUserJSONUnsigned, header,
-				GNSCommandProtocol.GUID, targetGUID, GNSCommandProtocol.FIELD,
-				field, GNSCommandProtocol.USER_JSON,
-				value);
+				GNSCommandProtocol.GUID, targetGUID, 
+				GNSCommandProtocol.USER_JSON, value);
 	}
 }
