@@ -47,9 +47,9 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	public void write(InternalRequestHeader header, String targetGUID,
 			String field, JSONObject value) throws ClientException, InternalRequestException {
 		try {
-			Request request = this.executeCommand(GNSCommandInternal.fieldUpdate(targetGUID, field,
+			Request response = this.executeCommand(GNSCommandInternal.fieldUpdate(targetGUID, field,
 					value, header));
-			InternalCommandPacket packet = (InternalCommandPacket) request;
+			InternalCommandPacket packet = (InternalCommandPacket) response;
 		} catch (IOException | JSONException e) {
 			throw new ClientException(e);
 		}

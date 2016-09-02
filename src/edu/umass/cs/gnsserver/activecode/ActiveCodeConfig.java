@@ -36,7 +36,7 @@ public class ActiveCodeConfig {
 	  /**
 	   * Number of threads running in each worker
 	   */
-	  public static int activeWorkerThreads = 1;
+	  public static int activeWorkerThreads = 10;
 	  
 	  /**
 	   * switch between blocking and non-blocking design

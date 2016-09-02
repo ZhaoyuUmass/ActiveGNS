@@ -163,6 +163,6 @@ public class GNSCommandInternal extends InternalCommandPacket {
 		return getCommand(CommandType.ReplaceUserJSONUnsigned, header,
 				GNSCommandProtocol.GUID, targetGUID, GNSCommandProtocol.FIELD,
 				field, GNSCommandProtocol.USER_JSON,
-				new JSONObject().put(field, value));
+				value);
 	}
 }
