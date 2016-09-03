@@ -81,7 +81,9 @@ public class ActiveNonBlockingWorker {
 					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel, map));
 					
 				} else if (msg.type == Type.RESPONSE ){
-					map.get(msg.getId()).release(msg);					
+					ActiveNonBlockingRunner runner = map.get(msg.getId());
+					if(runner !=null)
+						runner.release(msg);					
 				} 
 			}else{
 				// The client is shutdown
