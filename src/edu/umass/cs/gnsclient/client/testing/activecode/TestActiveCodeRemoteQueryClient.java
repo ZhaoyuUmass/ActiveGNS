@@ -96,6 +96,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
+		Thread.sleep(1000);
 		
 		String response = null;
 		try {
@@ -185,7 +186,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		
+		Thread.sleep(1000);
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			fail("A write followed with a write operation should not succeed.");
