@@ -90,18 +90,21 @@ public class ActiveCodeHandler {
 	
 	/**
 	 * Checks to see if this guid has active code for the specified action.
+	 * This function is only used for test, not used in system any more.
 	 * @param valuesMap 
 	 * @param action can be 'read' or 'write'
 	 * @return whether or not there is active code
 	 */
 	public static boolean hasCode(ValuesMap valuesMap, String action) {
-		try {
-            if(valuesMap.get(ActiveCode.getCodeField(action)) != null){
-            	return true;
-            }
-		} catch (Exception e) {
-			return false;
-		}
+
+            try {
+				if(valuesMap.get(ActiveCode.getCodeField(action)) != null){
+					return true;
+				}
+			} catch (JSONException e) {
+				return false;
+			}
+		
 		return false;
 	}
 	

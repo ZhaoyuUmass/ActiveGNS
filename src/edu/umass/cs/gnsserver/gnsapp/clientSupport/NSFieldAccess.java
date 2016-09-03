@@ -24,6 +24,7 @@ import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnsserver.database.ColumnFieldType;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
@@ -91,7 +92,11 @@ public class NSFieldAccess {
           throws FailedDBOperationException {
     ValuesMap valuesMap = lookupFieldLocalNoAuth(guid, field, ColumnFieldType.USER_JSON, gnsApp.getDB());
     if (handleActiveCode) {
-      valuesMap = NSFieldAccess.handleActiveCode(header, field, guid, valuesMap, gnsApp);
+      try {
+		valuesMap = NSFieldAccess.handleActiveCode(header, field, guid, valuesMap, gnsApp);
+		} catch (InternalRequestException e) {
+			// Active code field lookup failed, do nothing and return the original value
+		}
     }
     return valuesMap;
   }
@@ -310,8 +315,7 @@ public class NSFieldAccess {
   }
 
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String field, String guid,
-          ValuesMap originalValues, GNSApplicationInterface<String> gnsApp)
-          throws FailedDBOperationException {
+          ValuesMap originalValues, GNSApplicationInterface<String> gnsApp) throws InternalRequestException {
 	  long t = System.nanoTime();
 	  if(!AppOptionsOld.enableActiveCode) return originalValues;
 	  
@@ -330,32 +334,33 @@ public class NSFieldAccess {
       try {
         codeRecord = NameRecord.getNameRecordMultiUserFields(gnsApp.getDB(), guid,
                 ColumnFieldType.USER_JSON, ActiveCode.ON_READ);
-      } catch (RecordNotFoundException e) {
-        //GNS.getLogger().severe("Active code read record not found: " + e.getMessage());
+      } catch (RecordNotFoundException | FailedDBOperationException e) {
+    	// code can not be retrieved, return original value
+    	  return originalValues;
       }
       
       	ValuesMap codeMap = null;
 		try {
 			codeMap = codeRecord.getValuesMap();
 		} catch (FieldNotFoundException e) {
-			// do nothing
+			// No code deployed, return original value
+			return originalValues;
 		}
-      if (codeRecord != null && originalValues != null && gnsApp.getActiveCodeHandler() != null
-              && gnsApp.getActiveCodeHandler().hasCode(codeMap, ActiveCode.READ_ACTION)) {
-        try {
-          String code = codeMap.getString(ActiveCode.ON_READ);
+      if (codeMap != null && originalValues != null && gnsApp.getActiveCodeHandler() != null) {
+        String code;
+		try {
+			code = codeMap.getString(ActiveCode.ON_READ);
+		} catch (JSONException e) {
+			// No code deployed, return original value
+			return originalValues;
+		}
           ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}",
                   new Object[]{guid, field, originalValues.toString()});
 
           newResult = gnsApp.getActiveCodeHandler().runCode(header, code, guid, field,
                   "read", originalValues, hopLimit);
           ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0}",
-                  newResult.toString());
-
-        } catch (Exception e) {
-          ClientSupportConfig.getLogger().log(Level.FINE, "Active code error: {0}",
-                  e.getMessage());
-        }
+                  newResult.toString()); 
       }
     }
     DelayProfiler.updateDelayNano("activeTotal", t);

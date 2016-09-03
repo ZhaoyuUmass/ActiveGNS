@@ -10,6 +10,7 @@ package edu.umass.cs.gnsserver.gnsapp.clientSupport;
 import edu.umass.cs.gnscommon.GNSResponseCode;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.database.ColumnFieldType;
@@ -72,6 +73,7 @@ public class NSUpdateSupport {
    * @throws FailedDBOperationException
    * @throws RecordNotFoundException
    * @throws FieldNotFoundException
+ * @throws InternalRequestException 
    */
   public static GNSResponseCode executeUpdateLocal(InternalRequestHeader header, String guid, String field,
           String writer, String signature, String message, Date timestamp,
@@ -79,7 +81,7 @@ public class NSUpdateSupport {
           ValuesMap userJSON, GNSApplicationInterface<String> app, boolean doNotReplyToClient)
           throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
           SignatureException, JSONException, IOException, FailedDBOperationException,
-          RecordNotFoundException, FieldNotFoundException {
+          RecordNotFoundException, FieldNotFoundException, InternalRequestException {
     ClientSupportConfig.getLogger().log(Level.FINE,
             "Processing local update {0} / {1} {2} {3}",
             new Object[]{guid, field, operation, updateValue});
@@ -150,15 +152,10 @@ public class NSUpdateSupport {
 
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
-          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException {
+          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
     if (activeCodeHandler != null) {
-      try {
         newValue = handleActiveCode(header, guid, field, userJSON, db, activeCodeHandler);
-      } catch (JSONException e) {
-        ClientSupportConfig.getLogger().log(Level.SEVERE,
-                "JSON problem while handling active code: {0}", e);
-      }
     }
     
     if (field != null) {
@@ -169,9 +166,10 @@ public class NSUpdateSupport {
     }
     // Apply updateEntireValuesMap to record in the database
     nameRecord.updateNameRecord(field, updateValue, oldValue, argument, newValue, operation);
+    
   }
 
-  private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, JSONException {
+  private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws InternalRequestException {
 	  long t = System.nanoTime();
 	  if(!AppOptionsOld.enableActiveCode) return userJSON;
 	  // Only do active field handling for user fields.
@@ -187,23 +185,28 @@ public class NSUpdateSupport {
       try {
         activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,
                 ColumnFieldType.USER_JSON, ActiveCode.ON_WRITE);
-      } catch (RecordNotFoundException e) {
+      } catch (RecordNotFoundException | FailedDBOperationException e) {
+    	// code can not be retrieved, return original value
+    	  return userJSON;
       }
-      if (activeCodeNameRecord != null) {
-        ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0}", activeCodeNameRecord.toString());
-      }
+      
       ValuesMap codeMap = null;
       try {
         codeMap = activeCodeNameRecord.getValuesMap();
       } catch (FieldNotFoundException e) {
-        // do nothing
+    	// No code deployed, return original value
+    	  return userJSON;
       }
       int hopLimit = 1;
       
-      if (activeCodeNameRecord != null
-              && activeCodeHandler.hasCode(codeMap, ActiveCode.WRITE_ACTION)) {
-        String code = codeMap.getString(ActiveCode.ON_WRITE);
-        //ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}", new Object[]{guid, field, packetValuesMap.toReasonableString()});
+      if (codeMap != null && userJSON != null) {
+        String code;
+		try {
+			code = codeMap.getString(ActiveCode.ON_WRITE);
+		} catch (JSONException e) {
+			// no code deployed, return original value
+			return userJSON;
+		}
         newResult = activeCodeHandler.runCode(header, code, guid, field, "write", userJSON, hopLimit);
       }
     }
