@@ -182,16 +182,16 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
+		
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			fail("A write followed with a write operation should not succeed.");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-		System.out.println("Depth query test(a write followed by a write) succeeds!");
+		} catch (ClientException | JSONException e) {
+			System.out.println("Depth query test(a write followed by a write) succeeds!");
+		}		
 		
 		try {
-			//cleanup();
+			cleanup();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
