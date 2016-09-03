@@ -163,6 +163,9 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		}
 		assertEquals(someValue, response);
+		
+		// This sleep is required as a requirement for eventual consistency semantics of gigapaxos
+		Thread.sleep(1000);
 		try {
 			response = client.fieldRead(entries[1], someField);
 		} catch (Exception e1) {
@@ -171,7 +174,7 @@ public class TestActiveCodeRemoteQueryClient {
 		assertEquals(someValue, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
-		Thread.sleep(1000);
+		
 		
 		
 		// test a write followed by a write
@@ -203,6 +206,10 @@ public class TestActiveCodeRemoteQueryClient {
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]);
+			
+			client.fieldRemove(entries[0], someField);
+			client.fieldRemove(entries[1], someField);
+			client.fieldRemove(entries[1], depthField);
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
