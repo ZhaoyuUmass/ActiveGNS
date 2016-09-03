@@ -158,12 +158,6 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		
 		try {
-			JSONObject json = client.read(entries[1]);
-			System.out.println("Before running, the returned value is "+json);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-		try {
 			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -178,13 +172,6 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
 		Thread.sleep(1000);
-		
-		try {
-			JSONObject json = client.read(entries[1]);
-			System.out.println("After running, the returned value is "+json);
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
 		
 		
 		// test a write followed by a write

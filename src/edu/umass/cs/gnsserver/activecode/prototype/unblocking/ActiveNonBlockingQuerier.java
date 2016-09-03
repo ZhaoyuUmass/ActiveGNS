@@ -93,10 +93,10 @@ public class ActiveNonBlockingQuerier implements Querier {
 		ValuesMap value = null;
 		try{
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
+			channel.sendMessage(am);
 			synchronized(monitor){
 				while(!monitor.getDone()){				
-					try {
-						channel.sendMessage(am);
+					try {						
 						monitor.wait();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
@@ -124,13 +124,13 @@ public class ActiveNonBlockingQuerier implements Querier {
 	private void writeValueIntoField(String querierGuid, String queriedGuid, String field, ValuesMap value, int ttl)
 			throws ActiveException {
 		
-			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);
+			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);			
 			try {
-				
+				channel.sendMessage(am);
 				while(!monitor.getDone()){
 					synchronized(monitor){
 						try {
-							channel.sendMessage(am);
+							
 							monitor.wait();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
