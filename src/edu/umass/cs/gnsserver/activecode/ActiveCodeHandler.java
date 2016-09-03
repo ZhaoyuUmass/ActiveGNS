@@ -33,6 +33,7 @@ import org.json.JSONObject;
 import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.gigapaxos.PaxosConfig.PC;
 import edu.umass.cs.gnscommon.utils.Base64;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveHandler;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
@@ -116,10 +117,16 @@ public class ActiveCodeHandler {
 	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (ActiveException e) {
+			//e.printStackTrace();
+			/**
+			 *  return the original value without executing, as there is an error
+			 *  returned from the worker. The error indicates that the code failed
+			 *  to execute on worker. 
+			 *  Note: cannot return null as specified by gigapaxos execute method
+			 */
+			return valuesMap;
 		}
-		return null;
 	}
 	
 	/**

@@ -80,7 +80,6 @@ public class ActiveQueryHandler {
 	 */
 	public ActiveMessage handleWriteQuery(ActiveMessage am, InternalRequestHeader header) {
 		ActiveMessage resp;
-		System.out.println(">>>>>>>>>>>>>>>>>>>>>>> received update request "+am);
 		try {
 			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
 			resp = new ActiveMessage(am.getId(), new ValuesMap(), null);
