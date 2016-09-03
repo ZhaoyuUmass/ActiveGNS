@@ -384,7 +384,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		response = monitor.getResult();
 		
 		if(response.getError() != null){
-			throw new ActiveException();
+			throw new ActiveException(msg.toString());
 		}
 		counter.getAndIncrement();
 		tasks.remove(response.getId());

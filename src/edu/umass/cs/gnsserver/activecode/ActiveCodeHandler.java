@@ -32,6 +32,8 @@ import org.json.JSONObject;
 
 import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.gigapaxos.PaxosConfig.PC;
+import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveHandler;
@@ -113,8 +115,9 @@ public class ActiveCodeHandler {
 	 * @param valuesMap
 	 * @param activeCodeTTL current default is 10
 	 * @return executed result
+	 * @throws InternalRequestException 
 	 */
-	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) {
+	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) throws InternalRequestException {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
 		} catch (ActiveException e) {
@@ -125,7 +128,7 @@ public class ActiveCodeHandler {
 			 *  to execute on worker. 
 			 *  Note: cannot return null as specified by gigapaxos execute method
 			 */
-			return valuesMap;
+			throw new InternalRequestException(GNSResponseCode.INTERNAL_REQUEST_EXCEPTION, "ActiveGNS request execution failed:"+e.getMessage());
 		}
 	}
 	
@@ -143,8 +146,9 @@ public class ActiveCodeHandler {
 	 * @throws ExecutionException 
 	 * @throws IOException 
 	 * @throws JSONException 
+	 * @throws InternalRequestException 
 	 */
-	public static void main(String[] args) throws InterruptedException, ExecutionException, IOException, JSONException {
+	public static void main(String[] args) throws InterruptedException, ExecutionException, IOException, JSONException, InternalRequestException {
 		ActiveCodeHandler handler = new ActiveCodeHandler("Test");
 		
 		// initialize the parameters used in the test 

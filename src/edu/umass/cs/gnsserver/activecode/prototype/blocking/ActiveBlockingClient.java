@@ -342,7 +342,7 @@ public class ActiveBlockingClient implements Client {
 		}
 		
 		if(response.getError() != null){
-			throw new ActiveException();
+			throw new ActiveException(msg.toString());
 		}
 		counter.getAndIncrement();
 		
