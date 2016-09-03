@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -155,6 +156,13 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		Thread.sleep(1000);
 		
+		
+		try {
+			JSONObject json = client.read(entries[1]);
+			System.out.println("Before running, the returned value is "+json);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 		try {
 			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
@@ -171,9 +179,15 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		Thread.sleep(1000);
 		
+		try {
+			JSONObject json = client.read(entries[1]);
+			System.out.println("After running, the returned value is "+json);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
 		
 		// test a write followed by a write
-		/*
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, code, entries[0]);
@@ -182,13 +196,12 @@ public class TestActiveCodeRemoteQueryClient {
 			e.printStackTrace();
 		}
 		try {
-			response = client.fieldRead(entries[0], someField);
+			client.fieldUpdate(entries[0], someField, someValue);
 			fail("A write followed with a write operation should not succeed.");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}	
 		System.out.println("Depth query test(a write followed by a write) succeeds!");
-		*/
 		
 		try {
 			cleanup();
