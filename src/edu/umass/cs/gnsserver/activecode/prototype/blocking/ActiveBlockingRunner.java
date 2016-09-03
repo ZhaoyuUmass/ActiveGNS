@@ -50,7 +50,7 @@ public class ActiveBlockingRunner {
 		invocable = (Invocable) engine;
 	}
 	
-	private void updateCache(String codeId, String code) throws ScriptException {
+	private synchronized void updateCache(String codeId, String code) throws ScriptException {
 	    if (!contexts.containsKey(codeId)) {
 	      // Create a context if one does not yet exist and eval the code
 	      ScriptContext sc = new SimpleScriptContext();

@@ -50,7 +50,14 @@ public class ActiveNonBlockingRunner {
 		invocable = (Invocable) engine;
 	}
 	
-	private void updateCache(String codeId, String code) throws ScriptException {
+	/**
+	 * Update cache needs to be synchronized, as some code cache may not be evaled before being used.
+	 * 
+	 * @param codeId
+	 * @param code
+	 * @throws ScriptException
+	 */
+	private synchronized void updateCache(String codeId, String code) throws ScriptException {
 	    if (!contexts.containsKey(codeId)) {
 	      // Create a context if one does not yet exist and eval the code
 	      ScriptContext sc = new SimpleScriptContext();
@@ -85,7 +92,7 @@ public class ActiveNonBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public synchronized ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+	public ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		if(querier != null) ((ActiveNonBlockingQuerier) querier).resetQuerier(guid, ttl, id);

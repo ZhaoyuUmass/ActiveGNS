@@ -184,16 +184,25 @@ public class ActiveNonBlockingQuerier implements Querier {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(null);
+		int n = 1000000;	
+		ActiveNonBlockingQuerier querier = null;
+		
+		long t = System.currentTimeMillis();
+		for(int i=0; i<n; i++){
+			querier = new ActiveNonBlockingQuerier(null);
+		}
+		long elapsed = System.currentTimeMillis() - t;
+		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
+		
 		int ttl = 1;
 		String guid = "Zhaoyu Gao";			
 		
-		int n = 1000000;		
+			
 		long t1 = System.currentTimeMillis();		
 		for(int i=0; i<n; i++){
 			querier.resetQuerier(guid, ttl, 0);
 		}		
-		long elapsed = System.currentTimeMillis() - t1;
+		elapsed = System.currentTimeMillis() - t1;
 		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 	}
 }
