@@ -87,6 +87,7 @@ public class GNSCommandInternal extends InternalCommandPacket {
 		if (header.getTTL() == 0)
 			throw new InternalRequestException(
 					GNSResponseCode.INTERNAL_REQUEST_EXCEPTION, "TTL expired");
+		//FIXME: redundant as ActiveGNSClient.executeCommand method also checks this
 		if (header.hasBeenCoordinatedOnce()
 				&& gnsCommandInternal.needsCoordination())
 			throw new InternalRequestException(

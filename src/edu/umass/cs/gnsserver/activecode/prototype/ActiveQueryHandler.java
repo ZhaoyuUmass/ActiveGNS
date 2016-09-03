@@ -63,7 +63,7 @@ public class ActiveQueryHandler {
 			ValuesMap value = new ValuesMap(app.read(header, am.getTargetGuid(), am.getField()));
 			resp = new ActiveMessage(am.getId(), value, null);
 		} catch (InternalRequestException | ClientException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			resp = new ActiveMessage(am.getId(), null, "Read failed");
 		} 
 		
@@ -83,9 +83,8 @@ public class ActiveQueryHandler {
 		try {
 			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
 			resp = new ActiveMessage(am.getId(), new ValuesMap(), null);
-			System.out.println("The response by query handler "+resp);
 		} catch (ClientException | InternalRequestException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			resp = new ActiveMessage(am.getId(), null, "Write failed");
 		} 
 				

@@ -177,7 +177,7 @@ public class TestActiveCodeRemoteQueryClient {
 		// test a write followed by a write
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, code, entries[0]);
+			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]);
 			
 		} catch (ClientException e) {
 			e.printStackTrace();
