@@ -39,7 +39,6 @@ public class ActiveQueryHandler {
 	 * @return an ActiveMessage being sent back to worker as a response to the query
 	 */
 	public ActiveMessage handleQuery(ActiveMessage am, InternalRequestHeader header){
-		System.out.println("ActiveQueryHandler handles query "+am);
 		ActiveMessage response;
 		if(am.type == ActiveMessage.Type.READ_QUERY)
 			response = handleReadQuery(am, header);

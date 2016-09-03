@@ -15,8 +15,8 @@ import org.json.JSONException;
 import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.ActiveQueryHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveQueryHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveDatagramChannel;
 import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
@@ -24,7 +24,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
-import edu.umass.cs.utils.DelayProfiler;
 
 /**
  * This is a Client implementation with unix named pipe as the way

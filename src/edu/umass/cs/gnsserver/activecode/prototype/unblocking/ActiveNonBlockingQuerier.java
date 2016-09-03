@@ -28,33 +28,17 @@ public class ActiveNonBlockingQuerier implements Querier {
 	 * @param channel
 	 * @param ttl 
 	 * @param guid 
+	 * @param id 
 	 */
-	public ActiveNonBlockingQuerier(Channel channel, int ttl, String guid){
+	public ActiveNonBlockingQuerier(Channel channel, int ttl, String guid, long id){
 		this.channel = channel;
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
+		this.currentID = id;
 		
 		monitor = new Monitor();
 	}
 	
-	
-	/**
-	 * @param channel
-	 */
-	public ActiveNonBlockingQuerier(Channel channel){
-		this(channel, 0, null);
-	}
-	
-	/**
-	 * @param guid
-	 * @param ttl
-	 * @param id 
-	 */
-	protected void resetQuerier(String guid, int ttl, long id){
-		this.currentGuid = guid;
-		this.currentTTL = ttl;
-		this.currentID = id;
-	}
 	
 	/**
 	 * @param queriedGuid
@@ -107,6 +91,8 @@ public class ActiveNonBlockingQuerier implements Querier {
 					
 			ActiveMessage response = monitor.getResult();
 			
+			System.out.println("Response from client is "+response);
+			
 			if(response == null){
 				throw new ActiveException();
 			}
@@ -127,10 +113,9 @@ public class ActiveNonBlockingQuerier implements Querier {
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);			
 			try {
 				channel.sendMessage(am);
-				while(!monitor.getDone()){
-					synchronized(monitor){
-						try {
-							
+				synchronized(monitor){
+					while(!monitor.getDone()){					
+						try {							
 							monitor.wait();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
@@ -140,6 +125,8 @@ public class ActiveNonBlockingQuerier implements Querier {
 				}
 				
 				ActiveMessage response = monitor.getResult();
+				
+				System.out.println("Response from client is "+response);
 				
 				if(response == null){
 					throw new ActiveException();
@@ -170,8 +157,8 @@ public class ActiveNonBlockingQuerier implements Querier {
 		
 		synchronized void setResult(ActiveMessage response, boolean isDone){
 			assert(response.type == Type.RESPONSE):"This is not a response!";
-			this.response = response;
-			this.isDone = isDone;	
+			this.isDone = isDone;
+			this.response = response;				
 			notifyAll();
 		}
 		
@@ -185,24 +172,15 @@ public class ActiveNonBlockingQuerier implements Querier {
 	 */
 	public static void main(String[] args){
 		int n = 1000000;	
-		ActiveNonBlockingQuerier querier = null;
+		//ActiveNonBlockingQuerier querier = null;
 		
 		long t = System.currentTimeMillis();
 		for(int i=0; i<n; i++){
-			querier = new ActiveNonBlockingQuerier(null);
+			
 		}
 		long elapsed = System.currentTimeMillis() - t;
 		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 		
-		int ttl = 1;
-		String guid = "Zhaoyu Gao";			
 		
-			
-		long t1 = System.currentTimeMillis();		
-		for(int i=0; i<n; i++){
-			querier.resetQuerier(guid, ttl, 0);
-		}		
-		elapsed = System.currentTimeMillis() - t1;
-		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 	}
 }

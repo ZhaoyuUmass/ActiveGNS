@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,7 +23,7 @@ import javax.script.SimpleScriptContext;
 import org.json.JSONException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 /**
@@ -36,14 +37,14 @@ public class ActiveNonBlockingRunner {
 	
 	private final HashMap<String, ScriptContext> contexts = new HashMap<String, ScriptContext>();
 	private final HashMap<String, Integer> codeHashes = new HashMap<String, Integer>();
-	
-	private Querier querier;
+	private final Channel channel;
+	private final ConcurrentHashMap<Long, ActiveNonBlockingQuerier> map = new ConcurrentHashMap<Long, ActiveNonBlockingQuerier>();
 	
 	/**
-	 * @param querier
+	 * @param channel 
 	 */
-	public ActiveNonBlockingRunner(Querier querier){
-		this.querier = querier;
+	public ActiveNonBlockingRunner(Channel channel){
+		this.channel = channel;
 		
 		engine = new ScriptEngineManager().getEngineByName("nashorn");
 		
@@ -93,13 +94,17 @@ public class ActiveNonBlockingRunner {
 	 * @throws NoSuchMethodException
 	 */
 	public ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, ttl, guid, id);
+		map.put(id, querier);
+		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
-		if(querier != null) ((ActiveNonBlockingQuerier) querier).resetQuerier(guid, ttl, id);
+		
 		ValuesMap valuesMap = null;
 		
 		valuesMap = (ValuesMap) invocable.invokeFunction("run", value, field, querier);
 		
+		map.remove(id);
 		return valuesMap;
 	}
 	
@@ -107,7 +112,12 @@ public class ActiveNonBlockingRunner {
 	 * @param am
 	 */
 	public void release(ActiveMessage am){
-		((ActiveNonBlockingQuerier) querier).release(am, true);
+		ActiveNonBlockingQuerier querier = map.get(am.getId());
+		if(querier != null){
+			// querier might be null as it might be already removed because of timedout task
+			querier.release(am, true);
+		}
+		
 	}
 	
 	private static class SimpleTask implements Callable<ValuesMap>{
@@ -179,7 +189,7 @@ public class ActiveNonBlockingRunner {
 		/**
 		 * Test runner's protected method
 		 */
-		ActiveNonBlockingRunner runner = new ActiveNonBlockingRunner(new ActiveNonBlockingQuerier(null));
+		ActiveNonBlockingRunner runner = new ActiveNonBlockingRunner(null);
 		String chain_code = null;
 		try {
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));

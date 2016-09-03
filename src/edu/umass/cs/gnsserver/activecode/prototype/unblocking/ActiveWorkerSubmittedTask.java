@@ -1,7 +1,6 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -21,15 +20,13 @@ public class ActiveWorkerSubmittedTask implements Runnable {
 	final ActiveNonBlockingRunner runner;
 	final ActiveMessage request;
 	final Channel channel;
-	final ConcurrentHashMap<Long, ActiveNonBlockingRunner> map;
 	
 	ActiveWorkerSubmittedTask(ThreadPoolExecutor executor, ActiveNonBlockingRunner runner, ActiveMessage request, 
-			Channel channel, ConcurrentHashMap<Long, ActiveNonBlockingRunner> map){
+			Channel channel){
 		this.executor = executor;
 		this.runner = runner;
 		this.request = request;
 		this.channel = channel;
-		this.map = map;
 	}
 	
 	@Override
@@ -43,16 +40,14 @@ public class ActiveWorkerSubmittedTask implements Runnable {
 			response = future.get(timeout, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			// return an error
-			runner.release(null);
-			response = new ActiveMessage(request.getId(), null, e.getMessage());			
+			response = new ActiveMessage(request.getId(), null, e.getMessage());
 		}
 		
 		try {
 			channel.sendMessage(response);
 		} catch (IOException e) {
 			throw new RuntimeException();
-		}
-		map.remove(request.getId());		
+		}	
 	}
 
 }

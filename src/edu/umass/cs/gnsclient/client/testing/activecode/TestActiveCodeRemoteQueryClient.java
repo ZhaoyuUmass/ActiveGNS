@@ -208,6 +208,8 @@ public class TestActiveCodeRemoteQueryClient {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]);
 			
+			Thread.sleep(1000);
+			
 			client.fieldRemove(entries[0], someField);
 			client.fieldRemove(entries[1], someField);
 			client.fieldRemove(entries[1], depthField);

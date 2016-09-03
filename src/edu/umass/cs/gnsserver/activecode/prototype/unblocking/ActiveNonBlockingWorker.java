@@ -1,11 +1,9 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
 
@@ -21,16 +19,13 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 public class ActiveNonBlockingWorker {
 	
 	
-	private final ActiveNonBlockingRunner[] runners;
+	private final ActiveNonBlockingRunner runner;
 	
 	private final Channel channel;
 	private final int id;
-	private final int numThread;
 	
 	private final ThreadPoolExecutor executor;
-	private final ThreadPoolExecutor taskExecutor;
-	private final ConcurrentHashMap<Long, ActiveNonBlockingRunner> map = new ConcurrentHashMap<Long, ActiveNonBlockingRunner>();
-	private final AtomicInteger counter = new AtomicInteger(0);	
+	private final ThreadPoolExecutor taskExecutor;	
 	
 	
 	
@@ -44,7 +39,6 @@ public class ActiveNonBlockingWorker {
 	 */
 	protected ActiveNonBlockingWorker(String ifile, String ofile, int id, int numThread) {
 		this.id = id;
-		this.numThread = numThread;
 		
 		executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();
@@ -52,12 +46,8 @@ public class ActiveNonBlockingWorker {
 		taskExecutor.prestartAllCoreThreads();
 		
 		channel = new ActiveNamedPipe(ifile, ofile);
-		runners = new ActiveNonBlockingRunner[numThread];
+		runner = new ActiveNonBlockingRunner(channel);
 		
-		for (int i=0; i<numThread; i++){
-			runners[i] = new ActiveNonBlockingRunner(new ActiveNonBlockingQuerier(channel));
-		}		
-
 		try {
 			runWorker();
 		} catch (JSONException | IOException e) {
@@ -76,14 +66,9 @@ public class ActiveNonBlockingWorker {
 		while(!Thread.currentThread().isInterrupted()){
 			if((msg = (ActiveMessage) channel.receiveMessage()) != null){
 				if(msg.type == Type.REQUEST){
-					ActiveNonBlockingRunner runner = runners[counter.getAndIncrement()%numThread];
-					map.put(msg.getId(), runner);
-					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel, map));
-					
+					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel));					
 				} else if (msg.type == Type.RESPONSE ){
-					ActiveNonBlockingRunner runner = map.get(msg.getId());
-					if(runner !=null)
-						runner.release(msg);					
+					runner.release(msg);					
 				} 
 			}else{
 				// The client is shutdown
