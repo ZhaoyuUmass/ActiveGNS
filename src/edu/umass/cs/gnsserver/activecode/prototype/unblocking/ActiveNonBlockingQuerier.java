@@ -67,8 +67,8 @@ public class ActiveNonBlockingQuerier implements Querier {
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			return readValueFromField(currentGuid, currentGuid, field, currentTTL--);
-		return readValueFromField(currentGuid, queriedGuid, field, currentTTL--);
+			return readValueFromField(currentGuid, currentGuid, field, currentTTL);
+		return readValueFromField(currentGuid, queriedGuid, field, currentTTL);
 	}
 	
 	/**
@@ -82,9 +82,9 @@ public class ActiveNonBlockingQuerier implements Querier {
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL--);
+			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL);
 		else
-			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL--);
+			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL);
 	}
 	
 	
@@ -100,6 +100,7 @@ public class ActiveNonBlockingQuerier implements Querier {
 						monitor.wait();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
+						return null;
 					}
 				}
 			}
@@ -133,6 +134,7 @@ public class ActiveNonBlockingQuerier implements Querier {
 							monitor.wait();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
+							return;
 						}
 					}
 				}

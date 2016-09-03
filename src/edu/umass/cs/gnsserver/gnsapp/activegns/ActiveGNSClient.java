@@ -50,6 +50,7 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 			Request response = this.executeCommand(GNSCommandInternal.fieldUpdate(targetGUID, field,
 					value, header));
 			InternalCommandPacket packet = (InternalCommandPacket) response;
+			System.out.println(">>>>>>>>>>>>>>> response is "+packet);
 		} catch (IOException | JSONException e) {
 			throw new ClientException(e);
 		}

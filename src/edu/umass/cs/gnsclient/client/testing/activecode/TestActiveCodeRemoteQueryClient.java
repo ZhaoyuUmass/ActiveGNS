@@ -204,7 +204,7 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("Depth query test(a write followed by a write) succeeds!");
 		
 		try {
-			cleanup();
+			//cleanup();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		

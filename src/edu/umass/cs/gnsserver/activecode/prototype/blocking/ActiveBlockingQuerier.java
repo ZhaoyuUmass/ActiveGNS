@@ -64,8 +64,8 @@ public class ActiveBlockingQuerier implements Querier {
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			return readValueFromField(currentGuid, currentGuid, field, currentTTL--);
-		return readValueFromField(currentGuid, queriedGuid, field, currentTTL--);
+			return readValueFromField(currentGuid, currentGuid, field, currentTTL);
+		return readValueFromField(currentGuid, queriedGuid, field, currentTTL);
 	}
 	
 	/**
@@ -78,11 +78,10 @@ public class ActiveBlockingQuerier implements Querier {
 	public void writeGuid(String queriedGuid, String field, ValuesMap value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
-		System.out.println(">>>>>>>>>>>>>>>> Write "+value+" into field "+field);
 		if(queriedGuid==null)
-			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL--);
+			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL);
 		else
-			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL--);
+			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL);
 	}
 	
 	
@@ -112,12 +111,9 @@ public class ActiveBlockingQuerier implements Querier {
 			throws ActiveException {
 		
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, targetGuid, value, currentID);
-			System.out.println(">>>>>>>>>>>>>>>>The write query sent to client is "+am);
 			try {
 				channel.sendMessage(am);
-				System.out.println(">>>>>>>>>>>>>>The message has been sent out!");
 				ActiveMessage response = (ActiveMessage) channel.receiveMessage();
-				System.out.println("Returned value to querier for read is "+value);
 				
 				if(response == null){
 					throw new ActiveException();
