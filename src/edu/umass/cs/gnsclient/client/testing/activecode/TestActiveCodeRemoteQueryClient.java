@@ -53,7 +53,7 @@ public class TestActiveCodeRemoteQueryClient {
 		// initialize the fields for each guid
 		
 		client.fieldUpdate(entries[0], someField, someValue);
-		client.fieldUpdate(entries[1], someField, depthResult);
+		//client.fieldUpdate(entries[1], someField, depthResult);
 		client.fieldUpdate(entries[1], depthField, depthResult);
 		
 		// set the target guid to the second one and put it into the code
@@ -122,16 +122,8 @@ public class TestActiveCodeRemoteQueryClient {
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			
-			count = 0;
-			while(count < 10){
-				response = client.fieldRead(entries[0], someField);
-				if(response.equals(depthField)){
-					break;
-				}else{
-					count++;
-					Thread.sleep(500);
-				}
-			}
+			Thread.sleep(1000);
+			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -142,6 +134,7 @@ public class TestActiveCodeRemoteQueryClient {
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
+			Thread.sleep(1000);
 			client.fieldUpdate(entries[0], someField, someValue);
 		} catch (ClientException | JSONException e) {
 			e.printStackTrace();
@@ -166,21 +159,29 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		Thread.sleep(1000);
 		
+		try {
+			response = client.fieldRead(entries[0], someField);
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+		assertEquals(someValue, response);
+		
 		count = 0;
 		while(count < 10){
 			try {
-				response = client.fieldRead(entries[0], someField);
+				response = client.fieldRead(entries[1], someField);
 				if(response.equals(someValue)){
 					break;
-				}else{
+				}else{					
 					count++;
+					System.out.println("The value hasn't been updated without a reason "+count);
 					Thread.sleep(500);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		assertEquals(someValue, response);
+		
 		
 		// This sleep is required as a requirement for eventual consistency semantics of gigapaxos
 		Thread.sleep(1000);
