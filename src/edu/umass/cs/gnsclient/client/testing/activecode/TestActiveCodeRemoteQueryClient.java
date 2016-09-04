@@ -122,8 +122,22 @@ public class TestActiveCodeRemoteQueryClient {
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			
-			Thread.sleep(1000);
-			response = client.fieldRead(entries[0], someField);
+			count = 0;
+			while(count < 10){
+				try {
+					response = client.fieldRead(entries[0], someField);
+					if(response.equals(depthResult)){
+						break;
+					}else{					
+						count++;
+						System.out.println("The value hasn't been updated without a reason "+count);
+						Thread.sleep(500);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

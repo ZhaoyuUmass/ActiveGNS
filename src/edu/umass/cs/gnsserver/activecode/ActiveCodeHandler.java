@@ -124,7 +124,7 @@ public class ActiveCodeHandler {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
 		} catch (ActiveException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			/**
 			 *  return the original value without executing, as there is an error
 			 *  returned from the worker. The error indicates that the code failed
