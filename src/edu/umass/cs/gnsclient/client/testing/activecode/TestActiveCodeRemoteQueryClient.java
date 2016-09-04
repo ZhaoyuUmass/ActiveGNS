@@ -69,6 +69,7 @@ public class TestActiveCodeRemoteQueryClient {
 	@Test
 	public void test_01_RemoteQuery() throws IOException, InterruptedException{	
 		
+		int count = 0;
 		try {
 			setupClientsAndGuids();
 		} catch (Exception e) {
@@ -88,10 +89,8 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		//test read after a read		
 		try {
-			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
 			
-			//client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);		
 			client.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]);
 		} catch (ClientException e) {
 			e.printStackTrace();
@@ -122,7 +121,17 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
-			response = client.fieldRead(entries[0], someField);
+			
+			count = 0;
+			while(count < 10){
+				response = client.fieldRead(entries[0], someField);
+				if(response.equals(depthField)){
+					break;
+				}else{
+					count++;
+					Thread.sleep(500);
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -157,11 +166,19 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		Thread.sleep(1000);
 		
-		
-		try {
-			response = client.fieldRead(entries[0], someField);
-		} catch (Exception e) {
-			e.printStackTrace();
+		count = 0;
+		while(count < 10){
+			try {
+				response = client.fieldRead(entries[0], someField);
+				if(response.equals(someValue)){
+					break;
+				}else{
+					count++;
+					Thread.sleep(500);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		assertEquals(someValue, response);
 		
