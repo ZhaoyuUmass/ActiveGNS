@@ -207,7 +207,9 @@ public class NSUpdateSupport {
 			// no code deployed, return original value
 			return userJSON;
 		}
+		System.out.println("Running request for guid "+guid+" on field "+field+" with value "+userJSON+" for write");
         newResult = activeCodeHandler.runCode(header, code, guid, field, "write", userJSON, hopLimit);
+        System.out.println(">>>>>>> Active Code write returns "+newResult+" to write");
       }
     }
     DelayProfiler.updateDelayNano("activeTotal", t);

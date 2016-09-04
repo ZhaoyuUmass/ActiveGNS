@@ -356,7 +356,9 @@ public class NSFieldAccess {
 		}
           ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0} {1} {2}",
                   new Object[]{guid, field, originalValues.toString()});
+          
 
+          System.out.println("Running request for guid "+guid+" on field "+field+" with value "+originalValues+" for read");
           newResult = gnsApp.getActiveCodeHandler().runCode(header, code, guid, field,
                   "read", originalValues, hopLimit);
           ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0}",
