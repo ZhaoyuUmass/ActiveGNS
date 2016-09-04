@@ -91,6 +91,8 @@ public class ActiveNonBlockingQuerier implements Querier {
 					
 			ActiveMessage response = monitor.getResult();
 			
+			System.out.println("Response from client is "+response);
+			
 			if(response == null){
 				throw new ActiveException();
 			}
@@ -123,7 +125,9 @@ public class ActiveNonBlockingQuerier implements Querier {
 				}
 				
 				ActiveMessage response = monitor.getResult();
-								
+				
+				System.out.println("Response from client is "+response);
+				
 				if(response == null){
 					throw new ActiveException();
 				}
