@@ -263,7 +263,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	/**
 	 * @throws Exception
 	 */
-	//@Test
+	@Test
 	public void test_02_SequentialUnsignedReadCapacity() throws Exception {
 		int numReads = (Config.getGlobalInt(TC.NUM_REQUESTS)/40);
 		long t = System.currentTimeMillis();
@@ -367,7 +367,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	/**
 	 * @throws Exception
 	 */
-	//@Test
+	@Test
 	public void test_04_ParallelUnsignedReadCapacity() throws Exception {
 		for(int k=0; k<1; k++) {
 		int numReads = Config.getGlobalInt(TC.NUM_REQUESTS);
