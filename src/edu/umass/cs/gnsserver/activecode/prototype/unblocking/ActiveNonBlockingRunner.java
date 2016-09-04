@@ -112,13 +112,11 @@ public class ActiveNonBlockingRunner {
 	 * @param am
 	 */
 	public void release(ActiveMessage am){
-		System.out.println(">>>>>>>>>>>>> Release runner with response "+am);
 		
 		ActiveNonBlockingQuerier querier = map.get(am.getId());
 		if(querier != null){
 			// querier might be null as it might be already removed because of timedout task
 			querier.release(am, true);
-			System.out.println(">>>>>>>>>>>>>>> Released querier "+am);
 		}
 		
 	}
