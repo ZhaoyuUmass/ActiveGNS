@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
@@ -25,6 +24,7 @@ import org.json.JSONException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 /**
  * @author gaozy
@@ -46,7 +46,9 @@ public class ActiveNonBlockingRunner {
 	public ActiveNonBlockingRunner(Channel channel){
 		this.channel = channel;
 		
-		engine = new ScriptEngineManager().getEngineByName("nashorn");
+		// Initialize an script engine without extensions in 
+		NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+		engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");
 		
 		invocable = (Invocable) engine;
 	}
