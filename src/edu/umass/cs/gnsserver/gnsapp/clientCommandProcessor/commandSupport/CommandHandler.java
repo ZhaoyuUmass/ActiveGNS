@@ -208,7 +208,7 @@ public class CommandHandler {
 							+ OPERATION_NOT_SUPPORTED + " - Don't understand "
 							+ PacketUtils.getCommand(commandPacket));
 		} catch (JSONException e) {
-			// e.printStackTrace();
+			e.printStackTrace();
 			return new CommandResponse(GNSResponseCode.JSON_PARSE_ERROR,
 					BAD_RESPONSE + " " + JSON_PARSE_ERROR + " " + e
 							+ " while executing command.");
