@@ -133,6 +133,9 @@ final static Random random = new Random();
 	 */
 	public static void thru_test() throws InterruptedException{
 		
+		String operation = (isRead?"read":"write");
+		String signed = (withSignature?"signed":"unsigned");
+		
 		int numReads = Math.min(
 				Config.getGlobalBoolean(GNSCC.ENABLE_SECRET_KEY) ? Integer.MAX_VALUE : 10000,
 				Config.getGlobalInt(TC.NUM_REQUESTS));
@@ -144,7 +147,7 @@ final static Random random = new Random();
 				blockingWrite(numReads % numClients, entry, withSignature);
 			}
 		}
-		System.out.print("[total_reads=" + numReads+": ");
+		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
 		int lastCount = 0;
 		while (numFinishedReads < numReads) {
 			if(numFinishedReads>lastCount)  {
@@ -153,9 +156,10 @@ final static Random random = new Random();
 			}
 			Thread.sleep(1000);
 		}
-		System.out.print("] ");
-
-		System.out.print("parallel_signed_read_rate="
+		System.out.println("] ");
+		
+		
+		System.out.println("parallel_"+signed+"_"+operation+"_rate="
 				+ Util.df(numReads * 1.0 / (lastReadFinishedTime - t))
 				+ "K/s");
 	}
