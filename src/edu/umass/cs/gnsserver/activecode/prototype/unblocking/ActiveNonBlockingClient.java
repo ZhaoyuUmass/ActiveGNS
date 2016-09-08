@@ -232,6 +232,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	
 	/**
 	 * Create a worker with named pipe
+	 * 
+	 * -Xms specify the initial heap size
+	 * -Xmx specify the maximal memory can be used by the process
+	 * -Xss specify the maximal memory size can be used by a thread
+	 * 
 	 * @param ifile
 	 * @param ofile
 	 * @param id

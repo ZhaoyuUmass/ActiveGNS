@@ -8,7 +8,11 @@ function run(value, field, querier) {
 	 * creating an array does not mean the memory of
 	 * the array is pre-allocated. 
 	 */
-    var a = new Array(4294967295);
-    var b = new Array(4294967295);
+	var i=0;
+	var arr=new Array();
+	while(true){
+		arr[i] = i;
+		i++;
+	}
     return value;
 }
