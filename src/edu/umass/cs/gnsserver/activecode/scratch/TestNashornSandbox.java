@@ -26,7 +26,7 @@ public class TestNashornSandbox {
 		long elapsed = System.currentTimeMillis()-t;
 		System.out.println("It takes "+elapsed+"ms to initialize a script engine.");
 		
-		/*
+		
 		String no_java_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/testNoJava.js")));
 		try {
 			engine.eval(no_java_code);
@@ -42,7 +42,7 @@ public class TestNashornSandbox {
 		} catch (ScriptException e) {
 			System.out.println("Nashorn with --no-syntax-extensions option test succeeds.");
 		}
-		*/
+		
 		
 		String stack_overflow_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/testOutOfMemoryError.js")));
 		//String stack_overflow_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/mal.js")));
@@ -53,5 +53,7 @@ public class TestNashornSandbox {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		
+		throw new RuntimeException("The program should not be here!");
 	}
 }
