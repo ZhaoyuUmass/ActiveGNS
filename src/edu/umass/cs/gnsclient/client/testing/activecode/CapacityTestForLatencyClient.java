@@ -11,21 +11,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.FixMethodOrder;
-
 import edu.umass.cs.gigapaxos.paxosutil.RateLimiter;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.utils.Config;
-import edu.umass.cs.utils.DefaultTest;
 import edu.umass.cs.utils.Util;
 
 /**
  * @author gaozy
  *
  */
-@FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
-public class CapacityTestClient extends DefaultTest {
+public class CapacityTestForLatencyClient{
 	
 	final static Random random = new Random();
 	
