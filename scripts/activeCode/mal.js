@@ -6,13 +6,12 @@ function run(value, field, querier) {
 	/**
 	 * The maximal value is 2^32-1 to create an array
 	 * creating an array does not mean the memory of
-	 * the array is pre-allocated. 
+	 * the array is allocated. 
 	 */
-	var i=0;
-	var arr=new Array();
-	while(true){
+	var size=4294967296-1;
+	var arr = new Array(size);
+	for(var i=0;i<size;i++){
 		arr[i] = i;
-		i++;
 	}
     return value;
 }
