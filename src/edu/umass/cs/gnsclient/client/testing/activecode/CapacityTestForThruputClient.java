@@ -224,11 +224,15 @@ final static Random random = new Random();
 	 * 
 	 */
 	public static void sequential_thru_test(){
+		String signed = withSignature?"signed":"unsigned";
+		String operation = isRead?"read":"write";
+		
 		assert(malEntry != null):"Malicious guid can not be null";
 		System.out.println("Start running experiment with "+numClients+" clients, threshold="+thres+"...");
+		long t = System.currentTimeMillis();
 		Thread thread = new Thread(){
 			public void run(){
-				long t = System.currentTimeMillis();
+				
 				int lastCount = 0;
 				while (true) {
 					if(numFinishedReads>lastCount)  {
@@ -249,10 +253,13 @@ final static Random random = new Random();
 		}
 		
 		try {
-			executor.awaitTermination(300, TimeUnit.SECONDS);
+			executor.awaitTermination(60, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		System.out.println("parallel_"+signed+"_"+operation+"_rate="
+				+ Util.df(numFinishedReads * 1000.0 / (lastReadFinishedTime - t))
+				+ "/s");
 	}
 	
 	static class SequentialClient implements Runnable{
