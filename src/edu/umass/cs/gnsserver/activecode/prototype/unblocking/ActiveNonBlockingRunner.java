@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
@@ -47,9 +48,10 @@ public class ActiveNonBlockingRunner {
 		this.channel = channel;
 		
 		// Initialize an script engine without extensions in 
-		NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-		engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");
+		// NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+		// engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");
 		
+		engine = new ScriptEngineManager().getEngineByName("nashorn");
 		invocable = (Invocable) engine;
 	}
 	
