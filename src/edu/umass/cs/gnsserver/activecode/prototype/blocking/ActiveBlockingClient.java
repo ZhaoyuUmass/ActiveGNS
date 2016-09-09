@@ -46,6 +46,7 @@ import edu.umass.cs.utils.DelayProfiler;
 public class ActiveBlockingClient implements Client {
 	
 	private final static int DEFAULT_HEAP_SIZE = ActiveCodeConfig.activeWorkerHeapSize;
+	private final static String actionOnOutOfMemory = "kill -9 %p";
 	
 	private ActiveQueryHandler queryHandler;
 	
@@ -206,6 +207,8 @@ public class ActiveBlockingClient implements Client {
 	    command.add("java");
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
+	    // kill the worker on OutOfMemoryError
+	    command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingWorker");
@@ -242,6 +245,8 @@ public class ActiveBlockingClient implements Client {
 	    command.add("java");
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
+	    // kill the worker on OutOfMemoryError
+	    command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingWorker");
