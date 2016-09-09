@@ -7,15 +7,16 @@ import java.io.ObjectInputStream;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.FixMethodOrder;
+import org.json.JSONException;
 
 import edu.umass.cs.gigapaxos.testing.TESTPaxosConfig.TC;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.GNSClientConfig.GNSCC;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
+import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.utils.Config;
-import edu.umass.cs.utils.DefaultTest;
 import edu.umass.cs.utils.Util;
 
 /**
@@ -26,17 +27,22 @@ public class CapacityTestForThruputClient {
 	
 final static Random random = new Random();
 	
-	private static int NUM_THREAD = 100;
+	private static int NUM_THREAD = 120;
 	
 	private static int numClients;
 	private static String someField = "someField";
 	private static String someValue = "someValue";
+	
+	private static boolean withMalicious;
 	private static boolean withSignature;
-
 	private static boolean isRead;
-
+	
+	private static double fraction;
+	private static int thres; // After which index to start malicious client
+	
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
+	private static GuidEntry malEntry;
 	
 	private static ExecutorService executor;
 	
@@ -64,6 +70,11 @@ final static Random random = new Random();
 			someField = System.getProperty("field");
 		}
 		
+		withMalicious = false;
+		if(System.getProperty("withMalicious")!= null){
+			withMalicious = Boolean.parseBoolean("withMalicious");
+		}
+		
 		withSignature = false;
 		if(System.getProperty("withSigniture")!= null){
 			withSignature = Boolean.parseBoolean(System.getProperty("withSigniture"));
@@ -84,7 +95,23 @@ final static Random random = new Random();
 		}
 		ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File(keyFile)));
 		entry = new GuidEntry(input);
+		input.close();
 		assert(entry != null);
+		
+		String malKeyFile = "mal_guid";
+		if(System.getProperty("malKeyFile") != null){
+			malKeyFile = System.getProperty("malKeyFile");
+		}
+		if(new File(malKeyFile).exists()){
+			input = new ObjectInputStream(new FileInputStream(new File(malKeyFile)));
+			malEntry = new GuidEntry(input);
+		}
+		
+		fraction = 0.0;
+		if(System.getProperty("fraction")!=null){
+			fraction = Double.parseDouble(System.getProperty("fraction"));
+		}
+		thres = numClients - ((Number) (fraction*numClients)).intValue();
 		
 		executor = Executors.newFixedThreadPool(NUM_THREAD);
 		
@@ -128,6 +155,34 @@ final static Random random = new Random();
 		});
 	}
 	
+	private static void read(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal) {
+		
+			try {
+				if(signed)
+					client.fieldRead(guid, someField);
+				else
+					client.fieldRead(guid.getGuid(),
+							someField, null);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
+		if(!mal)
+			incrFinishedReads();
+	}
+	
+	
+	private static void write(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal){		
+		try {
+			client.fieldUpdate(guid, someField, someValue);
+		} catch (ClientException | IOException | JSONException e) {
+			e.printStackTrace();
+			return;
+		}
+		if(!mal)
+			incrFinishedReads();
+	}
+	
 	/**
 	 * @throws InterruptedException
 	 */
@@ -142,9 +197,9 @@ final static Random random = new Random();
 		long t = System.currentTimeMillis();
 		for (int i = 0; i < numReads; i++) {
 			if(isRead){
-				blockingRead(numReads % numClients, entry, withSignature);
+				blockingRead(i % numClients, entry, withSignature);
 			}else{
-				blockingWrite(numReads % numClients, entry, withSignature);
+				blockingWrite(i % numClients, entry, withSignature);
 			}
 		}
 		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
@@ -164,6 +219,66 @@ final static Random random = new Random();
 				+ "K/s");
 	}
 	
+	/**
+	 * 
+	 */
+	public static void sequential_thru_test(){
+		assert(malEntry != null):"Malicious guid can not be null";
+		
+		Thread thread = new Thread(){
+			public void run(){
+				long t = System.currentTimeMillis();
+				int lastCount = 0;
+				while (true) {
+					if(numFinishedReads>lastCount)  {
+						lastCount = numFinishedReads;
+						System.out.print(numFinishedReads + "@" + Util.df(numFinishedReads * 1.0 / (lastReadFinishedTime - t))+"K/s ");
+					}
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+		executor.submit(thread);
+		for(int i=0; i<numClients; i++){
+			executor.submit(new SequentialClient(clients[i], (i>=thres)?entry:malEntry, i>=thres));
+		}
+		
+		try {
+			executor.awaitTermination(60, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	static class SequentialClient implements Runnable{
+		
+		GNSClientCommands client;
+		GuidEntry entry;
+		boolean mal;
+		
+		SequentialClient(GNSClientCommands client, GuidEntry entry, boolean mal){
+			this.client = client;
+			this.entry = entry;
+			this.mal = mal;
+		}
+		
+		@Override
+		public void run() {
+			while(true){
+				if(isRead){
+					read(client, entry, withSignature, mal);
+				}else{
+					write(client, entry, withSignature, mal);
+				}
+			}
+		}
+		
+	}
+	
 	private static void processArgs(String[] args) throws IOException {
 		Config.register(args);
 	}
@@ -177,7 +292,10 @@ final static Random random = new Random();
 		processArgs(args);
 		
 		setup();
-		thru_test();
+		if(!withMalicious)
+			thru_test();
+		else
+			sequential_thru_test();
 				
 		System.exit(0);
 	}
