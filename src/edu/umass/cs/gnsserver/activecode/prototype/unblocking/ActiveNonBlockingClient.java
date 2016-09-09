@@ -42,6 +42,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
 public class ActiveNonBlockingClient implements Runnable,Client {
 	
 	private final static int DEFAULT_HEAP_SIZE = ActiveCodeConfig.activeWorkerHeapSize;
+	private final static String actionOnOutOfMemory = "kill -9 %p";
 	
 	private ActiveQueryHandler queryHandler;
 	private final String nodeId;
@@ -194,12 +195,14 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 					monitor.setResult(response, response.type == Type.RESPONSE);
 				} else {
 					if(!isRestarting.getAndSet(true)){
+						
 						// restart the worker
 						this.shutdown();
 						this.initializeChannelAndStartWorker();
-						// resend all the requests that failed
+						
+						// release all the requests that waited on its monitor
 						for(Monitor monitor:this.tasks.values()){
-							monitor.setResult(null, false);
+							monitor.setResult(null, true);
 						}
 						isRestarting.set(false);
 					}
@@ -250,6 +253,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("java");
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
+	    // kill the worker on OutOfMemoryError
+	    command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
@@ -286,6 +291,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("java");
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
+	    // kill the worker on OutOfMemoryError
+	    command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
@@ -369,24 +376,31 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 					monitor.wait();
 				} catch (InterruptedException e) {
 					// this thread is interrupted, do nothing
+					e.printStackTrace();
 				}				
 				
 				response = monitor.getResult();	
 				
-				if(response == null){
-					/**
-					 *  The worker is crashed, resend the request.
-					 *  It would work even for the query.
-					 */
-					sendMessage(msg);
-				} else if (response.type != Type.RESPONSE){
+				/**
+				 * If it's a query, queryHandler needs to handle it.
+				 * Otherwise, exit the while loop to process the response.
+				 */
+				if (response != null && response.type != Type.RESPONSE){
 					ActiveMessage result = queryHandler.handleQuery(response, header);
 					sendMessage(result);
 				}
 			}		
 		}
-		response = monitor.getResult();
 		
+		//response = monitor.getResult();
+		
+		if(response == null){
+			/**
+			 * No need to resend the request, as it might be
+			 * a malicious request. 
+			 */
+			throw new ActiveException("Worker crashes!");
+		}
 		if(response.getError() != null){
 			throw new ActiveException(msg.toString());
 		}
