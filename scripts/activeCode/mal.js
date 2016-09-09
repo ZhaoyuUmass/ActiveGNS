@@ -8,7 +8,7 @@ function run(value, field, querier) {
 	 * creating an array does not mean the memory of
 	 * the array is allocated. 
 	 */
-	var size=4294967296-1;
+	var size=4294967295;
 	var arr = new Array(size);
 	for(var i=0;i<size;i++){
 		arr[i] = i;
