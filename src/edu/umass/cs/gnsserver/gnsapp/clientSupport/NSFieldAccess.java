@@ -361,6 +361,9 @@ public class NSFieldAccess {
           
           newResult = gnsApp.getActiveCodeHandler().runCode(header, code, guid, field,
                   "read", originalValues, hopLimit);
+          if(newResult == null){
+        	  newResult = originalValues;
+          }
           ClientSupportConfig.getLogger().log(Level.FINE, "AC--->>> {0}",
                   newResult.toString()); 
       }
