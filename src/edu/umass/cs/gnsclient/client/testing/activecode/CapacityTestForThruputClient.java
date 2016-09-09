@@ -156,20 +156,18 @@ final static Random random = new Random();
 		});
 	}
 	
-	private static void read(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal) {
-		
-			try {
-				if(signed)
-					client.fieldRead(guid, someField);
-				else
-					client.fieldRead(guid.getGuid(),
-							someField, null);
-			} catch (Exception e) {
-				//e.printStackTrace();
-				//return;
-			}
-		if(!mal)
-			incrFinishedReads();
+	private static void read(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal) {		
+		try {
+			if(signed)
+				client.fieldRead(guid, someField);
+			else
+				client.fieldRead(guid.getGuid(),
+						someField, null);
+		} catch (Exception e) {
+			//e.printStackTrace();
+			//return;
+		}
+		incrFinishedReads();
 	}
 	
 	
@@ -180,8 +178,7 @@ final static Random random = new Random();
 			//e.printStackTrace();
 			//return;
 		}
-		if(!mal)
-			incrFinishedReads();
+		incrFinishedReads();
 	}
 	
 	/**
