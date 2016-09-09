@@ -24,6 +24,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.DelayProfiler;
 
 /**
  * This is a Client implementation with unix named pipe as the way
@@ -59,7 +60,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	
 	private final int heapSize;
 	
-	
+	private static long lastWorkerStartedTime;
 	private AtomicBoolean isRestarting = new AtomicBoolean();
 	
 	/********************* For test **********************/
@@ -98,9 +99,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		this.workerNumThread = workerNumThread;
 		this.heapSize = heapSize;
 		
+		queryHandler = new ActiveQueryHandler(app);
+		
+		lastWorkerStartedTime = System.currentTimeMillis();
 		initializeChannelAndStartWorker();
 		
-		queryHandler = new ActiveQueryHandler(app);
 		
 	}
 	
@@ -129,7 +132,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		channel = new ActiveNamedPipe(ifile, ofile);				
+		channel = new ActiveNamedPipe(ifile, ofile);
+		DelayProfiler.updateDelay("activeRestartWorker", lastWorkerStartedTime);
 	}
 	
 	/**
@@ -195,7 +199,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 					monitor.setResult(response, response.type == Type.RESPONSE);
 				} else {
 					if(!isRestarting.getAndSet(true)){
-						
+						lastWorkerStartedTime = System.currentTimeMillis();
 						// restart the worker
 						this.shutdown();
 						this.initializeChannelAndStartWorker();
@@ -205,6 +209,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 							monitor.setResult(null, true);
 						}
 						isRestarting.set(false);
+						
 					}
 				}
 			} catch (IOException e) {
