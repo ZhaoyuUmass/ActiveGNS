@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
@@ -62,6 +63,7 @@ public class ActiveBlockingClient implements Client {
 	
 	private final int heapSize;
 	
+	private AtomicBoolean isRestarting = new AtomicBoolean();
 	
 	/********************* For test **********************/
 	/**
@@ -329,14 +331,16 @@ public class ActiveBlockingClient implements Client {
 			if(response == null){
 				/**
 				 *  The worker is crashed, restart the
-				 *  worker and resend the request. 
-				 *  There should be always exactly one
-				 *  outstanding request as this method
-				 *  is synchronized.
+				 *  worker.
 				 */
-				this.shutdown();
-				this.initializeChannelAndStartWorker();
-				this.sendMessage(msg);
+				if(!isRestarting.getAndSet(true)){
+					this.shutdown();
+					this.initializeChannelAndStartWorker();
+					
+					isRestarting.set(false);
+					break;
+				}
+				
 			} else if (response.type != Type.RESPONSE){
 				ActiveMessage result = queryHandler.handleQuery(response, header);
 				sendMessage(result);
@@ -344,6 +348,10 @@ public class ActiveBlockingClient implements Client {
 				assert(response.type == Type.RESPONSE):"The message type is not RESPONSE";
 				break;
 			}
+		}
+		
+		if(response == null){
+			throw new ActiveException("Worker crashed!");
 		}
 		
 		if(response.getError() != null){

@@ -63,7 +63,6 @@ final static Random random = new Random();
 		if(System.getProperty("numClients") != null){
 			numClients = Integer.parseInt(System.getProperty("numClients"));
 		}
-		System.out.println("There are "+numClients+" clients.");
 		
 		someField = "someField";
 		if(System.getProperty("field")!=null){
@@ -72,7 +71,7 @@ final static Random random = new Random();
 		
 		withMalicious = false;
 		if(System.getProperty("withMalicious")!= null){
-			withMalicious = Boolean.parseBoolean("withMalicious");
+			withMalicious = Boolean.parseBoolean(System.getProperty("withMalicious"));
 		}
 		
 		withSignature = false;
@@ -112,6 +111,8 @@ final static Random random = new Random();
 			fraction = Double.parseDouble(System.getProperty("fraction"));
 		}
 		thres = numClients - ((Number) (fraction*numClients)).intValue();
+		
+		
 		
 		executor = Executors.newFixedThreadPool(NUM_THREAD);
 		
@@ -164,8 +165,8 @@ final static Random random = new Random();
 					client.fieldRead(guid.getGuid(),
 							someField, null);
 			} catch (Exception e) {
-				e.printStackTrace();
-				return;
+				//e.printStackTrace();
+				//return;
 			}
 		if(!mal)
 			incrFinishedReads();
@@ -176,8 +177,8 @@ final static Random random = new Random();
 		try {
 			client.fieldUpdate(guid, someField, someValue);
 		} catch (ClientException | IOException | JSONException e) {
-			e.printStackTrace();
-			return;
+			//e.printStackTrace();
+			//return;
 		}
 		if(!mal)
 			incrFinishedReads();
@@ -224,7 +225,7 @@ final static Random random = new Random();
 	 */
 	public static void sequential_thru_test(){
 		assert(malEntry != null):"Malicious guid can not be null";
-		
+		System.out.println("Start running experiment with "+numClients+" clients, threshold="+thres+"...");
 		Thread thread = new Thread(){
 			public void run(){
 				long t = System.currentTimeMillis();
@@ -244,11 +245,11 @@ final static Random random = new Random();
 		};
 		executor.submit(thread);
 		for(int i=0; i<numClients; i++){
-			executor.submit(new SequentialClient(clients[i], (i>=thres)?entry:malEntry, i>=thres));
+			executor.submit(new SequentialClient(clients[i], (i>=thres)?malEntry:entry, i>=thres));
 		}
 		
 		try {
-			executor.awaitTermination(60, TimeUnit.SECONDS);
+			executor.awaitTermination(300, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -274,6 +275,9 @@ final static Random random = new Random();
 				}else{
 					write(client, entry, withSignature, mal);
 				}
+				if(mal){
+					System.out.println("Send a mal request...");
+				}
 			}
 		}
 		
@@ -292,6 +296,7 @@ final static Random random = new Random();
 		processArgs(args);
 		
 		setup();
+		
 		if(!withMalicious)
 			thru_test();
 		else
