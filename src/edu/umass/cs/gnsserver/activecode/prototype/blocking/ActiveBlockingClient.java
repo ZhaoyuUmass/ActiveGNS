@@ -338,9 +338,8 @@ public class ActiveBlockingClient implements Client {
 					this.initializeChannelAndStartWorker();
 					
 					isRestarting.set(false);
-					break;
 				}
-				
+				break;
 			} else if (response.type != Type.RESPONSE){
 				ActiveMessage result = queryHandler.handleQuery(response, header);
 				sendMessage(result);
