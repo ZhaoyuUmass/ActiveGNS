@@ -121,7 +121,7 @@ public class CapacityTestForLatencyClient{
 	 * 
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
-		
+		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
 		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
 		
 		try {
