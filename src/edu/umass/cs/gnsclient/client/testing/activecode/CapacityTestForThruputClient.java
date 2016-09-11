@@ -254,6 +254,7 @@ final static Random random = new Random();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		System.out.println();
 		System.out.println("parallel_"+signed+"_"+operation+"_rate="
 				+ Util.df(numFinishedReads * 1000.0 / (lastReadFinishedTime - t))
 				+ "/s");
