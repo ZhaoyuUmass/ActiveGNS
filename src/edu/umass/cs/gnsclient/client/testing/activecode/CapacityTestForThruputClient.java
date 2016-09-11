@@ -127,14 +127,14 @@ final static Random random = new Random();
 			public void run() {
 				try {
 					if (signed)
-						assert(clients[clientIndex].fieldRead(guid, someField).equals(someValue));
+						clients[clientIndex].fieldRead(guid, someField);
 					else
-						assert(clients[clientIndex].fieldRead(guid.getGuid(),
-								someField, null).equals(someValue));
-					incrFinishedReads();
+						clients[clientIndex].fieldRead(guid.getGuid(),
+								someField, null);					
 				} catch (Exception e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
+				incrFinishedReads();
 			}
 		});
 	}
@@ -147,11 +147,11 @@ final static Random random = new Random();
 					if (signed)
 						clients[clientIndex].fieldUpdate(guid, someField, someValue);
 					else
-						clients[clientIndex].fieldUpdate(guid, someField, someValue);
-					incrFinishedReads();
+						clients[clientIndex].fieldUpdate(guid, someField, someValue);					
 				} catch (Exception e) {
-					e.printStackTrace();
+					//e.printStackTrace();
 				}
+				incrFinishedReads();
 			}
 		});
 	}

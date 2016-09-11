@@ -203,13 +203,11 @@ public class CapacityTestForLatencyClient{
 				else
 					client.fieldRead(guid.getGuid(),
 							someField, null);
-
-				//latency.add(System.currentTimeMillis() - t);
-				if(log)
-					increaseLatency((System.nanoTime() - t)/1000);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			if(log)
+				increaseLatency((System.nanoTime() - t)/1000);
 		}
 		
 	}
@@ -235,14 +233,12 @@ public class CapacityTestForLatencyClient{
 					client.fieldUpdate(guid.getGuid(), someField, someValue, guid);
 				else
 					client.fieldUpdate(guid.getGuid(),
-							someField, someValue, guid);
-
-				//latency.add(System.currentTimeMillis() - t);
-				if(log)
-					increaseLatency((System.nanoTime() - t)/1000);
+							someField, someValue, guid);				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			if(log)
+				increaseLatency((System.nanoTime() - t)/1000);
 		}
 		
 	}
