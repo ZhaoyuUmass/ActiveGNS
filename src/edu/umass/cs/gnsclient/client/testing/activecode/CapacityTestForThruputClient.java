@@ -280,9 +280,6 @@ final static Random random = new Random();
 				}else{
 					write(client, entry, withSignature, mal);
 				}
-				if(mal){
-					System.out.println("Send a mal request...");
-				}
 			}
 		}
 		

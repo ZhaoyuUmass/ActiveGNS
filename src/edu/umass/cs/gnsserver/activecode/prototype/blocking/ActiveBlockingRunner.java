@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
@@ -24,6 +23,7 @@ import org.json.JSONException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 /**
  * @author gaozy
@@ -31,8 +31,8 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  */
 public class ActiveBlockingRunner {
 	
-	private ScriptEngine engine;
-	private Invocable invocable;
+	final private ScriptEngine engine;
+	final private Invocable invocable;
 	
 	private final HashMap<String, ScriptContext> contexts = new HashMap<String, ScriptContext>();
 	private final HashMap<String, Integer> codeHashes = new HashMap<String, Integer>();
@@ -45,7 +45,9 @@ public class ActiveBlockingRunner {
 	public ActiveBlockingRunner(Querier querier){
 		this.querier = querier;
 		
-		engine = new ScriptEngineManager().getEngineByName("nashorn");
+		// Initialize an script engine without extensions and java
+		NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+		engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");
 		
 		invocable = (Invocable) engine;
 	}
