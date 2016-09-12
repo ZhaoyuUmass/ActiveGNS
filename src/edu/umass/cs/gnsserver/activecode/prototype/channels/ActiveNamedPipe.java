@@ -73,8 +73,9 @@ public class ActiveNamedPipe implements Channel {
 	@Override
 	public Message receiveMessage() throws IOException {
 		Message am = null;
-		int len = -1;			
-		len = reader.read(readerLengthBuffer, 0, readerLengthBuffer.length);
+		int len = -1;
+		if(reader != null)
+			len = reader.read(readerLengthBuffer, 0, readerLengthBuffer.length);
 		if(len>0){
 			int length = ByteBuffer.wrap(readerLengthBuffer).getInt();
 			byte[] buffer = new byte[length];
