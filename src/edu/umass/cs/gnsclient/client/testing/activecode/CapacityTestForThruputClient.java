@@ -178,10 +178,16 @@ final static Random random = new Random();
 		}
 		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
 		int lastCount = 0;
+		int cnt = 0;
 		while (numFinishedReads < numReads) {
 			if(numFinishedReads>lastCount)  {
 				lastCount = numFinishedReads;
+				cnt = 0;
 				System.out.print(numFinishedReads + "@" + Util.df(numFinishedReads * 1.0 / (lastReadFinishedTime - t))+"K/s ");
+			}else{
+				cnt++;
+				if(cnt>=10)
+					break;
 			}
 			Thread.sleep(1000);
 		}
@@ -227,10 +233,16 @@ final static Random random = new Random();
 		
 		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
 		int lastCount = 0;
+		int cnt = 0;
 		while (numFinishedReads < numReads) {
 			if(numFinishedReads>lastCount)  {
 				lastCount = numFinishedReads;
+				cnt = 0;
 				System.out.print(numFinishedReads + "@" + Util.df(numFinishedReads * 1.0 / (lastReadFinishedTime - t))+"K/s ");
+			}else{
+				cnt++;
+				if(cnt>=10)
+					break;
 			}
 			Thread.sleep(1000);
 		}
