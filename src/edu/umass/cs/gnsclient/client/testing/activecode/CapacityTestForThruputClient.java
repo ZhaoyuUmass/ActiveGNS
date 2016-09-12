@@ -122,7 +122,7 @@ final static Random random = new Random();
 		}
 	}
 	
-	private static void blockingRead(int clientIndex, GuidEntry guid, boolean signed) {
+	private static void blockingRead(int clientIndex, GuidEntry guid, boolean signed, boolean mal) {
 		executor.submit(new Runnable() {
 			public void run() {
 				try {
@@ -134,11 +134,15 @@ final static Random random = new Random();
 				} catch (Exception e) {
 					//e.printStackTrace();
 				}
-				incrFinishedReads();
+				if(!mal)
+					incrFinishedReads();
 			}
 		});
 	}
 	
+	private static void blockingRead(int clientIndex, GuidEntry guid, boolean signed) {
+		blockingRead(clientIndex, guid, signed, false);
+	}
 	
 	private static void blockingWrite(int clientIndex, GuidEntry guid, boolean signed) {
 		executor.submit(new Runnable() {
@@ -234,7 +238,7 @@ final static Random random = new Random();
 		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
 		int lastCount = 0;
 		int cnt = 0;
-		while (numFinishedReads < numReads) {
+		while (numFinishedReads < (numReads-malReads)) {
 			if(numFinishedReads>lastCount)  {
 				lastCount = numFinishedReads;
 				cnt = 0;
