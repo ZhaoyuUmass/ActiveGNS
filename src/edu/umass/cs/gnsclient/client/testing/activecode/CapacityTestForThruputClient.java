@@ -7,15 +7,11 @@ import java.io.ObjectInputStream;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import org.json.JSONException;
 
 import edu.umass.cs.gigapaxos.testing.TESTPaxosConfig.TC;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.GNSClientConfig.GNSCC;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
-import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.Util;
 
@@ -38,11 +34,12 @@ final static Random random = new Random();
 	private static boolean isRead;
 	
 	private static double fraction;
-	private static int thres; // After which index to start malicious client
 	
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
 	private static GuidEntry malEntry;
+	
+	private static double ratio = 0.0;
 	
 	private static ExecutorService executor;
 	
@@ -55,12 +52,7 @@ final static Random random = new Random();
 		lastReadFinishedTime = System.currentTimeMillis();
 	}
 	
-	private static int numFailedReads = 0;
-	synchronized static void incrFailedReads(){
-		numFailedReads++;
-		lastReadFinishedTime = System.currentTimeMillis();
-	}
-
+	
 	/**
 	 * @throws Exception
 	 */
@@ -116,9 +108,11 @@ final static Random random = new Random();
 		if(System.getProperty("fraction")!=null){
 			fraction = Double.parseDouble(System.getProperty("fraction"));
 		}
-		thres = numClients - ((Number) (fraction*numClients)).intValue();
 		
-		
+		ratio = 0.0;
+		if(System.getProperty("ratio")!=null){
+			ratio = Double.parseDouble(System.getProperty("ratio")); 
+		}
 		
 		executor = Executors.newFixedThreadPool(NUM_THREAD);
 		
@@ -138,7 +132,7 @@ final static Random random = new Random();
 						clients[clientIndex].fieldRead(guid.getGuid(),
 								someField, null);					
 				} catch (Exception e) {
-					//e.printStackTrace();
+					//incrFailedReads();
 				}
 				incrFinishedReads();
 			}
@@ -162,30 +156,6 @@ final static Random random = new Random();
 		});
 	}
 	
-	private static void read(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal) {		
-		try {
-			if(signed)
-				client.fieldRead(guid, someField);
-			else
-				client.fieldRead(guid.getGuid(),
-						someField, null);
-		} catch (Exception e) {
-			incrFailedReads();
-			return;
-		}
-		incrFinishedReads();
-	}
-	
-	
-	private static void write(GNSClientCommands client, GuidEntry guid, boolean signed, boolean mal){		
-		try {
-			client.fieldUpdate(guid, someField, someValue);
-		} catch (ClientException | IOException | JSONException e) {
-			incrFailedReads();
-			return;
-		}
-		incrFinishedReads();
-	}
 	
 	/**
 	 * @throws InterruptedException
@@ -224,75 +194,53 @@ final static Random random = new Random();
 	}
 	
 	/**
+	 * @throws InterruptedException 
 	 * 
 	 */
-	public static void sequential_thru_test(){
+	public static void sequential_thru_test() throws InterruptedException{
 		String signed = withSignature?"signed":"unsigned";
-		String operation = isRead?"read":"write";
+		String operation = isRead?"read":"write";		
 		
 		assert(malEntry != null):"Malicious guid can not be null";
-		System.out.println("Start running experiment with "+numClients+" clients, threshold="+thres+"...");
-		long t = System.currentTimeMillis();
-		Thread thread = new Thread(){
-			public void run(){
+		assert(ratio > 0.0):"ration can't be 0 or negative";
+		int numReads = Config.getGlobalInt(TC.NUM_REQUESTS);
+		int malReads = ((Number) (numReads*fraction/(fraction+ratio*(1-fraction)))).intValue();
 				
-				int lastCount = 0;
-				int received = numFinishedReads+numFailedReads;
-				while (true) {
-					if(received>lastCount)  {
-						lastCount = received;
-						System.out.print(received + "@" + Util.df(received * 1.0 / (lastReadFinishedTime - t))+"K/s ");
-					}
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					received = numFinishedReads+numFailedReads;
+		System.out.println("Start running experiment with "+numReads+" benign requests and "+malReads+" malicious requests, "
+				+ "the ratio is "+ratio+" with the malicious fraction="+fraction);
+		long t = System.currentTimeMillis();
+		
+		new Thread(){
+			public void run(){
+				for (int i = 0; i < numReads-malReads; i++) {
+					blockingRead(i % numClients, entry, withSignature);
 				}
 			}
-		};
-		executor.submit(thread);
-		for(int i=0; i<numClients; i++){
-			executor.submit(new SequentialClient(clients[i], (i>=thres)?malEntry:entry, i>=thres));
-		}
+		}.start();
+		new Thread(){
+			public void run(){
+				for (int i = 0; i < malReads; i++) {
+					blockingRead(i % numClients, malEntry, withSignature);
+				}
+			}
+		}.start();
 		
-		try {
-			executor.awaitTermination(60, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		System.out.print("[total_"+signed+"_"+operation+"=" + numReads+": ");
+		int lastCount = 0;
+		while (numFinishedReads < numReads) {
+			if(numFinishedReads>lastCount)  {
+				lastCount = numFinishedReads;
+				System.out.print(numFinishedReads + "@" + Util.df(numFinishedReads * 1.0 / (lastReadFinishedTime - t))+"K/s ");
+			}
+			Thread.sleep(1000);
 		}
-		System.out.println();
-		int received = numFinishedReads+numFailedReads;
+		System.out.println("] ");
+		
 		System.out.println("parallel_"+signed+"_"+operation+"_rate="
-				+ Util.df(received * 1000.0 / (lastReadFinishedTime - t))
+				+ Util.df(numReads * 1000.0 / (lastReadFinishedTime - t))
 				+ "/s");
 	}
 	
-	static class SequentialClient implements Runnable{
-		
-		GNSClientCommands client;
-		GuidEntry entry;
-		boolean mal;
-		
-		SequentialClient(GNSClientCommands client, GuidEntry entry, boolean mal){
-			this.client = client;
-			this.entry = entry;
-			this.mal = mal;
-		}
-		
-		@Override
-		public void run() {
-			while(true){
-				if(isRead){
-					read(client, entry, withSignature, mal);
-				}else{
-					write(client, entry, withSignature, mal);
-				}
-			}
-		}
-		
-	}
 	
 	private static void processArgs(String[] args) throws IOException {
 		Config.register(args);
