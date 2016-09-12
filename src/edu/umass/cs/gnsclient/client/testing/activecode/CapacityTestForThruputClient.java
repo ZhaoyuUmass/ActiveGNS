@@ -55,6 +55,12 @@ final static Random random = new Random();
 		lastReadFinishedTime = System.currentTimeMillis();
 	}
 	
+	private static int numFailedReads = 0;
+	synchronized static void incrFailedReads(){
+		numFailedReads++;
+		lastReadFinishedTime = System.currentTimeMillis();
+	}
+
 	/**
 	 * @throws Exception
 	 */
@@ -164,8 +170,8 @@ final static Random random = new Random();
 				client.fieldRead(guid.getGuid(),
 						someField, null);
 		} catch (Exception e) {
-			//e.printStackTrace();
-			//return;
+			incrFailedReads();
+			return;
 		}
 		incrFinishedReads();
 	}
@@ -175,8 +181,8 @@ final static Random random = new Random();
 		try {
 			client.fieldUpdate(guid, someField, someValue);
 		} catch (ClientException | IOException | JSONException e) {
-			//e.printStackTrace();
-			//return;
+			incrFailedReads();
+			return;
 		}
 		incrFinishedReads();
 	}
@@ -231,16 +237,18 @@ final static Random random = new Random();
 			public void run(){
 				
 				int lastCount = 0;
+				int received = numFinishedReads+numFailedReads;
 				while (true) {
-					if(numFinishedReads>lastCount)  {
-						lastCount = numFinishedReads;
-						System.out.print(numFinishedReads + "@" + Util.df(numFinishedReads * 1.0 / (lastReadFinishedTime - t))+"K/s ");
+					if(received>lastCount)  {
+						lastCount = received;
+						System.out.print(received + "@" + Util.df(received * 1.0 / (lastReadFinishedTime - t))+"K/s ");
 					}
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
+					received = numFinishedReads+numFailedReads;
 				}
 			}
 		};
