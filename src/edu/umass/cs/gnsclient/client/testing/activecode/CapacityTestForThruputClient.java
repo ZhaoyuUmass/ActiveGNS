@@ -263,8 +263,9 @@ final static Random random = new Random();
 			e.printStackTrace();
 		}
 		System.out.println();
+		int received = numFinishedReads+numFailedReads;
 		System.out.println("parallel_"+signed+"_"+operation+"_rate="
-				+ Util.df(numFinishedReads * 1000.0 / (lastReadFinishedTime - t))
+				+ Util.df(received * 1000.0 / (lastReadFinishedTime - t))
 				+ "/s");
 	}
 	
