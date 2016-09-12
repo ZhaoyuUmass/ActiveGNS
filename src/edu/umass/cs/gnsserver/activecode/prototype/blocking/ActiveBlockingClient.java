@@ -210,7 +210,7 @@ public class ActiveBlockingClient implements Client {
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
 	    // kill the worker on OutOfMemoryError
-	    command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
+	    // command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingWorker");
