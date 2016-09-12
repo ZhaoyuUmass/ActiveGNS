@@ -29,7 +29,7 @@ public class ActiveWorkerBlockingTask implements Callable<ActiveMessage> {
 					runner.runCode(request.getGuid(), request.getField(), request.getCode(), request.getValue(), request.getTtl(), request.getId()),
 					null);
 		} catch (NoSuchMethodException | ScriptException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
 		}
 

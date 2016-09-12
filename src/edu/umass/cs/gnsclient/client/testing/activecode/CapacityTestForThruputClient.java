@@ -132,7 +132,7 @@ final static Random random = new Random();
 						clients[clientIndex].fieldRead(guid.getGuid(),
 								someField, null);					
 				} catch (Exception e) {
-					//incrFailedReads();
+					//e.printStackTrace();
 				}
 				incrFinishedReads();
 			}
