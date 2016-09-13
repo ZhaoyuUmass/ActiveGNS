@@ -527,7 +527,8 @@ public class ActiveMessage implements Message{
 	public String toString(){
 		
 		return "[id:"+id
-				+ ",guid:"+ ((guid != null)?guid:"null")
+				+",guid:"+ ((guid != null)?guid:"null")
+				+",tguid:"+((targetGuid != null)?targetGuid:"null")
 				+",field:"+((field!=null)?field:"null")
 				+",value:"+((value!=null)?value:"null")
 				+",error:"+((error!=null)?error:"null")
