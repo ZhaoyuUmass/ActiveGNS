@@ -1,6 +1,9 @@
 package edu.umass.cs.gnsclient.client.testing.activecode;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -63,9 +66,21 @@ public class SetupChainCode {
 		}
 		Thread.sleep(1000);
 		
-		String response = client.fieldRead(entries[0], targetGuidField);
-		System.out.println("Response is "+response+", depth query code chain has been successfully set up!");
-		assert(response.equals(successResult));
+		for(int i=0; i<depth; i++){
+			String response = client.fieldRead(entries[i], targetGuidField);			
+			assert(response.equals(successResult));
+			System.out.println("Response is "+response+", succeeds for "+entries[i].getEntityName()+"("+entries[i].getGuid()+")");
+			Thread.sleep(1000);
+		}
+		System.out.println("Depth query code chain has been successfully set up!");
+		
+		// save all guids
+		for(int i=0; i<depth; i++){
+			ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid"+i)));
+			entries[i].writeObject(output);
+			output.flush();
+			output.close();
+		}
 		
 		System.exit(0);
 	}
