@@ -57,15 +57,15 @@ public class SetupChainCode {
 		for(int i=0; i<depth; i++){
 			client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
 		}
-		
+		Thread.sleep(1000);
 		for(int i=0; i<depth; i++){
 			client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
 		}
+		Thread.sleep(1000);
 		
 		String response = client.fieldRead(entries[0], targetGuidField);
-				
-		assert(response.equals(successResult));
 		System.out.println("Response is "+response+", depth query code chain has been successfully set up!");
+		assert(response.equals(successResult));
 		
 		System.exit(0);
 	}
