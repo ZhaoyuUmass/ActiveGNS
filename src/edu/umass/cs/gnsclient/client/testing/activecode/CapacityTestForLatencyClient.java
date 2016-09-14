@@ -45,6 +45,8 @@ public class CapacityTestForLatencyClient{
 	private static GuidEntry entry;
 	private static GuidEntry[] entries;
 	private static int guidIndex;
+	private static int numGuids;
+	
 	private static GNSClientCommands[] clients;
 	private static boolean sequential = true;
 	
@@ -149,18 +151,17 @@ public class CapacityTestForLatencyClient{
 	 */
 	public static void sequential_latency_test() throws InterruptedException, IOException, EncryptionException{
 		guidIndex = Integer.parseInt(System.getProperty("guidIndex"));
+		numGuids = Integer.parseInt(System.getProperty("numGuids"));
 		
-		entries = new GuidEntry[100];
-		for(int i=0; i<100; i++){
+		entries = new GuidEntry[numGuids];
+		for(int i=0; i<numGuids; i++){
 			ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File("guid"+(i*1000+guidIndex))));
 			entries[i] = new GuidEntry(input);
 			input.close();
 		}
 		
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		
-		executor.execute(new GNSClientTask(clients[0], entries, ((Integer) RATE).doubleValue(), TOTAL));
-		
+		executor.execute(new GNSClientTask(clients[0], entries, ((Integer) RATE).doubleValue(), TOTAL));		
 		while(getRcvd() < TOTAL ){
 			System.out.println("Client received "+received+" responses, "+(TOTAL-received)+" left.");
 			Thread.sleep(1000);
@@ -194,7 +195,7 @@ public class CapacityTestForLatencyClient{
 			long t1 = System.currentTimeMillis();
 			for (int i=0; i<total; i++){
 				if(!executor.isShutdown()){
-					executor.submit(isRead?new ReadTask(client, entries[i%100], withSignature, true):new WriteTask(client, entry, withSignature, true));
+					executor.submit(isRead?new ReadTask(client, entries[i%numGuids], withSignature, true):new WriteTask(client, entry, withSignature, true));
 					rateLimiter.record();
 				}
 			}
