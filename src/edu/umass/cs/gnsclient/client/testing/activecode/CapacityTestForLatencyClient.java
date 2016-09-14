@@ -43,7 +43,7 @@ public class CapacityTestForLatencyClient{
 	private static int EXTRA_WAIT_TIME; // second
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
-	private static boolean waitForAll = true;
+	private static boolean sequential = true;
 	
 	private static ExecutorService executor;
 	
@@ -101,6 +101,10 @@ public class CapacityTestForLatencyClient{
 			NUM_THREAD = Integer.parseInt(System.getProperty("numThread"));
 		}
 		
+		if(System.getProperty("sequential")!=null){
+			sequential = Boolean.parseBoolean(System.getProperty("sequential"));
+		}
+		
 		String keyFile = "guid";
 		if(System.getProperty("keyFile")!= null){
 			keyFile = System.getProperty("keyFile");
@@ -118,13 +122,15 @@ public class CapacityTestForLatencyClient{
 	}
 	
 	/**
+	 * If it's sequential test, then no need for warmup
+	 * @param sequential 
 	 * @throws InterruptedException 
 	 * @throws FileNotFoundException 
 	 * 
 	 */	
-	public static void latency_test() throws FileNotFoundException, InterruptedException{
+	public static void latency_test(boolean sequential) throws FileNotFoundException, InterruptedException{
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, true));
+		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, !sequential));
 		
 		try {
 			executor.awaitTermination(DURATION+15000+EXTRA_WAIT_TIME, TimeUnit.MILLISECONDS);
@@ -135,16 +141,19 @@ public class CapacityTestForLatencyClient{
 		
 	}
 	
+	/**
+	 * @throws InterruptedException
+	 * @throws FileNotFoundException
+	 */
 	public static void sequential_latency_test() throws InterruptedException, FileNotFoundException{
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		Future task = executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, false));
+		Future<?> task = executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, false));
 		
 		while(!task.isDone()){
 			System.out.println("Client received "+received+" responses, "+(TOTAL-received)+" left.");
 			Thread.sleep(1000);
 		}
 		System.out.println("Received all responses!");
-		dump();
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
@@ -295,11 +304,8 @@ public class CapacityTestForLatencyClient{
 		Util.assertAssertionsEnabled();
 		processArgs(args);
 		
-		setup();
-		if(waitForAll)
-			sequential_latency_test();
-		else
-			latency_test();
+		setup();		
+		latency_test(sequential);
 		dump();
 		
 		System.exit(0);
