@@ -54,11 +54,10 @@ public class SetupChainCode {
 		}
 		nextGuid[depth-1] = successResult;
 		
-		
+		/*
 		for(int i=0; i<depth; i++){
 			client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
-		}
-		Thread.sleep(1000);
+		}*/
 		
 		for(int i=0; i<depth; i++){
 			client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
