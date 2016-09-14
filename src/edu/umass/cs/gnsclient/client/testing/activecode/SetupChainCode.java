@@ -46,7 +46,7 @@ public class SetupChainCode {
 			
 			for (int i=0; i<depth; i++){
 				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
-						client, ACCOUNT_GUID_PREFIX + i, PASSWORD);
+						client, ACCOUNT_GUID_PREFIX +j+i, PASSWORD);
 			}
 			
 			String[] nextGuid = new String[depth];
