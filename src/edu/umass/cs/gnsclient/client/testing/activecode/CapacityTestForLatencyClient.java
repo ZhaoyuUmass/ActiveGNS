@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 import edu.umass.cs.gigapaxos.paxosutil.RateLimiter;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
+import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.Util;
 
@@ -42,6 +43,8 @@ public class CapacityTestForLatencyClient{
 	private static boolean isRead;
 	private static int EXTRA_WAIT_TIME; // second
 	private static GuidEntry entry;
+	private static GuidEntry[] entries;
+	private static int guidIndex;
 	private static GNSClientCommands[] clients;
 	private static boolean sequential = true;
 	
@@ -141,11 +144,20 @@ public class CapacityTestForLatencyClient{
 	
 	/**
 	 * @throws InterruptedException
-	 * @throws FileNotFoundException
+	 * @throws IOException 
+	 * @throws EncryptionException 
 	 */
-	public static void sequential_latency_test() throws InterruptedException, FileNotFoundException{
+	public static void sequential_latency_test() throws InterruptedException, IOException, EncryptionException{
+		entries = new GuidEntry[100];
+		for(int i=0; i<100; i++){
+			ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File("guid"+(i*1000+guidIndex))));
+			entries[i] = new GuidEntry(input);
+			input.close();
+		}
+		
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		Future<?> task = executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, false));
+		
+		executor.execute(new GNSClientTask(clients[0], entries, ((Integer) RATE).doubleValue(), TOTAL));
 		
 		while(getRcvd() < TOTAL ){
 			System.out.println("Client received "+received+" responses, "+(TOTAL-received)+" left.");
@@ -157,6 +169,36 @@ public class CapacityTestForLatencyClient{
 	
 	private static void processArgs(String[] args) throws IOException {
 		Config.register(args);
+	}
+	
+	static class GNSClientTask implements Runnable{
+		private final GNSClientCommands client;
+		private final GuidEntry[] entries;
+		private final double rate;
+		private final int total;
+		
+		GNSClientTask(GNSClientCommands client, GuidEntry[] entries, double rate, int total){
+			this.client = client;
+			this.entries = entries;
+			this.rate = rate;
+			this.total = total;
+		}
+		
+		@Override
+		public void run() {
+			
+			RateLimiter rateLimiter = new RateLimiter(rate);
+			
+			long t1 = System.currentTimeMillis();
+			for (int i=0; i<total; i++){
+				if(!executor.isShutdown()){
+					executor.submit(isRead?new ReadTask(client, entries[i%100], withSignature, true):new WriteTask(client, entry, withSignature, true));
+					rateLimiter.record();
+				}
+			}
+			
+			System.out.println("It takes "+(System.currentTimeMillis()-t1)+"ms to send all requests.");
+		}		
 	}
 	
 	static class SingleGNSClientTask implements Runnable{
