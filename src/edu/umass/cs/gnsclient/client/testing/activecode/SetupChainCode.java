@@ -40,51 +40,49 @@ public class SetupChainCode {
 		String code = new String(Files.readAllBytes(Paths.get(codeFile)));
 		
 		client = new GNSClientCommands();	
+				
+		entries = new GuidEntry[depth];
 		
-		for (int j=0; j<10; j++){
-			entries = new GuidEntry[depth];
-			
-			for (int i=0; i<depth; i++){
-				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
-						client, ACCOUNT_GUID_PREFIX +j+i, PASSWORD);
-			}
-			
-			String[] nextGuid = new String[depth];
-			for(int i=0; i<depth-1; i++){
-				nextGuid[i] = entries[i+1].getGuid();
-			}
-			nextGuid[depth-1] = successResult;
-			
-			for(int i=0; i<depth; i++){
-				client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
-			}
-			
-			for(int i=0; i<depth; i++){
-				client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
-			}
-			Thread.sleep(1000);
-			for(int i=0; i<depth; i++){
-				client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
-			}
-			Thread.sleep(1000);
-			
-			for(int i=0; i<depth; i++){
-				String response = client.fieldRead(entries[i], targetGuidField);			
-				assert(response.equals(successResult));
-				System.out.println("Response is "+response+", succeeds for "+entries[i].getEntityName()+"("+entries[i].getGuid()+")");
-				Thread.sleep(1000);
-			}
-			System.out.println("Depth query code chain has been successfully set up!");
-			
-			// save all guids
-			for(int i=0; i<depth; i++){
-				ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid"+j+i)));
-				entries[i].writeObject(output);
-				output.flush();
-				output.close();
-			}
-		
+		for (int i=0; i<depth; i++){
+			entries[i] = GuidUtils.lookupOrCreateAccountGuid(
+					client, ACCOUNT_GUID_PREFIX +i, PASSWORD);
 		}
+		
+		String[] nextGuid = new String[depth];
+		for(int i=0; i<depth-1; i++){
+			nextGuid[i] = entries[i+1].getGuid();
+		}
+		nextGuid[depth-1] = successResult;
+		
+		for(int i=0; i<depth; i++){
+			client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
+		}
+		
+		for(int i=0; i<depth; i++){
+			client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
+		}
+		Thread.sleep(1000);
+		for(int i=0; i<depth; i++){
+			client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
+		}
+		Thread.sleep(1000);
+		
+		for(int i=0; i<depth; i++){
+			String response = client.fieldRead(entries[i], targetGuidField);			
+			assert(response.equals(successResult));
+			System.out.println("Response is "+response+", succeeds for "+entries[i].getEntityName()+"("+entries[i].getGuid()+")");
+			Thread.sleep(1000);
+		}
+		System.out.println("Depth query code chain has been successfully set up!");
+		
+		// save all guids
+		for(int i=0; i<depth; i++){
+			ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid"+i)));
+			entries[i].writeObject(output);
+			output.flush();
+			output.close();
+		}
+				
 		System.exit(0);
 	}
 }
