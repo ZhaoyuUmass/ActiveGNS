@@ -391,13 +391,36 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 				 * Otherwise, exit the while loop to process the response.
 				 */
 				if (response != null && response.type != Type.RESPONSE){
-					ActiveMessage result = queryHandler.handleQuery(response, header);
-					sendMessage(result);
+					// submit the task to the worker and wait for the response
+					queryHandler.handleQueryAsync(response, header, monitor);
+					try {
+						monitor.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					/**
+					 * This can be awaken by two events:
+					 * <p>1. The response from the queryHandler, then we need to
+					 * send the response back to the worker.
+					 * <p>2. A timeout event happens on the worker, then there 
+					 * is no need for this response any more.
+					 */
+					
+					if(!monitor.getDone()){
+						// If it's not because of the timeout event, then send back the response  
+						ActiveMessage result = monitor.getResult();	
+						sendMessage(result);
+					}else{
+						// If it's because of timeout, then clean up the state and exit the loop
+						break;
+					}
+					
 				}
 			}		
 		}
 		
-		//response = monitor.getResult();
+		response = monitor.getResult();
 		
 		if(response == null){
 			/**
@@ -419,7 +442,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		return this.getClass().getSimpleName()+id;
 	}
 	
-	private static class Monitor {
+	/**
+	 * @author gaozy
+	 *
+	 */
+	public static class Monitor {
 		boolean isDone;
 		ActiveMessage response;
 		boolean waited;
@@ -429,11 +456,18 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 			this.waited = false;
 		}
 		
-		boolean getDone(){
+		/**
+		 * @return true if the task is done
+		 */
+		public boolean getDone(){
 			return isDone;
 		}
 		
-		synchronized void setResult(ActiveMessage response, boolean isDone){
+		/**
+		 * @param response
+		 * @param isDone
+		 */
+		public synchronized void setResult(ActiveMessage response, boolean isDone){
 			this.response = response;
 			this.isDone = isDone;
 			notifyAll();
