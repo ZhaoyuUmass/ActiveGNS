@@ -46,7 +46,7 @@ public class SetupChainCode {
 			
 			for (int i=0; i<depth; i++){
 				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
-						client, ACCOUNT_GUID_PREFIX +(j*100+i), PASSWORD);
+						client, ACCOUNT_GUID_PREFIX +(j*1000+i), PASSWORD);
 			}
 			
 			String[] nextGuid = new String[depth];
@@ -80,7 +80,7 @@ public class SetupChainCode {
 			
 			// save all guids
 			for(int i=0; i<depth; i++){
-				ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid"+(j*100+i) )));
+				ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid"+(j*1000+i) )));
 				entries[i].writeObject(output);
 				output.flush();
 				output.close();
