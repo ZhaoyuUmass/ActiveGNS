@@ -147,11 +147,12 @@ public class CapacityTestForLatencyClient{
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
 		Future<?> task = executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, false));
 		
-		while(!task.isDone()){
+		while(getRcvd() < TOTAL ){
 			System.out.println("Client received "+received+" responses, "+(TOTAL-received)+" left.");
 			Thread.sleep(1000);
 		}
 		System.out.println("Received all responses!");
+		executor.shutdown();
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
@@ -201,9 +202,6 @@ public class CapacityTestForLatencyClient{
 			}
 			
 			System.out.println("It takes "+(System.currentTimeMillis()-t1)+"ms to send all requests.");
-			while(getRcvd() < total){
-				;
-			}
 		}		
 	}
 	
