@@ -122,15 +122,13 @@ public class CapacityTestForLatencyClient{
 	}
 	
 	/**
-	 * If it's sequential test, then no need for warmup
-	 * @param sequential 
 	 * @throws InterruptedException 
 	 * @throws FileNotFoundException 
 	 * 
 	 */	
-	public static void latency_test(boolean sequential) throws FileNotFoundException, InterruptedException{
+	public static void latency_test() throws FileNotFoundException, InterruptedException{
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, !sequential));
+		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, true));
 		
 		try {
 			executor.awaitTermination(DURATION+15000+EXTRA_WAIT_TIME, TimeUnit.MILLISECONDS);
@@ -304,8 +302,11 @@ public class CapacityTestForLatencyClient{
 		Util.assertAssertionsEnabled();
 		processArgs(args);
 		
-		setup();		
-		latency_test(sequential);
+		setup();	
+		if(sequential)
+			sequential_latency_test();
+		else
+			latency_test();
 		dump();
 		
 		System.exit(0);
