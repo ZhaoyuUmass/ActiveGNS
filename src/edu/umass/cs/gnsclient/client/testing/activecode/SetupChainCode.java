@@ -41,7 +41,7 @@ public class SetupChainCode {
 		
 		client = new GNSClientCommands();	
 		
-		for (int j=0; j<10; j++){
+		for (int j=0; j<100; j++){
 			entries = new GuidEntry[depth];
 			
 			for (int i=0; i<depth; i++){
