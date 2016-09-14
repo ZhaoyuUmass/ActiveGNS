@@ -25,7 +25,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
 public class ActiveQueryHandler {
 	private static ActiveDBInterface app;
 	private final ThreadPoolExecutor queryExecutor;
-	private final int numThread = 10;
+	private final int numThread = 100;
 	
 	/**
 	 * Initialize a query handler

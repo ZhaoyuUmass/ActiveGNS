@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import edu.umass.cs.gigapaxos.paxosutil.RateLimiter;
@@ -42,7 +43,7 @@ public class CapacityTestForLatencyClient{
 	private static int EXTRA_WAIT_TIME; // second
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
-	private static boolean needWarmUp = false;
+	private static boolean waitForAll = true;
 	
 	private static ExecutorService executor;
 	
@@ -123,7 +124,7 @@ public class CapacityTestForLatencyClient{
 	 */	
 	public static void latency_test() throws FileNotFoundException, InterruptedException{
 		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
-		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL));
+		executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, true));
 		
 		try {
 			executor.awaitTermination(DURATION+15000+EXTRA_WAIT_TIME, TimeUnit.MILLISECONDS);
@@ -132,6 +133,18 @@ public class CapacityTestForLatencyClient{
 		}
 		executor.shutdown();
 		
+	}
+	
+	public static void sequential_latency_test() throws InterruptedException, FileNotFoundException{
+		System.out.println("Start running experiment for "+(withSignature?"signed":"unsigned")+" "+(isRead?"read":"write"));
+		Future task = executor.submit(new SingleGNSClientTask(clients[0], entry, ((Integer) RATE).doubleValue(), TOTAL, false));
+		
+		while(!task.isDone()){
+			System.out.println("Client received "+received+" responses, "+(TOTAL-received)+" left.");
+			Thread.sleep(1000);
+		}
+		System.out.println("Received all responses!");
+		dump();
 	}
 	
 	private static void processArgs(String[] args) throws IOException {
@@ -143,12 +156,14 @@ public class CapacityTestForLatencyClient{
 		private final GuidEntry entry;
 		private final double rate;
 		private final int total;
+		private boolean needWarmUp;
 		
-		SingleGNSClientTask(GNSClientCommands client, GuidEntry entry, double rate, int total){
+		SingleGNSClientTask(GNSClientCommands client, GuidEntry entry, double rate, int total, boolean needWarmUp){
 			this.client = client;
 			this.entry = entry;
 			this.rate = rate;
 			this.total = total;
+			this.needWarmUp = needWarmUp;
 		}
 		
 		@Override
@@ -165,6 +180,7 @@ public class CapacityTestForLatencyClient{
 				}
 			}
 			
+			
 			/**
 			 * 2nd round
 			 */
@@ -177,10 +193,10 @@ public class CapacityTestForLatencyClient{
 				}
 			}
 			
+			System.out.println("It takes "+(System.currentTimeMillis()-t1)+"ms to send all requests.");
 			while(getRcvd() < total){
 				;
 			}
-			System.out.println("It takes "+(System.currentTimeMillis()-t1)+"ms to send all requests.");
 		}		
 	}
 	
@@ -280,7 +296,10 @@ public class CapacityTestForLatencyClient{
 		processArgs(args);
 		
 		setup();
-		latency_test();
+		if(waitForAll)
+			sequential_latency_test();
+		else
+			latency_test();
 		dump();
 		
 		System.exit(0);
