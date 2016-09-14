@@ -42,6 +42,7 @@ public class CapacityTestForLatencyClient{
 	private static int EXTRA_WAIT_TIME; // second
 	private static GuidEntry entry;
 	private static GNSClientCommands[] clients;
+	private static boolean needWarmUp = false;
 	
 	private static ExecutorService executor;
 	
@@ -157,9 +158,11 @@ public class CapacityTestForLatencyClient{
 			/**
 			 * warm up for 1 round
 			 */
-			for (int i=0; i<rate*10; i++){
-				executor.submit(isRead?new ReadTask(client, entry, withSignature, false):new WriteTask(client, entry, withSignature, false));
-				rateLimiter.record();
+			if(needWarmUp){
+				for (int i=0; i<rate*10; i++){
+					executor.submit(isRead?new ReadTask(client, entry, withSignature, false):new WriteTask(client, entry, withSignature, false));
+					rateLimiter.record();
+				}
 			}
 			
 			/**

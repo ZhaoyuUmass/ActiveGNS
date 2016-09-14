@@ -40,7 +40,6 @@ public class ActiveWorkerSubmittedTask implements Runnable {
 			response = future.get(timeout, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			// return an error
-			e.printStackTrace();
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
 		}
 		

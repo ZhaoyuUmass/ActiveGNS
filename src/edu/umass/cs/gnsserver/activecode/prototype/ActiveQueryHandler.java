@@ -3,7 +3,6 @@ package edu.umass.cs.gnsserver.activecode.prototype;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -87,9 +86,9 @@ public class ActiveQueryHandler {
 				}
 				
 			}
-			System.out.println("ActiveQueryHandler receives resposne "+response);
-			if(!monitor.getDone())
-				monitor.setResult(response, false);
+			//System.out.println("ActiveQueryHandler receives resposne "+response);
+			
+			monitor.setResult(response, false);
 		}
 		
 	}
@@ -101,7 +100,7 @@ public class ActiveQueryHandler {
 	 * @param monitor
 	 */
 	public void handleQueryAsync(ActiveMessage am, InternalRequestHeader header, Monitor monitor){
-		System.out.println("ActiveQueryHandler handles query "+am);
+		//System.out.println("ActiveQueryHandler handles query "+am);
 		queryExecutor.execute(new ActiveQuerierTask(am, header, monitor));
 				
 	}

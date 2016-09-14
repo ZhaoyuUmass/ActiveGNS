@@ -123,9 +123,8 @@ public class ActiveCodeHandler {
 	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) throws InternalRequestException {
 		try {
 			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
-		} catch (ActiveException e) {
-			
-			e.printStackTrace();
+		} catch (ActiveException e) {			
+			//e.printStackTrace();
 			/**
 			 *  return the original value without executing, as there is an error
 			 *  returned from the worker. The error indicates that the code failed
