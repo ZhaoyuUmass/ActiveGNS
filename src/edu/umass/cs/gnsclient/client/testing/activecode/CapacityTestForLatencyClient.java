@@ -148,6 +148,8 @@ public class CapacityTestForLatencyClient{
 	 * @throws EncryptionException 
 	 */
 	public static void sequential_latency_test() throws InterruptedException, IOException, EncryptionException{
+		guidIndex = Integer.parseInt(System.getProperty("guidIndex"));
+		
 		entries = new GuidEntry[100];
 		for(int i=0; i<100; i++){
 			ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File("guid"+(i*1000+guidIndex))));
