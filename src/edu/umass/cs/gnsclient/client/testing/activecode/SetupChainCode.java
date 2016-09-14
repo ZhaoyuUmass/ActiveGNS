@@ -54,14 +54,16 @@ public class SetupChainCode {
 		}
 		nextGuid[depth-1] = successResult;
 		
+		/*
 		for(int i=0; i<depth; i++){
 			client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
-		}
+		}*/
 		
 		for(int i=0; i<depth; i++){
 			client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
 		}
 		Thread.sleep(1000);
+		
 		for(int i=0; i<depth; i++){
 			client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
 		}
@@ -69,9 +71,9 @@ public class SetupChainCode {
 		
 		for(int i=0; i<depth; i++){
 			String response = client.fieldRead(entries[i], targetGuidField);			
-			assert(response.equals(successResult));
+			//assert(response.equals(successResult));
 			System.out.println("Response is "+response+", succeeds for "+entries[i].getEntityName()+"("+entries[i].getGuid()+")");
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 		}
 		System.out.println("Depth query code chain has been successfully set up!");
 		
