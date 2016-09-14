@@ -37,11 +37,16 @@ public class SetupChainCode {
 			codeFile = System.getProperty("codeFile");
 		}
 		
+		int numChains = 1;
+		if(System.getProperty("numChains")!=null){
+			numChains = Integer.parseInt(System.getProperty("numChains"));
+		}
+		
 		String code = new String(Files.readAllBytes(Paths.get(codeFile)));
 		
 		client = new GNSClientCommands();	
 		
-		for (int j=0; j<100; j++){
+		for (int j=0; j<numChains; j++){
 			entries = new GuidEntry[depth];
 			
 			for (int i=0; i<depth; i++){
