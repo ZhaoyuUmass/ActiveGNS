@@ -48,7 +48,7 @@ public class CapacityTestForLatencyClient{
 	private static int numGuids;
 	
 	private static GNSClientCommands[] clients;
-	private static boolean sequential = true;
+	private static boolean sequential = false;
 	
 	private static ExecutorService executor;
 	
@@ -346,11 +346,15 @@ public class CapacityTestForLatencyClient{
 		processArgs(args);
 		
 		setup();	
-		if(sequential)
+		if(sequential){
+			long t = System.currentTimeMillis();
 			sequential_latency_test();
-		else
+			dump();
+			System.out.println("Total time:"+(System.currentTimeMillis()-t)+"ms");
+		} else {
 			latency_test();
-		dump();
+			dump();
+		}
 		
 		System.exit(0);
 	}
