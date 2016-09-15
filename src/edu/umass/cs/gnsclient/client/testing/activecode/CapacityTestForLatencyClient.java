@@ -273,7 +273,7 @@ public class CapacityTestForLatencyClient{
 					client.fieldRead(guid.getGuid(),
 							someField, null);
 			} catch (Exception e) {
-				e.printStackTrace();
+				//e.printStackTrace();
 			}
 			if(log)
 				increaseLatency((System.nanoTime() - t)/1000);
