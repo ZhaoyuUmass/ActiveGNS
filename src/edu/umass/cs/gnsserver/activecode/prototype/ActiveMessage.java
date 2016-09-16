@@ -65,7 +65,12 @@ public class ActiveMessage implements Message{
 		 * This message is used for worker to send a write query
 		 * to GNS to update a field.
 		 */
-		WRITE_QUERY(3);		
+		WRITE_QUERY(3),
+		
+		/**
+		 * This message is used for resolving a domain name
+		 */
+		RESOLVE_QUERY(4);
 		
 		private final int type;
 		Type(int type){

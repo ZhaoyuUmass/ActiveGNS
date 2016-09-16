@@ -86,7 +86,6 @@ public class ActiveQueryHandler {
 				}
 				
 			}
-			//System.out.println("ActiveQueryHandler receives resposne "+response);
 			
 			monitor.setResult(response, false);
 		}
