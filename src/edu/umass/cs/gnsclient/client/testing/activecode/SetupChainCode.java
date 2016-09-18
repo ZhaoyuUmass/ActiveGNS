@@ -37,6 +37,11 @@ public class SetupChainCode {
 			codeFile = System.getProperty("codeFile");
 		}
 		
+		boolean isRead = true;
+		if(System.getProperty("isRead") != null){
+			isRead = Boolean.parseBoolean(System.getProperty("isRead"));
+		}
+		
 		int numChains = 1;
 		if(System.getProperty("numChains")!=null){
 			numChains = Integer.parseInt(System.getProperty("numChains"));
@@ -60,18 +65,24 @@ public class SetupChainCode {
 			}
 			nextGuid[depth-1] = successResult;
 			
-			
 			for(int i=0; i<depth; i++){
+				if(i==0)
+					client.activeCodeClear(entries[i].getGuid(), ActiveCode.WRITE_ACTION, entries[i]);
 				client.activeCodeClear(entries[i].getGuid(), ActiveCode.READ_ACTION, entries[i]);
 			}
 			
 			for(int i=0; i<depth; i++){
 				client.fieldUpdate(entries[i], targetGuidField, nextGuid[i]);
 			}
+						
+			
 			Thread.sleep(1000);
 			
 			for(int i=0; i<depth; i++){
-				client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
+				if(!isRead && i==0)
+					client.activeCodeSet(entries[i].getGuid(), ActiveCode.WRITE_ACTION, code, entries[i]);
+				else
+					client.activeCodeSet(entries[i].getGuid(), ActiveCode.READ_ACTION, code, entries[i]);
 			}
 			Thread.sleep(1000);
 			

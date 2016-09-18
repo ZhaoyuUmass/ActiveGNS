@@ -42,20 +42,29 @@ public class ActiveCodeConfig {
 	   * switch between blocking and non-blocking design
 	   */
 	  public static boolean acitveCodeBlockingEnabled = false;
-	  
-	  
+	  	  
 	  /**
 	   * Worker heap size
 	   */
 	  public static int activeWorkerHeapSize = 128;
 	  
 	  /**
-	   * Number of spare workers.
+	   * Default request timeout (ms)
+	   */
+	  public static int activeRequestTimeout = 2000;
+	  
+	  /**
+	   * True if crash on OutOfMemoryError is enabled
+	   */
+	  public static boolean activeCrashEnabled = true;
+	  
+	  /**
+	   * Deprecated: Number of spare workers.
 	   */
 	  public static int activeCodeSpareWorker = 0;
 	  
 	  /**
-	   * Deprecated: True if timeout is enabled, i.e., ActiveCodeGuardian thread will run.
+	   * True if timeout is enabled, i.e., ActiveCodeGuardian thread will run.
 	   */
 	  public static boolean activeCodeEnableTimeout = true;
 	  
@@ -72,6 +81,10 @@ public class ActiveCodeConfig {
 	  private static final String ACTIVE_CODE_BLOCKING_ENABLED = "ACTIVE_CODE_BLOCKING_ENABLED"; 
 	  
 	  private static final String ACTIVE_WORKER_HEAP_SIZE = "ACTIVE_WORKER_HEAP_SIZE";
+	  
+	  private static final String ACTIVE_REQUEST_TIMEOUT = "ACTIVE_REQUEST_TIMEOUT";
+	  
+	  private static final String ACTIVE_CRASH_ENEABLED = "ACTIVE_CRASH_ENEABLED";
 	  
 	  private static final String ACTIVE_CODE_SPARE_WORKER = "ACTIVE_CODE_SPARE_WORKER";
 	  
@@ -110,6 +123,14 @@ public class ActiveCodeConfig {
 		    
 		    if(allValues.containsKey(ACTIVE_WORKER_HEAP_SIZE)){
 		    	activeWorkerHeapSize = Integer.parseInt(allValues.getProperty(ACTIVE_WORKER_HEAP_SIZE));
+		    }
+		    
+		    if(allValues.containsKey(ACTIVE_REQUEST_TIMEOUT)) {
+		    	activeRequestTimeout = Integer.parseInt(allValues.getProperty(ACTIVE_REQUEST_TIMEOUT));
+		    }
+		    
+		    if(allValues.containsKey(ACTIVE_CRASH_ENEABLED)) {
+		    	activeCrashEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CRASH_ENEABLED));
 		    }
 	  }
 	 

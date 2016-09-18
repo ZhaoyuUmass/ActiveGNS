@@ -58,8 +58,9 @@ public class ActiveBlockingClient implements Client {
 	private final int workerNumThread;
 	
 	private Process workerProc;
-	final private int id;
-	final private boolean pipeEnable;
+	private final int id;
+	private final boolean pipeEnable;
+	private final static boolean crashEnabled = ActiveCodeConfig.activeCrashEnabled;
 	
 	private final int heapSize;
 	
@@ -210,7 +211,8 @@ public class ActiveBlockingClient implements Client {
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
 	    // kill the worker on OutOfMemoryError
-	    // command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
+	    if(crashEnabled)
+	    	command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingWorker");
@@ -248,7 +250,8 @@ public class ActiveBlockingClient implements Client {
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
 	    // kill the worker on OutOfMemoryError
-	    // command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
+	    if(crashEnabled)
+	    	command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingWorker");

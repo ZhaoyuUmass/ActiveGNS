@@ -57,6 +57,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	private Process workerProc;
 	final private int id;
 	final private boolean pipeEnable;
+	final private boolean crashEnabled = ActiveCodeConfig.activeCrashEnabled;
 	
 	private final int heapSize;
 	
@@ -259,7 +260,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
 	    // kill the worker on OutOfMemoryError
-	    // command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
+	    if(crashEnabled)
+	    	command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
@@ -297,7 +299,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add("-Xms"+heapSize+"m");
 	    command.add("-Xmx"+heapSize+"m");
 	    // kill the worker on OutOfMemoryError
-	    // command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
+	    if(crashEnabled)
+	    	command.add("-XX:OnOutOfMemoryError="+actionOnOutOfMemory);
 	    command.add("-cp");
 	    command.add(classpath);
 	    command.add("edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingWorker");
