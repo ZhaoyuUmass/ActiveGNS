@@ -70,7 +70,12 @@ public class ActiveMessage implements Message{
 		/**
 		 * This message is used for resolving a domain name
 		 */
-		RESOLVE_QUERY(4);
+		RESOLVE_QUERY(4),
+		
+		/**
+		 * This message is used for sending a HTTP request
+		 */
+		HTTP_QUERY(5);
 		
 		private final int type;
 		Type(int type){
