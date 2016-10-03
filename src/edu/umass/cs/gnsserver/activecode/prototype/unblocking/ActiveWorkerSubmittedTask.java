@@ -41,6 +41,7 @@ public class ActiveWorkerSubmittedTask implements Runnable {
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			// return an error
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
+			//e.printStackTrace();
 		}
 		
 		try {
