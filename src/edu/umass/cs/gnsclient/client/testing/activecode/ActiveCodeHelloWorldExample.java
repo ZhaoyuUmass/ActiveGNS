@@ -63,7 +63,7 @@ public class ActiveCodeHelloWorldExample {
 		final edu.umass.cs.gnsclient.client.util.GuidEntry entry = GuidUtils.lookupOrCreateAccountGuid(client, ACCOUNT_GUID, PASSWORD);
 		
 		String field = "someField";
-		String value = "someValue";
+		String value = "original value";
 		
 		String depth_field = "depthField";
 		String depth_result = "Depth query succeeds";
