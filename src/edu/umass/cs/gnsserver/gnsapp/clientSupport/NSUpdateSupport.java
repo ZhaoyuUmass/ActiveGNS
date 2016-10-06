@@ -173,7 +173,7 @@ public class NSUpdateSupport {
 	  long t = System.nanoTime();
 	  if(!AppOptionsOld.enableActiveCode) return userJSON;
 	  // Only do active field handling for user fields.
-	  //FIXME: field could be null and it's an internalField, then a bug is triggered
+	  //FIXME: field could be null as it's an internalField, then a bug is triggered
 	  //This is a temporary fix to the problem
 	  if(field==null){
 		 field = (String) userJSON.keys().next();

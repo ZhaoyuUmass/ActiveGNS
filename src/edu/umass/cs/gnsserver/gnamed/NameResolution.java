@@ -175,7 +175,7 @@ public class NameResolution {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
         return errorMessage(query, Rcode.NXDOMAIN);
       }
-      /* Parse the response from GNS and create DNS records*/
+      // Parse the response from GNS and create DNS records 
       try {
         NameResolution.getLogger().log(Level.FINE, "fieldResponse all field:{0}", fieldResponseJson.toString());
         if (fieldResponseJson.has("A")) {
@@ -189,7 +189,7 @@ public class NameResolution {
           NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, 120, new Name(ns));
           response.addRecord(nsRecord, Section.AUTHORITY);
 
-          /* Resolve NS Record name to an IP address and add it to ADDITIONAL section */
+          // Resolve NS Record name to an IP address and add it to ADDITIONAL section 
           JSONObject nsResponseJson = lookupGuidField(ns, fieldName, null, handler);
           //CommandResponse nsResponse = lookupGuidGnsServer(ns, fieldName, null, handler);
           if (nsResponseJson != null) {
@@ -206,7 +206,7 @@ public class NameResolution {
           MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, 120, 100, new Name(mxname));
           response.addRecord(mxRecord, Section.AUTHORITY);
 
-          /* Resolve MX Record name to an IP address and add it to ADDITIONAL section */
+          // Resolve MX Record name to an IP address and add it to ADDITIONAL section 
           JSONObject mxResponseJson = lookupGuidField(mxname, fieldName, null, handler);
           //CommandResponse mxResponse = lookupGuidGnsServer(mxname, fieldName, null, handler);
           if (mxResponseJson != null) {
@@ -219,7 +219,7 @@ public class NameResolution {
           }
         }
         if (fieldResponseJson.has("CNAME")) {
-          /* Resolve CNAME alias to an IP address and add it to ADDITIONAL section */
+          // Resolve CNAME alias to an IP address and add it to ADDITIONAL section 
           String cname = fieldResponseJson.getString("CNAME");
           CNAMERecord cnameRecord = new CNAMERecord(new Name(nameToResolve), DClass.IN, 60, new Name(cname));
           response.addRecord(cnameRecord, Section.ANSWER);
@@ -228,7 +228,7 @@ public class NameResolution {
         }
         DelayProfiler.updateDelay("ResolveName", resolveStart);
         if (!nameResolved) {
-          /* We should reach here only if we fail to resolve to an IP address */
+          // We should reach here only if we fail to resolve to an IP address
           NameResolution.getLogger().log(Level.FINER,
                   "Couldn''t resolve to an IP address for domain {0}", domainName);
           break;
@@ -239,7 +239,7 @@ public class NameResolution {
       } catch (TextParseException | UnknownHostException e) {
         e.printStackTrace();
       }
-
+      
     }
     NameResolution.getLogger().log(Level.FINER, "Outgoing response from GNS: {0}", response.toString());
     return response;
@@ -257,16 +257,10 @@ public class NameResolution {
    * @return a JSONObject containing the fields and values or null
    */
   public static JSONObject lookupGuidField(String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
-    long startTime = System.currentTimeMillis();
-    // Make an array of field names 
-    String[] fieldArray = null;
-    if (field != null) {
-      fieldArray = new String[1];
-      fieldArray[0] = field;
-    } else if (fields != null) {
-      fieldArray = new String[fields.size()];
-      fieldArray = fields.toArray(fieldArray);
-    }
+    /**
+     * Querying multiple types together is allowed in DNS protocol, but practically not supported.
+     * Therefore, no need for us to implement support for multi-type query.
+     */
     
     /**
      * 1. Lookup guid for the domain name

@@ -166,8 +166,12 @@ public class NSFieldAccess {
     	  // active code handling
     	  ValuesMap valuesMap = nameRecord.getValuesMap();
     	  if (handleActiveCode) {
-    		  valuesMap = handler.getApp().getActiveCodeHandler().handleActiveCode(header, fields,
-    				  guid, valuesMap, handler.getApp());
+    		  try {
+				valuesMap =  handleActiveCode(header, null, guid,
+				          valuesMap, handler.getApp());
+			} catch (InternalRequestException e) {
+				e.printStackTrace();
+			}
     	  }
     	  return valuesMap;
       }
@@ -324,7 +328,7 @@ public class NSFieldAccess {
     ValuesMap newResult = originalValues;
     //FIXME: field could be null and it's an internalField, then a bug is triggered
 	  // This is a temporary fix to the problem
-    if(field==null){
+    if(field == null){
 		 field = (String) originalValues.keys().next();
 	}
     

@@ -175,18 +175,4 @@ public class ActiveCodeHandler {
 		System.out.println(String.format("it takes %d ms, avg_latency = %f us", elapsed, elapsed*1000.0/n));
 		
 	}
-
-
-	/**
-	 * @param header
-	 * @param fields
-	 * @param guid
-	 * @param valuesMap
-	 * @param app
-	 * @return
-	 */
-	public ValuesMap handleActiveCode(InternalRequestHeader header,
-			List<String> fields, String guid, ValuesMap valuesMap, GNSApp app) {
-		throw new RuntimeException("Unimplemented");
-	}
 }
