@@ -283,6 +283,9 @@ public class NameResolution {
                 "No guid for {0}: {1}", new Object[]{domain, e});
     }
     
+    /**
+     * 2. Lookup the record
+     */
     JSONObject value = null;
     if(guid != null){
     	//FIXME: the internal request header should not be null
