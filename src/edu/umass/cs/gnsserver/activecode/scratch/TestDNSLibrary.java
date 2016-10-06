@@ -10,7 +10,6 @@ import org.xbill.DNS.DClass;
 import org.xbill.DNS.Flags;
 import org.xbill.DNS.Message;
 import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
 import org.xbill.DNS.TextParseException;
 
@@ -90,7 +89,7 @@ public class TestDNSLibrary {
 	public static void main(String[] args) throws TextParseException, UnknownHostException{
 		System.out.println("####################### TEST 01 ##########################");
 		System.out.println("Malformatted query: Randomly generate meaningless data and use the library to deserialize the message. \n"
-				+ "If the message can not be deserialized, then generate a response with a format error message(FORMERR).\n");
+				+ "If the message can not be deserialized, then generate a response with a format error message(FORMERR).");
 		test_01_malformat();
 		System.out.println("######################## DONE ############################");
 		

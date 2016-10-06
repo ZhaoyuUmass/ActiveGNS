@@ -26,7 +26,9 @@ import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import static edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.AccountAccess.HRN_GUID;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
+import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSFieldAccess;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
+import edu.umass.cs.gnsserver.utils.ValuesMap;
 import edu.umass.cs.utils.DelayProfiler;
 
 import java.io.IOException;
@@ -162,13 +164,13 @@ public class NameResolution {
     response.getHeader().setFlag(Flags.AA);
 
     /* Request DNS fields of an alias and prepare a DNS response message */
-    ArrayList<String> fieldNames = new ArrayList<>(Arrays.asList("A", "NS", "CNAME", "SOA", "PTR", "MX"));
+    ArrayList<String> fields = new ArrayList<>(Arrays.asList("A", "NS", "CNAME", "SOA", "PTR", "MX"));
     Boolean nameResolved = false;
     String nameToResolve = domainName;
 
     while (!nameResolved) {
       long resolveStart = System.currentTimeMillis();
-      JSONObject fieldResponseJson = lookupGuidField(nameToResolve, null, fieldNames, handler);
+      JSONObject fieldResponseJson = lookupGuidField(nameToResolve, null, fields, handler);
       if (fieldResponseJson == null) {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
         return errorMessage(query, Rcode.NXDOMAIN);
@@ -248,34 +250,65 @@ public class NameResolution {
    * Returns a JSONObject containing the fields and values
    * or null if the domainName doesn't exist.
    *
-   * @param domainName - the HRN of the guid
-   * @param fieldName - the field to lookup (mutually exclusive with fieldNames)
-   * @param fieldNames - the fields to lookup (mutually exclusive with fieldNames)
+   * @param domain - the HRN of the guid
+   * @param field - the field to lookup (mutually exclusive with fieldNames)
+   * @param fields - the fields to lookup (mutually exclusive with fieldNames)
    * @param handler
    * @return a JSONObject containing the fields and values or null
    */
-  public static JSONObject lookupGuidField(String domainName, String fieldName, ArrayList<String> fieldNames, ClientRequestHandlerInterface handler) {
+  public static JSONObject lookupGuidField(String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
     long startTime = System.currentTimeMillis();
-    // Make an array of field names to fetch from fieldName or FieldNames
+    // Make an array of field names 
     String[] fieldArray = null;
-    if (fieldName != null) {
+    if (field != null) {
       fieldArray = new String[1];
-      fieldArray[0] = fieldName;
-    } else if (fieldNames != null) {
-      fieldArray = new String[fieldNames.size()];
-      fieldArray = fieldNames.toArray(fieldArray);
+      fieldArray[0] = field;
+    } else if (fields != null) {
+      fieldArray = new String[fields.size()];
+      fieldArray = fields.toArray(fieldArray);
     }
+    
+    /**
+     * 1. Lookup guid for the domain name
+     */
+    String guid = null;
+    try{
+	    ValuesMap result = NSFieldAccess.lookupJSONFieldLocalNoAuth(null, domain,
+	            HRN_GUID, handler.getApp(), false);
+	    if (result != null) {
+	        guid = result.getString(HRN_GUID);
+	    }
+    } catch (FailedDBOperationException | JSONException e) {
+    	NameResolution.getLogger().log(Level.FINE,
+                "No guid for {0}: {1}", new Object[]{domain, e});
+    }
+    
+    JSONObject value = null;
+    if(guid != null){
+    	//FIXME: the internal request header should not be null
+    	try {
+			value = NSFieldAccess.lookupFieldsLocalNoAuth(null, guid, fields, ColumnFieldType.USER_JSON, handler);
+		} catch (FailedDBOperationException e) {
+			NameResolution.getLogger().log(Level.FINE,
+	                "Fetching record failed for {0}: {1}", new Object[]{domain, e});
+		}
+    }
+    return value;
+    
+    /**
+     * Zhaoyu: to trigger active code, this part needs to be discarded
+    
     // First we lookup the guid from the HRN
     GNSApp app = handler.getApp();
     NameRecord hrnNameRecord = null;
     try {
-      hrnNameRecord = NameRecord.getNameRecordMultiUserFields(app.getDB(), domainName,
+      hrnNameRecord = NameRecord.getNameRecordMultiUserFields(app.getDB(), domain,
               ColumnFieldType.USER_JSON, HRN_GUID);
     } catch (RecordNotFoundException e) {
       // Normal result when the record doesn't exist
     } catch (FailedDBOperationException e) {
       NameResolution.getLogger().log(Level.SEVERE,
-              "Problem getting guid for {0}: {1}", new Object[]{domainName, e});
+              "Problem getting guid for {0}: {1}", new Object[]{domain, e});
     }
     DelayProfiler.updateDelay("lookupGuidField.guid", startTime);
     long fieldTime = System.currentTimeMillis();
@@ -295,7 +328,7 @@ public class NameResolution {
           // Normal result
         } catch (FailedDBOperationException e) {
           NameResolution.getLogger().log(Level.SEVERE,
-                  "Problem getting guid for {0}: {1}", new Object[]{domainName, e});
+                  "Problem getting guid for {0}: {1}", new Object[]{domain, e});
         }
       }
     }
@@ -311,6 +344,7 @@ public class NameResolution {
     } else {
       return null;
     }
+    */
   }
 
   /**
