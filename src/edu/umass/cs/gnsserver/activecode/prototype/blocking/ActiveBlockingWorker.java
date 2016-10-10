@@ -15,8 +15,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
 import edu.umass.cs.gnsserver.activecode.prototype.channels.ActiveNamedPipe;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
-import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingQuerier;
-import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingRunner;
 
 /**
  * @author gaozy

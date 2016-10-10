@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
@@ -317,8 +318,8 @@ public class ActiveBlockingClient implements Client {
 	 * @return executed result sent back from worker
 	 */
 	@Override
-	public synchronized ValuesMap runCode(InternalRequestHeader header, String guid, String field, 
-			String code, ValuesMap valuesMap, int ttl, long budget) throws ActiveException {
+	public synchronized JSONObject runCode(InternalRequestHeader header, String guid, String field, 
+			String code, JSONObject valuesMap, int ttl, long budget) throws ActiveException {
 		
 		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
 		sendMessage(msg);
@@ -403,7 +404,7 @@ public class ActiveBlockingClient implements Client {
 		} 
 		ValuesMap value = new ValuesMap();
 		value.put(field, executionTime);	
-		ValuesMap result = client.runCode(null, guid, field, code, value, 0, 1000);
+		JSONObject result = client.runCode(null, guid, field, code, value, 0, 1000);
 		System.out.println(result);
 		
 		assertEquals(result.toString(), value.toString());
@@ -415,8 +416,7 @@ public class ActiveBlockingClient implements Client {
 		long t1 = System.currentTimeMillis();
 		
 		for (int i=0; i<n; i++){
-			client.runCode(null, guid, field, code, value, 0, executionTime);
-			
+			client.runCode(null, guid, field, code, value, 0, executionTime);			
 		}
 		
 		long elapsed = System.currentTimeMillis() - t1;

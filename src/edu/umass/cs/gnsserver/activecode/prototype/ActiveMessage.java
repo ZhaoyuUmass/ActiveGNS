@@ -32,7 +32,7 @@ public class ActiveMessage implements Message{
 	private String guid;
 	private String field;
 	private String code;
-	private ValuesMap value;
+	private JSONObject value;
 	private String targetGuid;
 	private String error;
 
@@ -103,7 +103,7 @@ public class ActiveMessage implements Message{
 	 * @param targetGuid 
 	 * @param error 
 	 */
-	public ActiveMessage(Type type, long id, int ttl, long budget, String guid, String field, String code, ValuesMap value, String targetGuid, String error){
+	public ActiveMessage(Type type, long id, int ttl, long budget, String guid, String field, String code, JSONObject value, String targetGuid, String error){
 		this.type = type;
 		this.id = id;
 		this.ttl = ttl;
@@ -125,7 +125,7 @@ public class ActiveMessage implements Message{
 	 * @param ttl
 	 * @param budget 
 	 */
-	public ActiveMessage(String guid, String field, String code, ValuesMap value, int ttl, long budget){
+	public ActiveMessage(String guid, String field, String code, JSONObject value, int ttl, long budget){
 		this(Type.REQUEST, counter.getAndIncrement(), ttl, budget, guid, field, code, value, null, null);
 	}
 	
@@ -151,7 +151,7 @@ public class ActiveMessage implements Message{
 	 * @param value
 	 * @param id 
 	 */
-	public ActiveMessage(int ttl, String guid, String field, String targetGuid, ValuesMap value, long id){
+	public ActiveMessage(int ttl, String guid, String field, String targetGuid, JSONObject value, long id){
 		this(Type.WRITE_QUERY, id, ttl, 0, guid, field, null, value, targetGuid, null);
 	}
 	
@@ -161,7 +161,7 @@ public class ActiveMessage implements Message{
 	 * @param value
 	 * @param error
 	 */
-	public ActiveMessage(long id, ValuesMap value, String error){
+	public ActiveMessage(long id, JSONObject value, String error){
 		this(Type.RESPONSE, id, 0, 0, null, null, null, value, null, error);
 	}
 	
@@ -203,7 +203,7 @@ public class ActiveMessage implements Message{
 	/**
 	 * @return value
 	 */
-	public ValuesMap getValue() {
+	public JSONObject getValue() {
 		return value;
 	}
 	
@@ -228,7 +228,11 @@ public class ActiveMessage implements Message{
 		return budget;
 	}
 	
-	private int getEstimatedLengthExceptForValuesMap(){
+	/**
+	 * 
+	 * @return
+	 */
+	private int getEstimatedLengthExceptWithoutValue(){
 		int length = 0;
 		switch(type){
 		case REQUEST:
@@ -279,7 +283,7 @@ public class ActiveMessage implements Message{
 		// First convert ValuesMap to String, as it is costly
 		String valuesMapString = (value == null)?null:value.toString();
 		
-		byte[] buffer = new byte[this.getEstimatedLengthExceptForValuesMap()+( (valuesMapString==null)?0:valuesMapString.length() )];
+		byte[] buffer = new byte[this.getEstimatedLengthExceptWithoutValue()+( (valuesMapString==null)?0:valuesMapString.length() )];
 		ByteBuffer bbuf = ByteBuffer.wrap(buffer);
 		byte[] guidBytes,fieldBytes,codeBytes,valuesMapBytes,targetGuidBytes;
 		
@@ -398,6 +402,8 @@ public class ActiveMessage implements Message{
 			bbuf.putInt( (error==null)?0:errorBytes.length );
 			bbuf.put(errorBytes);
 			exactLength += (Integer.BYTES + ((error==null)? 0:errorBytes.length));
+			break;
+		default:
 			break;
 		
 		}
@@ -527,6 +533,8 @@ public class ActiveMessage implements Message{
 				error = new String(errorBytes, CHARSET);
 			}
 			
+			break;
+		default:
 			break;
 			
 		}

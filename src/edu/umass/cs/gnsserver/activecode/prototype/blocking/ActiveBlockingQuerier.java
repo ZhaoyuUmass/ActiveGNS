@@ -2,6 +2,8 @@ package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.io.IOException;
 
+import org.json.JSONObject;
+
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
@@ -60,7 +62,7 @@ public class ActiveBlockingQuerier implements Querier {
 	 * @throws ActiveException
 	 */
 	@Override
-	public ValuesMap readGuid(String queriedGuid, String field) throws ActiveException{
+	public JSONObject readGuid(String queriedGuid, String field) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
@@ -75,7 +77,7 @@ public class ActiveBlockingQuerier implements Querier {
 	 * @throws ActiveException
 	 */
 	@Override
-	public void writeGuid(String queriedGuid, String field, ValuesMap value) throws ActiveException{
+	public void writeGuid(String queriedGuid, String field, JSONObject value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
@@ -85,9 +87,9 @@ public class ActiveBlockingQuerier implements Querier {
 	}
 	
 	
-	private ValuesMap readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
+	private JSONObject readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
 			throws ActiveException {
-		ValuesMap value = null;
+		JSONObject value = null;
 		try{
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
 			channel.sendMessage(am);
@@ -107,7 +109,7 @@ public class ActiveBlockingQuerier implements Querier {
 		return value;
 	}
 
-	private void writeValueIntoField(String querierGuid, String targetGuid, String field, ValuesMap value, int ttl)
+	private void writeValueIntoField(String querierGuid, String targetGuid, String field, JSONObject value, int ttl)
 			throws ActiveException {
 		
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, targetGuid, value, currentID);

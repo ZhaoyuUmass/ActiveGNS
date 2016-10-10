@@ -1,5 +1,7 @@
 package edu.umass.cs.gnsserver.activecode.prototype.interfaces;
 
+import org.json.JSONObject;
+
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
@@ -34,7 +36,7 @@ public interface Querier {
 	 * @return the ValuesMap read from the field of the guid
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
-	public ValuesMap readGuid(String queriedGuid, String field) throws ActiveException;
+	public JSONObject readGuid(String queriedGuid, String field) throws ActiveException;
 	
 	
 	/**
@@ -54,6 +56,6 @@ public interface Querier {
 	 * @param value
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
-	public void writeGuid(String queriedGuid, String field, ValuesMap value) throws ActiveException;
+	public void writeGuid(String queriedGuid, String field, JSONObject value) throws ActiveException;
 	
 }

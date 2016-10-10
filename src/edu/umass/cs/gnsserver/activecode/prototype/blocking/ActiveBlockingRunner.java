@@ -19,6 +19,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
@@ -87,7 +88,7 @@ public class ActiveBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {
+	public JSONObject runCode(String guid, String field, String code, JSONObject value, int ttl, long id) throws ScriptException, NoSuchMethodException {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);
@@ -98,7 +99,7 @@ public class ActiveBlockingRunner {
 		return valuesMap;
 	}
 	
-	private static class SimpleTask implements Callable<ValuesMap>{
+	private static class SimpleTask implements Callable<JSONObject>{
 		
 		ActiveBlockingRunner runner;
 		ActiveMessage am;
@@ -109,7 +110,7 @@ public class ActiveBlockingRunner {
 		}
 		
 		@Override
-		public ValuesMap call() throws Exception {
+		public JSONObject call() throws Exception {
 			return runner.runCode(am.getGuid(), am.getField(), am.getCode(), am.getValue(), am.getTtl(), am.getId());
 		}
 		
@@ -133,7 +134,7 @@ public class ActiveBlockingRunner {
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();
 		
-		ArrayList<Future<ValuesMap>> tasks = new ArrayList<Future<ValuesMap>>();
+		ArrayList<Future<JSONObject>> tasks = new ArrayList<Future<JSONObject>>();
 		
 		String guid = "zhaoyu";
 		String field = "gao";
@@ -154,7 +155,7 @@ public class ActiveBlockingRunner {
 		for(int i=0; i<n; i++){
 			tasks.add(executor.submit(new SimpleTask(runners[0], msg)));
 		}
-		for(Future<ValuesMap> task:tasks){
+		for(Future<JSONObject> task:tasks){
 			task.get();
 		}
 		

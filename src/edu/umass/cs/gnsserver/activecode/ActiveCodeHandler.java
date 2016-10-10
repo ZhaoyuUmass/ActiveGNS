@@ -33,17 +33,25 @@ import org.json.JSONObject;
 import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.gigapaxos.PaxosConfig.PC;
 import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
+import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
+import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveHandler;
+import edu.umass.cs.gnsserver.database.ColumnFieldType;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.InternalField;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
+import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
+import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 import edu.umass.cs.utils.Config;
+import edu.umass.cs.utils.DelayProfiler;
 
 /**
  * This class is the entry of activecode, it provides
@@ -95,7 +103,7 @@ public class ActiveCodeHandler {
 	 * @param action can be 'read' or 'write'
 	 * @return whether or not there is active code
 	 */
-	public static boolean hasCode(ValuesMap valuesMap, String action) {
+	protected static boolean hasCode(ValuesMap valuesMap, String action) {
 
             try {
 				if(valuesMap.get(ActiveCode.getCodeField(action)) != null){
@@ -115,14 +123,14 @@ public class ActiveCodeHandler {
 	 * @param guid
 	 * @param field
 	 * @param action
-	 * @param valuesMap
+	 * @param value
 	 * @param activeCodeTTL current default is 10
 	 * @return executed result
 	 * @throws InternalRequestException 
 	 */
-	public static ValuesMap runCode(InternalRequestHeader header, String code, String guid, String field, String action, ValuesMap valuesMap, int activeCodeTTL) throws InternalRequestException {
+	public static JSONObject runCode(InternalRequestHeader header, String code, String guid, String field, String action, JSONObject value, int activeCodeTTL) throws InternalRequestException {
 		try {
-			return handler.runCode(header, guid, field, code, valuesMap, activeCodeTTL);
+			return handler.runCode(header, guid, field, code, value, activeCodeTTL);
 		} catch (ActiveException e) {			
 			//e.printStackTrace();
 			/**
@@ -133,6 +141,61 @@ public class ActiveCodeHandler {
 			 */
 			throw new InternalRequestException(GNSResponseCode.INTERNAL_REQUEST_EXCEPTION, "ActiveGNS request execution failed:"+e.getMessage());
 		}
+	}
+	
+	/**
+	 * This interface is used for the class out of activecode package to trigger active code.
+	 * It requires the parameters for running active code such as guid, field, and value.
+	 * It runs the requests and returns the processed result to the caller. 
+	 * 
+	 * 
+	 * @param header header is needed for depth query
+	 * @param guid 
+	 * @param field
+	 * @param action the actions in {@code ActiveCode}
+	 * @param value
+	 * @param db db is needed for fetching active code to run
+	 * @return the processed result as an JSONObject, the original value is returned if there is an error with code execution
+	 * @throws InternalRequestException 
+	 */
+	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
+		/**
+		 * Only execute active code for user field 
+		 */
+		long t = System.nanoTime();
+		if(field == null){			
+			field = (String) value.keys().next();
+			System.out.println("The field is null, the first field in user value is "+field+", the userJSON is "+value);
+		}
+		JSONObject newResult = value;
+		if ( !InternalField.isInternalField(field) ) {
+			NameRecord activeCodeNameRecord = null;
+			try {
+				activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,
+				        ColumnFieldType.USER_JSON, ActiveCode.getCodeField(action));
+			} catch (RecordNotFoundException | FailedDBOperationException e) {
+				return value;
+			}
+			
+			ValuesMap codeMap = null;
+			try {
+				codeMap = activeCodeNameRecord.getValuesMap();
+			} catch (FieldNotFoundException e) {
+				return value;
+			}
+			
+			if (codeMap != null && value != null) {
+				String code;
+				try {
+					code = codeMap.getString(ActiveCode.getCodeField(action));
+				} catch (JSONException e) {
+					return value;
+				}
+				newResult = ActiveCodeHandler.runCode(header, code, guid, field, action, value, header.getTTL());
+			}
+		}
+		DelayProfiler.updateDelayNano("activeTotal", t);
+		return newResult;
 	}
 	
 	/**

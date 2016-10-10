@@ -20,6 +20,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
@@ -95,7 +96,7 @@ public class ActiveNonBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public ValuesMap runCode(String guid, String field, String code, ValuesMap value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+	public ValuesMap runCode(String guid, String field, String code, JSONObject value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
 		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, ttl, guid, id);
 		map.put(id, querier);
 		

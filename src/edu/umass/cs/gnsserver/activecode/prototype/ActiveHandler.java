@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gigapaxos.PaxosConfig;
 import edu.umass.cs.gigapaxos.PaxosConfig.PC;
@@ -127,7 +128,7 @@ public class ActiveHandler {
 	 * @return executed result
 	 * @throws ActiveException 
 	 */
-	public ValuesMap runCode(InternalRequestHeader header, String guid, String field, String code, ValuesMap value, int ttl) throws ActiveException{
+	public JSONObject runCode(InternalRequestHeader header, String guid, String field, String code, JSONObject value, int ttl) throws ActiveException{
 		//System.out.println("Running request for guid "+guid+" on field "+field+" with value "+value);	
 		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 2000);
 	}
@@ -166,7 +167,7 @@ public class ActiveHandler {
 		
 		// initialize a handler
 		ActiveHandler handler = new ActiveHandler("", null, numProcess, numThread, blocking);
-		ArrayList<Future<ValuesMap>> tasks = new ArrayList<Future<ValuesMap>>();
+		ArrayList<Future<JSONObject>> tasks = new ArrayList<Future<JSONObject>>();
 		
 		int n = 1000000;
 		
@@ -175,7 +176,7 @@ public class ActiveHandler {
 		for(int i=0; i<n; i++){
 			tasks.add(executor.submit(new ActiveTask(clientPool[i%numProcess], guid, field, noop_code, value, 0)));
 		}
-		for(Future<ValuesMap> task:tasks){
+		for(Future<JSONObject> task:tasks){
 			task.get();
 		}
 		

@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
@@ -23,7 +24,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
 import edu.umass.cs.utils.DelayProfiler;
 
 /**
@@ -366,8 +366,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	 * @return executed result sent back from worker
 	 */
 	@Override
-	public ValuesMap runCode(InternalRequestHeader header, String guid, String field, 
-			String code, ValuesMap valuesMap, int ttl, long budget) throws ActiveException {
+	public JSONObject runCode(InternalRequestHeader header, String guid, String field, 
+			String code, JSONObject valuesMap, int ttl, long budget) throws ActiveException {
 		
 		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
 		Monitor monitor = new Monitor();

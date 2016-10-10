@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import javax.script.ScriptException;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingRunner;
 
 /**
  * @author gaozy
