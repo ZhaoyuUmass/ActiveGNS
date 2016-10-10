@@ -128,11 +128,11 @@ public class ActiveCodeHandler {
 	 * @return executed result
 	 * @throws InternalRequestException 
 	 */
-	public static JSONObject runCode(InternalRequestHeader header, String code, String guid, String field, String action, JSONObject value, int activeCodeTTL) throws InternalRequestException {
+	private static JSONObject runCode(InternalRequestHeader header, String code, String guid, String field, String action, JSONObject value, int activeCodeTTL) throws InternalRequestException {
 		try {
 			return handler.runCode(header, guid, field, code, value, activeCodeTTL);
 		} catch (ActiveException e) {			
-			//e.printStackTrace();
+			e.printStackTrace();
 			/**
 			 *  return the original value without executing, as there is an error
 			 *  returned from the worker. The error indicates that the code failed
@@ -159,21 +159,23 @@ public class ActiveCodeHandler {
 	 * @throws InternalRequestException 
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
+		System.out.println("handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+"}");
+		long t = System.nanoTime();
 		/**
 		 * Only execute active code for user field 
 		 */
-		long t = System.nanoTime();
-		if(field == null){			
-			field = (String) value.keys().next();
-			System.out.println("The field is null, the first field in user value is "+field+", the userJSON is "+value);
+		
+		if(field!=null && InternalField.isInternalField(field) ){
+			return value;
 		}
 		JSONObject newResult = value;
-		if ( !InternalField.isInternalField(field) ) {
+		if ( field==null || !InternalField.isInternalField(field) ) {
 			NameRecord activeCodeNameRecord = null;
 			try {
 				activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,
 				        ColumnFieldType.USER_JSON, ActiveCode.getCodeField(action));
 			} catch (RecordNotFoundException | FailedDBOperationException e) {
+				e.printStackTrace();
 				return value;
 			}
 			
@@ -181,6 +183,7 @@ public class ActiveCodeHandler {
 			try {
 				codeMap = activeCodeNameRecord.getValuesMap();
 			} catch (FieldNotFoundException e) {
+				e.printStackTrace();
 				return value;
 			}
 			
@@ -191,7 +194,7 @@ public class ActiveCodeHandler {
 				} catch (JSONException e) {
 					return value;
 				}
-				newResult = ActiveCodeHandler.runCode(header, code, guid, field, action, value, header.getTTL());
+				newResult = runCode(header, code, guid, field, action, value, header.getTTL());
 			}
 		}
 		DelayProfiler.updateDelayNano("activeTotal", t);

@@ -69,7 +69,7 @@ public class ActiveCodeHelloWorldExample {
 		String depth_result = "Depth query succeeds";
 		
 		// set up a field
-		client.fieldUpdate(entry,  field, value);
+		client.fieldUpdate(entry, field, value);
 		client.fieldUpdate(entry, depth_field, depth_result);
 		
 		// clear code for both read and write action

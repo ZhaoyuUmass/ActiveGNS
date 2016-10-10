@@ -98,7 +98,7 @@ public class NSFieldAccess {
     if (handleActiveCode) {
       try {
 		JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.READ_ACTION, valuesMap, gnsApp.getDB());
-		valuesMap = new ValuesMap(result);
+		valuesMap = result!=null?new ValuesMap(result):null;
 		} catch (InternalRequestException e) {
 			// Active code field lookup failed, do nothing and return the original value
 		}
@@ -172,7 +172,7 @@ public class NSFieldAccess {
     		  try {
 				JSONObject result =  ActiveCodeHandler.handleActiveCode(header,  guid, null, ActiveCode.READ_ACTION,
 				          valuesMap, handler.getApp().getDB());
-				valuesMap = new ValuesMap(result);
+				valuesMap = result!=null?new ValuesMap(result):null;
 			} catch (InternalRequestException e) {
 				e.printStackTrace();
 			}

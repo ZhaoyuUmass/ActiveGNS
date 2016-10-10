@@ -157,9 +157,9 @@ public class NSUpdateSupport {
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
-    if (activeCodeHandler != null && AppOptionsOld.enableActiveCode) {
+    if (activeCodeHandler != null && AppOptionsOld.enableActiveCode ) {    	
         JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
-        newValue = new ValuesMap(result);
+        newValue = result!=null?new ValuesMap(result):null;
     }
     
     if (field != null) {

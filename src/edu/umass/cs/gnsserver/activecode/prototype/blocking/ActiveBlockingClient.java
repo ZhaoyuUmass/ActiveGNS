@@ -280,7 +280,7 @@ public class ActiveBlockingClient implements Client {
 		try {
 			am = (ActiveMessage) channel.receiveMessage();
 		} catch (IOException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 		return am;
 	}
@@ -289,7 +289,7 @@ public class ActiveBlockingClient implements Client {
 		try {
 			channel.sendMessage(am);
 		} catch (IOException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 	

@@ -328,7 +328,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		try {
 			am = (ActiveMessage) channel.receiveMessage();
 		} catch (IOException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 		return am;
 	}
@@ -337,7 +337,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		try {
 			channel.sendMessage(am);
 		} catch (IOException e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 	}
 	
