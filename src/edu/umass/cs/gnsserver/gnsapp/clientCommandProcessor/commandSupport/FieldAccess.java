@@ -123,7 +123,7 @@ public class FieldAccess {
   public static CommandResponse lookupSingleField(InternalRequestHeader header, String guid, String field,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    GNSResponseCode errorCode = signatureAndACLCheckForRead(guid, field, null,
+    GNSResponseCode errorCode = signatureAndACLCheckForRead(header, guid, field, null,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new CommandResponse(errorCode, GNSCommandProtocol.BAD_RESPONSE + " " + errorCode.getProtocolCode());
@@ -185,7 +185,7 @@ public class FieldAccess {
   public static CommandResponse lookupMultipleFields(InternalRequestHeader header, String guid, ArrayList<String> fields,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    GNSResponseCode errorCode = signatureAndACLCheckForRead(guid, null, fields,
+    GNSResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new CommandResponse(errorCode, GNSCommandProtocol.BAD_RESPONSE + " " + errorCode.getProtocolCode());
@@ -260,7 +260,7 @@ public class FieldAccess {
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
 
-    GNSResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid,
+    GNSResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(header, guid,
             GNSCommandProtocol.ALL_FIELDS, null,
             reader, signature, message, timestamp,
             handler.getApp());
@@ -731,6 +731,14 @@ public class FieldAccess {
           String reader, String signature, String message,
           Date timestamp,
           GNSApplicationInterface<String> app) {
+	  return signatureAndACLCheckForRead(null, guid, field, fields, reader, signature, message, timestamp, app);
+  }
+	  
+  public static GNSResponseCode signatureAndACLCheckForRead(InternalRequestHeader header, String guid,
+          String field, List<String> fields,
+          String reader, String signature, String message,
+          Date timestamp,
+          GNSApplicationInterface<String> app) {	  
     GNSResponseCode errorCode = GNSResponseCode.NO_ERROR;
     ClientSupportConfig.getLogger().log(Level.FINE,
             "signatureAndACLCheckForRead guid: {0} field: {1} reader: {2} signature: {3}",
@@ -741,8 +749,11 @@ public class FieldAccess {
       // note: reader can also be null here
       if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(reader)
               && (field != null || fields != null)) {
-        errorCode = NSAuthentication.signatureAndACLCheck(guid, field, fields, reader,
+        errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
+      }else{
+    	  // FIXME: this might be a leak to allow users to bypass ACL check
+    	  errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
       }
       // Check for stale commands.
       if (timestamp != null) {

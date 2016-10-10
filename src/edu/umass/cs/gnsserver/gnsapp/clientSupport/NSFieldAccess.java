@@ -21,6 +21,7 @@ package edu.umass.cs.gnsserver.gnsapp.clientSupport;
 
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.database.ColumnFieldType;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
@@ -47,6 +48,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Methods for reading field information in guids on NameServers.
@@ -95,7 +97,8 @@ public class NSFieldAccess {
     ValuesMap valuesMap = lookupFieldLocalNoAuth(guid, field, ColumnFieldType.USER_JSON, gnsApp.getDB());
     if (handleActiveCode) {
       try {
-		valuesMap = NSFieldAccess.handleActiveCode(header, field, guid, valuesMap, gnsApp);
+		JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.READ_ACTION, valuesMap, gnsApp.getDB());
+		valuesMap = new ValuesMap(result);
 		} catch (InternalRequestException e) {
 			// Active code field lookup failed, do nothing and return the original value
 		}
@@ -167,8 +170,9 @@ public class NSFieldAccess {
     	  ValuesMap valuesMap = nameRecord.getValuesMap();
     	  if (handleActiveCode) {
     		  try {
-				valuesMap =  handleActiveCode(header, null, guid,
-				          valuesMap, handler.getApp());
+				JSONObject result =  ActiveCodeHandler.handleActiveCode(header,  guid, null, ActiveCode.READ_ACTION,
+				          valuesMap, handler.getApp().getDB());
+				valuesMap = new ValuesMap(result);
 			} catch (InternalRequestException e) {
 				e.printStackTrace();
 			}
@@ -319,7 +323,7 @@ public class NSFieldAccess {
     }
     return result;
   }
-
+  /*
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String field, String guid,
           ValuesMap originalValues, GNSApplicationInterface<String> gnsApp) throws InternalRequestException {
 	  long t = System.nanoTime();
@@ -352,7 +356,7 @@ public class NSFieldAccess {
 			// No code deployed, return original value
 			return originalValues;
 		}
-      if (codeMap != null && originalValues != null && gnsApp.getActiveCodeHandler() != null) {
+      if (codeMap != null && originalValues != null) {
         String code;
 		try {
 			code = codeMap.getString(ActiveCode.ON_READ);
@@ -375,4 +379,5 @@ public class NSFieldAccess {
     DelayProfiler.updateDelayNano("activeTotal", t);
     return newResult;
   }
+  */
 }

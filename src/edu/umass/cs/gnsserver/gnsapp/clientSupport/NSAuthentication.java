@@ -24,12 +24,18 @@ import com.google.common.cache.CacheBuilder;
 
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.*;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.utils.AclResult;
 import edu.umass.cs.gnscommon.GNSResponseCode;
 import edu.umass.cs.gnscommon.SharedGuidUtils;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.GuidInfo;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.MetaDataTypeName;
+import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -40,31 +46,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-final class AclResult {
+import org.json.JSONException;
+import org.json.JSONObject;
 
-  private final String publicKey;
-  private final boolean aclCheckPassed;
-  private final GNSResponseCode responseCode;
-
-  public AclResult(String publicKey, boolean aclCheckPassed, GNSResponseCode responseCode) {
-    this.publicKey = publicKey;
-    this.aclCheckPassed = aclCheckPassed;
-    this.responseCode = responseCode;
-  }
-
-  public String getPublicKey() {
-    return publicKey;
-  }
-
-  public boolean isAclCheckPassed() {
-    return aclCheckPassed;
-  }
-
-  public GNSResponseCode getResponseCode() {
-    return responseCode;
-  }
-
-}
 
 /**
  *
@@ -75,7 +59,7 @@ public class NSAuthentication {
   private static final Cache<String, String> PUBLIC_KEY_CACHE
           = CacheBuilder.newBuilder().concurrencyLevel(5).maximumSize(1000).build();
 
-  private static AclResult aclCheck(String targetGuid, String field,
+  public static AclResult aclCheck(InternalRequestHeader header, String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -98,7 +82,7 @@ public class NSAuthentication {
     } else {
       // Otherwise we attempt to find the public key for the accessorGuid in the ACL of the guid being
       // accesssed.
-      publicKey = lookupPublicKeyInACL(targetGuid, field, accessorGuid, access, gnsApp);
+      publicKey = lookupPublicKeyInACL(header, targetGuid, field, accessorGuid, access, gnsApp);
       if (publicKey != null) {
         // If we found the public key in the lookupPublicKey call then our access control list
         // check is done because the public key of the accessorGuid is in the given acl of targetGuid.
@@ -148,7 +132,7 @@ public class NSAuthentication {
    * @throws FailedDBOperationException
    * @throws UnsupportedEncodingException
    */
-  public static GNSResponseCode signatureAndACLCheck(String guid,
+  public static GNSResponseCode signatureAndACLCheck(InternalRequestHeader header, String guid,
           String field, List<String> fields,
           String accessorGuid, String signature,
           String message, MetaDataTypeName access,
@@ -177,14 +161,14 @@ public class NSAuthentication {
     // side effect which we need for the signing check below.
     AclResult aclResult = null;
     if (field != null) {
-      aclResult = aclCheck(guid, field, accessorGuid, access, gnsApp);
+      aclResult = aclCheck(header, guid, field, accessorGuid, access, gnsApp);
       if (aclResult.getResponseCode().isExceptionOrError()) {
         return aclResult.getResponseCode();
       }
     } else if (fields != null) {
       // Check each field individually.
       for (String aField : fields) {
-        aclResult = aclCheck(guid, aField, accessorGuid, access, gnsApp);
+        aclResult = aclCheck(header, guid, aField, accessorGuid, access, gnsApp);
         if (aclResult.getResponseCode().isExceptionOrError()) {
           return aclResult.getResponseCode();
         }
@@ -229,7 +213,7 @@ public class NSAuthentication {
    * @return the public key
    * @throws FailedDBOperationException
    */
-  private static String lookupPublicKeyInACL(String guid, String field, String accessorGuid,
+  private static String lookupPublicKeyInACL(InternalRequestHeader header, String guid, String field, String accessorGuid,
           MetaDataTypeName access, GNSApplicationInterface<String> gnsApp)
           throws FailedDBOperationException {
     String publicKey;
@@ -262,6 +246,29 @@ public class NSAuthentication {
       GNSConfig.getLogger().log(Level.FINE,
               "================> Public key not found: accessor={0} guid={1} field={2} public keys={3}",
               new Object[]{accessorGuid, guid, field, publicKeys});
+    }
+    /**
+     * If ActiveCode is enabled and the header is not null, then trigger active code.
+     * Header is not null means that this is a read or write operation.
+     */
+    if (AppOptionsOld.enableActiveCode && header != null){
+    	JSONObject value = new JSONObject();
+    	try {
+			value.put(ActiveCode.PUBLICKEY_FIELD, publicKey);
+			value.put(ActiveCode.ACCESSOR_GUID, header.getOriginatingRequestID());
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+    	
+    	JSONObject result = null;
+    	try {
+			result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.ACL_ACTION, value, gnsApp.getDB());
+			publicKey = result.getString(ActiveCode.PUBLICKEY_FIELD);
+		} catch (InternalRequestException e) {
+			
+		} catch (JSONException e) {
+			
+		}    	
     }
     return publicKey;
   }

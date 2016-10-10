@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
@@ -70,7 +71,7 @@ public class ActiveClientSequentialTest {
 		} 
 		ValuesMap value = new ValuesMap();
 		value.put(field, executionTime);	
-		ValuesMap result = client.runCode(null, guid, field, code, value, 0, 1000);
+		JSONObject result = client.runCode(null, guid, field, code, value, 0, 1000);
 
 		assertEquals(result.toString(), value.toString());
 		

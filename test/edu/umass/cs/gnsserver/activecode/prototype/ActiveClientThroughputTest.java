@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
@@ -28,7 +29,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  */
 public class ActiveClientThroughputTest {
 	
-	static class SimpleTask implements Callable<ValuesMap>{
+	static class SimpleTask implements Callable<JSONObject>{
 		ActiveNonBlockingClient client;
 		String guid;
 		String field;
@@ -46,7 +47,7 @@ public class ActiveClientThroughputTest {
 		}
 		
 		@Override
-		public ValuesMap call() throws Exception {
+		public JSONObject call() throws Exception {
 			return client.runCode(null, guid, field, code, value, ttl, 1000);
 		}
 		
@@ -90,12 +91,12 @@ public class ActiveClientThroughputTest {
 		} 
 		ValuesMap value = new ValuesMap();
 		value.put(field, "hello world!");	
-		ValuesMap result = client.runCode(null, guid, field, noop_code, value, 0, 10000);
+		JSONObject result = client.runCode(null, guid, field, noop_code, value, 0, 10000);
 
 		assertEquals(result.toString(), value.toString());
 		
 		ExecutorService executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
-		List<Future<ValuesMap>> tasks = new ArrayList<Future<ValuesMap>>();
+		List<Future<JSONObject>> tasks = new ArrayList<Future<JSONObject>>();
 		
 		int initial = client.getRecv();
 		
@@ -108,7 +109,7 @@ public class ActiveClientThroughputTest {
 			tasks.add(executor.submit(new SimpleTask(client, guid, field, noop_code, value, 0)));
 		}
 		
-		for (Future<ValuesMap> future:tasks){
+		for (Future<JSONObject> future:tasks){
 			future.get();
 		}
 		

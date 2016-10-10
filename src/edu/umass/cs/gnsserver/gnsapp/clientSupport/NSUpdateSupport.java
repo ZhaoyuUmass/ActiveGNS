@@ -40,6 +40,7 @@ import java.util.logging.Level;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  *
@@ -89,11 +90,11 @@ public class NSUpdateSupport {
     // writer will be the INTERNAL_OP_SECRET for super secret internal system accesses
     if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(writer)) {
       if (field != null) {
-        errorCode = NSAuthentication.signatureAndACLCheck(guid,
+        errorCode = NSAuthentication.signatureAndACLCheck(header, guid,
                 field, null,
                 writer, signature, message, MetaDataTypeName.WRITE_WHITELIST, app);
       } else if (userJSON != null) {
-        errorCode = NSAuthentication.signatureAndACLCheck(guid,
+        errorCode = NSAuthentication.signatureAndACLCheck(header, guid,
                 null, userJSON.getKeys(),
                 writer, signature, message, MetaDataTypeName.WRITE_WHITELIST, app);
       } else {
@@ -102,6 +103,8 @@ public class NSUpdateSupport {
         return GNSResponseCode.ACCESS_ERROR;
       }
     } else {
+    	//FIXME: this might be a security problem.  
+    	errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
     }
     // Check for stale commands.
     if (timestamp != null) {
@@ -154,8 +157,9 @@ public class NSUpdateSupport {
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
-    if (activeCodeHandler != null) {
-        newValue = handleActiveCode(header, guid, field, userJSON, db, activeCodeHandler);
+    if (activeCodeHandler != null && AppOptionsOld.enableActiveCode) {
+        JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
+        newValue = new ValuesMap(result);
     }
     
     if (field != null) {
@@ -168,10 +172,9 @@ public class NSUpdateSupport {
     nameRecord.updateNameRecord(field, updateValue, oldValue, argument, newValue, operation);
     
   }
-
+  /*
   private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws InternalRequestException {
 	  long t = System.nanoTime();
-	  if(!AppOptionsOld.enableActiveCode) return userJSON;
 	  // Only do active field handling for user fields.
 	  //FIXME: field could be null as it's an internalField, then a bug is triggered
 	  //This is a temporary fix to the problem
@@ -213,5 +216,5 @@ public class NSUpdateSupport {
     DelayProfiler.updateDelayNano("activeTotal", t);
     return newResult;
   }
-
+	*/
 }
