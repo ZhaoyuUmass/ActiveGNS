@@ -29,6 +29,7 @@ import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import edu.umass.cs.gnsserver.database.ColumnFieldType;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.utils.AclResult;
 import edu.umass.cs.gnsserver.utils.ResultValue;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
@@ -752,8 +753,18 @@ public class FieldAccess {
         errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
       }else{
-    	  // FIXME: this might be a leak to allow users to bypass ACL check
-    	  errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+    	  if(field != null){
+      			errorCode = NSAuthentication.aclCheck(header, guid, field, 
+      				header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app).getResponseCode();
+      	  }else if (fields != null){
+  			for (String aField : fields) {
+      	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, 
+      	        		header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app);
+      	        if (aclResult.getResponseCode().isExceptionOrError()) {
+      	          errorCode = aclResult.getResponseCode();
+  	        }
+      	  }
+      	}
       }
       // Check for stale commands.
       if (timestamp != null) {

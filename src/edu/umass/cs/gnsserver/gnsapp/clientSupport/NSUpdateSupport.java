@@ -24,6 +24,7 @@ import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.utils.AclResult;
 import edu.umass.cs.gnsserver.utils.ResultValue;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
@@ -36,6 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -103,8 +105,18 @@ public class NSUpdateSupport {
         return GNSResponseCode.ACCESS_ERROR;
       }
     } else {
-    	//FIXME: this might be a security problem.  
-    	errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+    	// This ACL check will be only used for active code remote query
+    	if(field != null){
+    		errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+    	}else if (userJSON != null){
+    		List<String> fields = userJSON.getKeys();
+    		for (String aField : fields) {
+    	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
+    	        if (aclResult.getResponseCode().isExceptionOrError()) {
+    	          errorCode = aclResult.getResponseCode();
+    	        }
+    	    }
+    	}
     }
     // Check for stale commands.
     if (timestamp != null) {
