@@ -51,7 +51,7 @@ public class ActiveNonBlockingWorker {
 		try {
 			runWorker();
 		} catch (JSONException | IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			// close the channel and exit
 		}finally{
 			channel.close();
@@ -65,7 +65,7 @@ public class ActiveNonBlockingWorker {
 		ActiveMessage msg = null;
 		while(!Thread.currentThread().isInterrupted()){
 			if((msg = (ActiveMessage) channel.receiveMessage()) != null){
-				System.out.println("Worker receives message:"+msg);
+				// System.out.println("Worker receives message:"+msg);
 				if(msg.type == Type.REQUEST){
 					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel));					
 				} else if (msg.type == Type.RESPONSE ){

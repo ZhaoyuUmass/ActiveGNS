@@ -438,7 +438,6 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		counter.getAndIncrement();
 		tasks.remove(response.getId());
 		
-		
 		return response.getValue();
 	}
 	

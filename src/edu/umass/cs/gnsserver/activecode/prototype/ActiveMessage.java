@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Message;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 /**
  * @author gaozy
@@ -467,7 +466,7 @@ public class ActiveMessage implements Message{
 			length = bbuf.getInt();
 			valueBytes = new byte[length];
 			bbuf.get(valueBytes);
-			value = new ValuesMap(new JSONObject(new String(valueBytes, CHARSET)));
+			value = new JSONObject(new String(valueBytes, CHARSET));
 			break;
 		case READ_QUERY:
 			ttl = bbuf.getInt();
@@ -514,7 +513,7 @@ public class ActiveMessage implements Message{
 			length = bbuf.getInt();
 			valueBytes = new byte[length];
 			bbuf.get(valueBytes);
-			value = new ValuesMap(new JSONObject(new String(valueBytes, CHARSET)));
+			value = new JSONObject(new String(valueBytes, CHARSET));
 			break;
 			
 		case RESPONSE:
@@ -523,7 +522,7 @@ public class ActiveMessage implements Message{
 			if(length>0){
 				valueBytes = new byte[length];
 				bbuf.get(valueBytes);
-				value = new ValuesMap(new JSONObject(new String(valueBytes, CHARSET)));
+				value = new JSONObject(new String(valueBytes, CHARSET));
 			}
 			
 			length = bbuf.getInt();
@@ -570,7 +569,7 @@ public class ActiveMessage implements Message{
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
-		ValuesMap value = new ValuesMap();
+		JSONObject value = new JSONObject();
 		value.put("string", "hello world");
 		
 		System.out.println("Test initializing REQUEST message");

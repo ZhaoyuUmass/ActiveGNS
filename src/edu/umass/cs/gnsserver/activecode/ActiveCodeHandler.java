@@ -132,7 +132,7 @@ public class ActiveCodeHandler {
 		try {
 			return handler.runCode(header, guid, field, code, value, activeCodeTTL);
 		} catch (ActiveException e) {			
-			e.printStackTrace();
+			//e.printStackTrace();
 			/**
 			 *  return the original value without executing, as there is an error
 			 *  returned from the worker. The error indicates that the code failed
@@ -159,7 +159,7 @@ public class ActiveCodeHandler {
 	 * @throws InternalRequestException 
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
-		System.out.println("handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+"}");
+		//System.out.println("handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+"}");
 		long t = System.nanoTime();
 		/**
 		 * Only execute active code for user field 

@@ -23,7 +23,6 @@ import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 /**
@@ -92,9 +91,9 @@ public class ActiveBlockingRunner {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);
-		ValuesMap valuesMap = null;
+		JSONObject valuesMap = null;
 		
-		valuesMap = (ValuesMap) invocable.invokeFunction("run", value, field, querier);
+		valuesMap = (JSONObject) invocable.invokeFunction("run", value, field, querier);
 		
 		return valuesMap;
 	}
@@ -144,7 +143,7 @@ public class ActiveBlockingRunner {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
-		ValuesMap value = new ValuesMap();
+		JSONObject value = new JSONObject();
 		value.put("string", "hello world");
 		
 		ActiveMessage msg = new ActiveMessage(guid, field, noop_code, value, 0, 500);
