@@ -13,13 +13,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient.Monitor;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
 
 /**
  * This class is used for executing the queries sent from
@@ -77,7 +77,7 @@ public class ActiveQueryHandler {
 			ActiveMessage response;
 			if(am.type == ActiveMessage.Type.READ_QUERY){
 				try {
-					response = new ActiveMessage(am.getId(), new ValuesMap(app.read(header, am.getTargetGuid(), am.getField())), null);
+					response = new ActiveMessage(am.getId(), app.read(header, am.getTargetGuid(), am.getField()), null);
 				} catch (InternalRequestException | ClientException e) {
 					response = new ActiveMessage(am.getId(), null, "Read failed");
 				} 
@@ -85,7 +85,7 @@ public class ActiveQueryHandler {
 			}else{
 				try {
 					app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
-					response = new ActiveMessage(am.getId(), new ValuesMap(), null);
+					response = new ActiveMessage(am.getId(), new JSONObject(), null);
 				} catch (InternalRequestException | ClientException e) {
 					response = new ActiveMessage(am.getId(), null, "Write failed");
 				}
@@ -119,7 +119,7 @@ public class ActiveQueryHandler {
 	public ActiveMessage handleReadQuery(ActiveMessage am, InternalRequestHeader header) {		
 		ActiveMessage resp = null;
 		try {
-			ValuesMap value = new ValuesMap(app.read(header, am.getTargetGuid(), am.getField()));
+			JSONObject value = app.read(header, am.getTargetGuid(), am.getField());
 			resp = new ActiveMessage(am.getId(), value, null);
 		} catch (InternalRequestException | ClientException e) {
 			resp = new ActiveMessage(am.getId(), null, "Read failed");
@@ -140,7 +140,7 @@ public class ActiveQueryHandler {
 		ActiveMessage resp;
 		try {
 			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
-			resp = new ActiveMessage(am.getId(), new ValuesMap(), null);
+			resp = new ActiveMessage(am.getId(), new JSONObject(), null);
 		} catch (ClientException | InternalRequestException e) {
 			resp = new ActiveMessage(am.getId(), null, "Write failed");
 		} 
@@ -207,7 +207,7 @@ public class ActiveQueryHandler {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
-		ValuesMap value = new ValuesMap();
+		JSONObject value = new JSONObject();
 		value.put("nextGuid", "alvin");
 		
 		ActiveHandler handler = new ActiveHandler("", null, 1);
