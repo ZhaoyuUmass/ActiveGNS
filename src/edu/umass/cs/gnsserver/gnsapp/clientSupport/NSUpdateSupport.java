@@ -105,17 +105,19 @@ public class NSUpdateSupport {
         return GNSResponseCode.ACCESS_ERROR;
       }
     } else {
-    	// This ACL check will be only used for active code remote query
-    	if(field != null){
-    		errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
-    	}else if (userJSON != null) {
-    		List<String> fields = userJSON.getKeys();
-    		for (String aField : fields) {
-    	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
-    	        if (aclResult.getResponseCode().isExceptionOrError()) {
-    	          errorCode = aclResult.getResponseCode();
-    	        }
-    	    }
+    	if(header != null){
+	    	// This ACL check will be only used for active code remote query
+	    	if(field != null){
+	    		errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+	    	}else if (userJSON != null) {
+	    		List<String> fields = userJSON.getKeys();
+	    		for (String aField : fields) {
+	    	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
+	    	        if (aclResult.getResponseCode().isExceptionOrError()) {
+	    	          errorCode = aclResult.getResponseCode();
+	    	        }
+	    	    }
+	    	}
     	}
     }
     // Check for stale commands.

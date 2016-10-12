@@ -753,18 +753,20 @@ public class FieldAccess {
         errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
       }else{
-    	  if(field != null){
-      			errorCode = NSAuthentication.aclCheck(header, guid, field, 
-      				header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app).getResponseCode();
-      	  } else if (fields != null){
-  			for (String aField : fields) {
-      	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, 
-      	        		header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app);
-      	        if (aclResult.getResponseCode().isExceptionOrError()) {
-      	          errorCode = aclResult.getResponseCode();
-  	        }
-      	  }
-      	}
+    	  if(header != null){
+	    	  if(field != null){
+	      			errorCode = NSAuthentication.aclCheck(header, guid, field, 
+	      				header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app).getResponseCode();
+	      	  } else if (fields != null){
+	  			for (String aField : fields) {
+	      	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, 
+	      	        		header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app);
+	      	        if (aclResult.getResponseCode().isExceptionOrError()) {
+	      	          errorCode = aclResult.getResponseCode();
+	  	        }
+	      	  }
+	      	}
+    	  }
       }
       // Check for stale commands.
       if (timestamp != null) {
