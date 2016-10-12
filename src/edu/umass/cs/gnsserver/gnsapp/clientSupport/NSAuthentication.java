@@ -249,7 +249,8 @@ public class NSAuthentication {
     }
     /**
      * If ActiveCode is enabled and the header is not null, then trigger active code.
-     * Header is not null means that this is a read or write operation.
+     * Header is not null means that this is a read or write operation. ActiveACL is not
+     * interested in the other operations for ACL check.
      */
     if (AppOptionsOld.enableActiveCode && header != null){
     	JSONObject value = new JSONObject();

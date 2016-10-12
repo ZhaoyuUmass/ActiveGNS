@@ -753,7 +753,6 @@ public class FieldAccess {
         errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
       }else{
-    	  System.out.println("Check ACL for accessor "+header.getOriginatingGUID()+" to guid "+guid+" field on "+field);
     	  if(field != null){
       			errorCode = NSAuthentication.aclCheck(header, guid, field, 
       				header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app).getResponseCode();
