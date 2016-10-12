@@ -105,10 +105,11 @@ public class NSUpdateSupport {
         return GNSResponseCode.ACCESS_ERROR;
       }
     } else {
+    	System.out.println("Check ACL for accessor "+header.getOriginatingGUID()+" to guid "+guid+" field on "+field);
     	// This ACL check will be only used for active code remote query
     	if(field != null){
     		errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
-    	}else if (userJSON != null){
+    	}else if (userJSON != null) {
     		List<String> fields = userJSON.getKeys();
     		for (String aField : fields) {
     	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);

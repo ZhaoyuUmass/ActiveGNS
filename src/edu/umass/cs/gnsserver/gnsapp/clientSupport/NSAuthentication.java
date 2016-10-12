@@ -263,7 +263,7 @@ public class NSAuthentication {
     	JSONObject result = null;
     	try {
 			result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.ACL_ACTION, value, gnsApp.getDB());
-			publicKey = result!=null?result.getString(ActiveCode.PUBLICKEY_FIELD):null;
+			publicKey = (result!=null)?result.getString(ActiveCode.PUBLICKEY_FIELD):null;
 		} catch (InternalRequestException e) {
 			
 		} catch (JSONException e) {
