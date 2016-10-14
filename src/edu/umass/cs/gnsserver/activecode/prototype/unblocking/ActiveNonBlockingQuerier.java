@@ -73,6 +73,10 @@ public class ActiveNonBlockingQuerier implements Querier {
 			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL);
 	}
 	
+	@Override
+	public JSONObject lookupPublicKeyForGuid(String targetGuid) throws ActiveException {
+		throw new RuntimeException("unimplemented");
+	}
 	
 	private JSONObject readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
 			throws ActiveException {

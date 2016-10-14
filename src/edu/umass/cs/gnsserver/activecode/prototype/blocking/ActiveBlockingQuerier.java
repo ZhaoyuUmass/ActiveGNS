@@ -144,4 +144,10 @@ public class ActiveBlockingQuerier implements Querier {
 		long elapsed = System.currentTimeMillis() - t1;
 		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 	}
+
+
+	@Override
+	public JSONObject lookupPublicKeyForGuid(String targetGuid) throws ActiveException {
+		throw new RuntimeException("unimplemented");
+	}
 }
