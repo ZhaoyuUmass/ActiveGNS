@@ -60,6 +60,7 @@ import org.xbill.DNS.Type;
 import org.xbill.DNS.MXRecord;
 import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.TextParseException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -179,10 +180,22 @@ public class NameResolution {
       try {
         NameResolution.getLogger().log(Level.FINE, "fieldResponse all field:{0}", fieldResponseJson.toString());
         if (fieldResponseJson.has("A")) {
+          JSONObject recordObj = fieldResponseJson.getJSONObject("A");
+          JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
+          int ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
+          // The records may contain multiple ip addresses
+          for(int i=0; i<records.length(); i++){
+      		String ip = records.getString(i);
+	        ARecord gnsARecord = new ARecord(new Name(nameToResolve), DClass.IN, ttl, InetAddress.getByName(ip));
+	        response.addRecord(gnsARecord, Section.ANSWER);
+      	  }
+          nameResolved = true;
+          /*
           String ip = fieldResponseJson.getString("A");
           ARecord gnsARecord = new ARecord(new Name(nameToResolve), DClass.IN, 60, InetAddress.getByName(ip));
           response.addRecord(gnsARecord, Section.ANSWER);
           nameResolved = true;
+          */
         }
         if (fieldResponseJson.has("NS")) {
           String ns = fieldResponseJson.getString("NS");

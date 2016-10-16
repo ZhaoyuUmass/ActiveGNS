@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -16,6 +17,8 @@ import org.junit.runner.notification.Failure;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
+import edu.umass.cs.gnscommon.AclAccessType;
+import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 
 /**
  * @author gaozy
@@ -34,21 +37,26 @@ public class ActiveACLHelloWorldExample {
 	
 	
 	
-	private static void setupClientsAndGuids() throws Exception{
+	private static void setupClientsAndGuids() throws Exception {
 		client = new GNSClientCommands();
 		entries = new GuidEntry[2];
 		
 		// initialize two GUID
 		for (int i=0; i<numGuid; i++){
-			entries[i] = GuidUtils.lookupOrCreateAccountGuid(
-					client, ACCOUNT_GUID_PREFIX + i, PASSWORD);
+			try {
+				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
+						client, ACCOUNT_GUID_PREFIX + i, PASSWORD);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		System.out.println("Create 2 GUIDs:GUID_0 and GUID_1");
 		
 		// initialize the fields for each guid
 		client.fieldUpdate(entries[0], someField, someValue);
+		client.aclAdd(AclAccessType.READ_WHITELIST, entries[0], someField, entries[0].getGuid());
 		System.out.println("Update value of field '"+someField+"' for GUID_0 to "+someValue);
-		
+		Thread.sleep(10000);
 	}
 	
 	

@@ -86,7 +86,7 @@ public class DNSServerProxy implements Runnable {
 	
 	@Override
 	public void run() {
-		 System.out.println("Start running UDP DNS server ... ");
+		 System.out.println("Start running TCP proxy ... ");
 		 while (true) {
 		      try {
 		        final short udpLength = 512;
