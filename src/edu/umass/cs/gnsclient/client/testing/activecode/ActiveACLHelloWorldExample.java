@@ -21,12 +21,19 @@ import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 
 /**
+ * This test checks when a GNS user does not remove his ALL_FIELD ACL,
+ * what will happen.
+ * 
+ * <p>The invariant of ACL is:
+ * <p>When the whitelist of a field Y.F exists, then a GUID X can read Y.F if and only if X belongs to the whitelist of Y.F
+ * <p>When the whitelist of a field Y.F does not exist, then any GUID X can read Y.F 
+ * 
  * @author gaozy
  *
  */
 public class ActiveACLHelloWorldExample {
 	
-	private final static int numGuid = 2;
+	private final static int numGuid = 3;
 	
 	private static GNSClientCommands client = null;
 	private static GuidEntry[] entries;	
@@ -39,9 +46,9 @@ public class ActiveACLHelloWorldExample {
 	
 	private static void setupClientsAndGuids() throws Exception {
 		client = new GNSClientCommands();
-		entries = new GuidEntry[2];
+		entries = new GuidEntry[numGuid];
 		
-		// initialize two GUID
+		// initialize three GUID
 		for (int i=0; i<numGuid; i++){
 			try {
 				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
@@ -50,13 +57,15 @@ public class ActiveACLHelloWorldExample {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Create 2 GUIDs:GUID_0 and GUID_1");
+		System.out.println("Create 3 GUIDs:GUID_0, GUID_1 and GUID_2");
 		
 		// initialize the fields for each guid
 		client.fieldUpdate(entries[0], someField, someValue);
-		client.aclAdd(AclAccessType.READ_WHITELIST, entries[0], someField, entries[0].getGuid());
-		System.out.println("Update value of field '"+someField+"' for GUID_0 to "+someValue);
-		Thread.sleep(10000);
+		client.aclAdd(AclAccessType.READ_WHITELIST, entries[0], someField, entries[2].getGuid());
+		
+		System.out.println("Update value of field '"+someField+"' for GUID_0 to "
+				+someValue+", and add GUID_2 into "+someField+"'s ACL.");
+		
 	}
 	
 	
@@ -76,6 +85,12 @@ public class ActiveACLHelloWorldExample {
 		System.out.println(">>>>>>>>>> Testing >>>>>>>>>>");
 		
 		String response = null;
+		try {
+			response = client.fieldRead(entries[0].getGuid(), someField, entries[2]);
+		} catch (Exception e1) {
+			
+		}
+		assertEquals(response, someValue);
 		
 		System.out.println("GUID_1 reads the field GUID_0_FIELD of GUID_0");
 		try {

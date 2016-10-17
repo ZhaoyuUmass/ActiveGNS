@@ -40,6 +40,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 	
 	private ManagedDNSServiceProxy(){
+		/*
 		try {
 			client = new GNSClientCommands();
 		} catch (IOException e) {
@@ -47,12 +48,12 @@ public class ManagedDNSServiceProxy implements Runnable {
 		}
 		
 		try {
-			accountGuid = GuidUtils.lookupOrCreateAccountGuid(client, "gaozy@cs.umass.edu",
+			accountGuid = GuidUtils.lookupOrCreateAccountGuid(client, "zhaoyu",
 					"password", true);
 			deployDomain();
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	private static void deployDomain() throws Exception {
@@ -70,6 +71,7 @@ public class ManagedDNSServiceProxy implements Runnable {
         } 
 		reader.close();
 		
+		System.out.println("The record list is "+records);
 		updateRecord(guid, records, ttl);
 		System.out.println("Create record for "+domain);
 	}
@@ -91,6 +93,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	}
 	
 	private static boolean updateRecord(GuidEntry entry, List<String> ips, int ttl){
+		System.out.println("Ready to update record for "+entry);
 		JSONObject recordObj = recordToCreate(ips, ttl);
 		try {
 			client.execute(GNSCommand.fieldUpdate(entry, "A", recordObj));
@@ -146,11 +149,14 @@ public class ManagedDNSServiceProxy implements Runnable {
 		
 		@Override
 		public void run() {
+			System.out.println("run task...");
 			try {
 				BufferedReader input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 				String queryString = input.readLine();
-				System.out.println("Received:"+queryString);
+				JSONObject query = new JSONObject(queryString);
 			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
 				e.printStackTrace();
 			} finally{
 				try {
