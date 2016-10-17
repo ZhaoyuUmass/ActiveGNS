@@ -54,7 +54,6 @@ public class ActiveACLHelloWorldExample {
 				entries[i] = GuidUtils.lookupOrCreateAccountGuid(
 						client, ACCOUNT_GUID_PREFIX + i, PASSWORD);
 			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 		System.out.println("Create 3 GUIDs:GUID_0, GUID_1 and GUID_2");
