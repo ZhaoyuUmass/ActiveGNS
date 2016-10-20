@@ -159,7 +159,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private static void updateRecordAndCode(GuidEntry entry, String record, String code){
 		assert(!record.equals("")):"record can't be enpty when update";
 		// Update record
-		List<String> ips = Arrays.asList(record.split("\n"));
+		List<String> ips = Arrays.asList(record.split("\\n"));
 		updateRecord(entry, ips, default_ttl);
 		
 		// Update code
