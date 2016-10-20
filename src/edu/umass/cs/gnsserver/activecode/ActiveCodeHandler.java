@@ -197,6 +197,7 @@ public class ActiveCodeHandler {
 				newResult = runCode(header, code, guid, field, action, value, 5);
 			}
 		}
+		System.out.println("The result after executing active code is "+newResult);
 		DelayProfiler.updateDelayNano("activeTotal", t);
 		return newResult;
 	}
