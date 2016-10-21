@@ -20,7 +20,8 @@
 package edu.umass.cs.gnsserver.gnsapp.clientSupport;
 
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.GNSProtocol;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.asynch.ClientAsynchBase;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
@@ -96,7 +97,7 @@ public class NSGroupAccess {
     // We could roll back the above operation if the one below gets an error, but we don't
     // We'll worry about this when we get transactions working.
 
-    if (response.equals(GNSCommandProtocol.OK_RESPONSE)) {
+    if (response.equals(GNSProtocol.OK_RESPONSE.toString())) {
       //if (!groupResponse.isAnError()) {
       // This is probably a bad idea to update every member
       for (String member : members) {
@@ -131,7 +132,7 @@ public class NSGroupAccess {
    * @throws FailedDBOperationException
    */
   public static boolean isGroupGuid(String guid, BasicRecordMap database) throws FailedDBOperationException {
-    return !NSFieldAccess.lookupListFieldLocallyNoAuth(guid, GroupAccess.GROUP, database).isEmpty();
+    return !NSFieldAccess.lookupListFieldLocallyNoAuthNoExceptions(guid, GroupAccess.GROUP, database).isEmpty();
   }
 
   /**
@@ -167,9 +168,9 @@ public class NSGroupAccess {
    * @param groupGuid
    * @param memberGuid
    * @param handler
-   * @return an {@link GNSResponseCode}
+   * @return an {@link ResponseCode}
    */
-  public static GNSResponseCode removeFromGroup(String groupGuid, String memberGuid,
+  public static ResponseCode removeFromGroup(String groupGuid, String memberGuid,
           ClientRequestHandlerInterface handler) {
     try {
       handler.getRemoteQuery().fieldRemove(groupGuid, GroupAccess.GROUP, memberGuid);
@@ -177,9 +178,9 @@ public class NSGroupAccess {
       // We'll worry about this when we get transactions working.
       handler.getRemoteQuery().fieldRemove(memberGuid, GroupAccess.GROUPS, groupGuid);
       // FIXME: Don't ignore errors in above code.
-      return GNSResponseCode.NO_ERROR;
+      return ResponseCode.NO_ERROR;
     } catch (IOException | JSONException | ClientException e) {
-      return GNSResponseCode.UNSPECIFIED_ERROR;
+      return ResponseCode.UNSPECIFIED_ERROR;
     }
 
   }
@@ -205,6 +206,7 @@ public class NSGroupAccess {
    *
    * @param guid
    * @param lastUpdate
+   * @param handler
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
    * @throws java.io.IOException
    * @throws org.json.JSONException
@@ -219,6 +221,7 @@ public class NSGroupAccess {
    *
    * @param guid
    * @param minRefresh
+   * @param handler
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
    * @throws java.io.IOException
    * @throws org.json.JSONException
@@ -292,6 +295,14 @@ public class NSGroupAccess {
     return getGroupFieldAsString(guid, GROUP_QUERY_STRING, handler);
   }
 
+  /**
+   *
+   * @param guid
+   * @param field
+   * @param handler
+   * @return the field
+   * @throws FailedDBOperationException
+   */
   public static String getGroupFieldAsString(String guid, String field, ClientRequestHandlerInterface handler)
           throws FailedDBOperationException {
     ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldAnywhere(guid, field, handler.getApp());
@@ -307,6 +318,15 @@ public class NSGroupAccess {
     return null;
   }
   
+  /**
+   *
+   * @param guid
+   * @param field
+   * @param defaultValue
+   * @param handler
+   * @return the field
+   * @throws FailedDBOperationException
+   */
   public static Number getGroupFieldAsNumber(String guid, String field, Number defaultValue, ClientRequestHandlerInterface handler)
           throws FailedDBOperationException {
     ValuesMap valuesMap = NSFieldAccess.lookupJSONFieldAnywhere(guid, field, handler.getApp());

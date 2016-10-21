@@ -25,13 +25,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Vector;
 
-import org.apache.log4j.Logger;
-
 
 import edu.umass.cs.msocket.ConnectionInfo;
 import edu.umass.cs.msocket.DataMessage;
 import edu.umass.cs.msocket.MWrappedOutputStream;
 import edu.umass.cs.msocket.SocketInfo;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * 
@@ -42,11 +41,14 @@ import edu.umass.cs.msocket.SocketInfo;
  * @author <a href="mailto:cecchet@cs.umass.edu">Emmanuel Cecchet</a>
  * @version 1.0
  */
-public class FullDuplicationWritingPolicy extends MultipathWritingPolicy {
-	
-	private static Logger log = Logger.getLogger(FullDuplicationWritingPolicy.class.getName());
-	
-	public FullDuplicationWritingPolicy(ConnectionInfo cinfo)
+public class FullDuplicationWritingPolicy extends MultipathWritingPolicy 
+{	
+
+  /**
+   *
+   * @param cinfo
+   */
+  public FullDuplicationWritingPolicy(ConnectionInfo cinfo)
 	  {
 	    this.cinfo = cinfo;
 	  }
@@ -146,7 +148,7 @@ public class FullDuplicationWritingPolicy extends MultipathWritingPolicy {
 		        }
 		        catch (IOException ex)
 		        {
-		          log.trace("Write exception caused");
+		          MSocketLogger.getLogger().fine("Write exception caused");
 		          sockObj1.setStatus(false);
 		          sockObj1.setneedToReqeustACK(true);
 
@@ -208,7 +210,7 @@ public class FullDuplicationWritingPolicy extends MultipathWritingPolicy {
 		        }
 		        catch (IOException ex)
 		        {
-		          log.trace("Write exception caused");
+		          MSocketLogger.getLogger().fine("Write exception caused");
 		          sockObj2.setStatus(false);
 		          sockObj2.setneedToReqeustACK(true);
 
@@ -244,7 +246,12 @@ public class FullDuplicationWritingPolicy extends MultipathWritingPolicy {
       cinfo.emptyTheWriteQueues();
 	}
 
-	protected SocketInfo getNextSocketToWrite() throws IOException {
+  /**
+   *
+   * @return
+   * @throws IOException
+   */
+  protected SocketInfo getNextSocketToWrite() throws IOException {
 		
 		return null;
 	}

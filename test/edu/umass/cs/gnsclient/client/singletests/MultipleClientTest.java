@@ -87,6 +87,9 @@ public class MultipleClientTest {
     return clients.get(random.nextInt(clients.size()));
   }
 
+  /**
+   *
+   */
   public MultipleClientTest() {
     if (clients == null) {
       clients = new ArrayList<>();
@@ -106,6 +109,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_01_CreateEntity() {
     String alias = "testGUID" + RandomString.randomString(6);
@@ -119,6 +125,9 @@ public class MultipleClientTest {
     assertEquals(alias, guidEntry.getEntityName());
   }
 
+  /**
+   *
+   */
   @Test
   public void test_02_RemoveGuid() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -160,6 +169,9 @@ public class MultipleClientTest {
 //    }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_03_RemoveGuidSansAccountInfo() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -184,6 +196,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_04_LookupPrimaryGuid() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -200,6 +215,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_05_CreateSubGuid() {
     try {
@@ -210,6 +228,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_06_FieldNotFoundException() {
     try {
@@ -222,6 +243,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_07_FieldExistsFalse() {
     try {
@@ -231,6 +255,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_08_CreateFieldForFieldExists() {
     try {
@@ -241,6 +268,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_09_FieldExistsTrue() {
     try {
@@ -250,6 +280,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_10_CreateFields() {
     try {
@@ -262,7 +295,7 @@ public class MultipleClientTest {
     }
     try {
       // remove default read acces for this test
-      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       getRandomClient().fieldCreateOneElementList(westyEntry.getGuid(), "environment", "work", westyEntry);
       getRandomClient().fieldCreateOneElementList(westyEntry.getGuid(), "ssn", "000-00-0000", westyEntry);
       getRandomClient().fieldCreateOneElementList(westyEntry.getGuid(), "password", "666flapJack", westyEntry);
@@ -287,6 +320,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_11_ACLPartOne() {
     //testCreateField();
@@ -314,6 +350,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_12_ACLPartTwo() {
     try {
@@ -328,7 +367,7 @@ public class MultipleClientTest {
       }
       barneyEntry = getRandomClient().guidCreate(masterGuid, barneyName);
       // remove default read access for this test
-      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       getRandomClient().fieldCreateOneElementList(barneyEntry.getGuid(), "cell", "413-555-1234", barneyEntry);
       getRandomClient().fieldCreateOneElementList(barneyEntry.getGuid(), "address", "100 Main Street", barneyEntry);
 
@@ -374,6 +413,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_13_ACLALLFields() {
     //testACL();
@@ -388,7 +430,7 @@ public class MultipleClientTest {
       GuidEntry superuserEntry = getRandomClient().guidCreate(masterGuid, superUserName);
 
       // let superuser read any of barney's fields
-      getRandomClient().aclAdd(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ALL_FIELDS, superuserEntry.getGuid());
+      getRandomClient().aclAdd(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ENTIRE_RECORD, superuserEntry.getGuid());
 
       assertEquals("413-555-1234",
               getRandomClient().fieldReadArrayFirstElement(barneyEntry.getGuid(), "cell", superuserEntry));
@@ -400,6 +442,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_14_DB() {
     //testCreateEntity();
@@ -458,6 +503,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_15_DBUpserts() {
     HashSet<String> expected = null;
@@ -512,6 +560,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_16_Substitute() {
     String testSubstituteGuid = "testSubstituteGUID" + RandomString.randomString(6);
@@ -554,6 +605,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_17_SubstituteList() {
     String testSubstituteListGuid = "testSubstituteListGUID" + RandomString.randomString(6);
@@ -599,6 +653,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_18_Group() {
     String mygroupName = "mygroup" + RandomString.randomString(6);
@@ -654,6 +711,9 @@ public class MultipleClientTest {
 
   }
 
+  /**
+   *
+   */
   @Test
   public void test_19_GroupAndACL() {
     //testGroup();
@@ -672,7 +732,7 @@ public class MultipleClientTest {
     try {
       groupAccessUserEntry = getRandomClient().guidCreate(masterGuid, groupAccessUserName);
       // remove all fields read by all
-      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      getRandomClient().aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
     } catch (Exception e) {
       fail("Exception creating group user: " + e);
       return;
@@ -726,6 +786,9 @@ public class MultipleClientTest {
 
   private static final String alias = "ALIAS-" + RandomString.randomString(4) + "@blah.org";
 
+  /**
+   *
+   */
   @Test
   public void test_20_AliasAdd() {
     try {
@@ -747,6 +810,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_21_AliasRemove() {
     try {
@@ -784,6 +850,9 @@ public class MultipleClientTest {
 //    }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_31_BasicSelect() {
     try {
@@ -795,6 +864,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_32_GeoSpatialSelect() {
     try {
@@ -837,6 +909,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_33_QuerySelect() {
     String fieldName = "testQuery";
@@ -881,6 +956,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_44_WriteAccess() {
     String fieldName = "whereAmI";
@@ -924,6 +1002,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_45_UnsignedRead() {
     String unsignedReadFieldName = "allreadaccess";
@@ -935,7 +1016,7 @@ public class MultipleClientTest {
 
       getRandomClient().fieldCreateOneElementList(westyEntry.getGuid(), standardReadFieldName, "bummer", westyEntry);
       // already did this above... doing it again gives us a paxos error
-      //getRandomClient().removeFromACL(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      //getRandomClient().removeFromACL(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       try {
         String result = getRandomClient().fieldReadArrayFirstElement(westyEntry.getGuid(), standardReadFieldName, null);
         fail("Result of read of westy's " + standardReadFieldName + " as world readable was " + result
@@ -947,6 +1028,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_46_UnsignedWrite() {
     String unsignedWriteFieldName = "allwriteaccess";
@@ -969,6 +1053,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_47_RemoveField() {
     String fieldToDelete = "fieldToDelete";
@@ -1000,6 +1087,9 @@ public class MultipleClientTest {
 
   }
 
+  /**
+   *
+   */
   @Test
   public void test_48_ListOrderAndSetElement() {
 //    try {
@@ -1239,6 +1329,10 @@ public class MultipleClientTest {
 //      fail("Exception executing selectLookupGroupQuery: " + e);
 //    }
 //  }
+
+  /**
+   *
+   */
   @Test
   public void test_70_SetFieldNull() {
     String field = "fieldToSetToNull";
@@ -1274,6 +1368,9 @@ public class MultipleClientTest {
 
   private static GuidEntry updateEntry;
 
+  /**
+   *
+   */
   @Test
   public void test_71_JSONUpdate() {
     try {
@@ -1386,6 +1483,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_72_NewRead() {
     try {
@@ -1447,6 +1547,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_73_NewUpdate() {
     try {
@@ -1528,6 +1631,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_74_MultiFieldLookup() {
     try {
@@ -1542,6 +1648,9 @@ public class MultipleClientTest {
   private static GuidEntry indirectionGroupGuid;
   private static JSONArray indirectionGroupMembers = new JSONArray();
 
+  /**
+   *
+   */
   @Test
   public void test_75_IndirectionSetupGuids() {
     try {
@@ -1568,6 +1677,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_76_IndirectionTestRead() {
     try {
@@ -1581,6 +1693,9 @@ public class MultipleClientTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_77_Stop() {
     try {

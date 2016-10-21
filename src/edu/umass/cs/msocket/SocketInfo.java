@@ -28,7 +28,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Vector;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * This class keeps the information about each flowpath. It stores the socket,
@@ -40,17 +40,55 @@ import org.apache.log4j.Logger;
 
 public class SocketInfo
 {
+
+  /**
+   *
+   */
   public static final int       QUEUE_GET                      = 1;
+
+  /**
+   *
+   */
   public static final int       QUEUE_PUT                      = 2;
+
+  /**
+   *
+   */
   public static final int       QUEUE_REMOVE                   = 3;
+
+  /**
+   *
+   */
   public static final int       QUEUE_SIZE                     = 4;
 
+  /**
+   *
+   */
   public static final int       VARIABLE_UPDATE                = 1;
+
+  /**
+   *
+   */
   public static final int       VARIABLE_SET                   = 2;
+
+  /**
+   *
+   */
   public static final int       VARIABLE_GET                   = 3;
 
+  /**
+   *
+   */
   public final Object           queueMonitor                   = new Object();
+
+  /**
+   *
+   */
   public final Object           byteInfoVectorMonitor          = new Object();
+
+  /**
+   *
+   */
   public final Object           currentChunkWriteOffsetMonitor = new Object();
 
   private SocketChannel         dataChannel                    = null;
@@ -126,8 +164,12 @@ public class SocketInfo
   
   private int numCloseFPRecvdOtherSide						   = 0;
   
-  private static Logger         log                            = Logger.getLogger(SocketInfo.class.getName());
-  
+  /**
+   *
+   * @param dataChannel
+   * @param socket
+   * @param SocketIdentifier
+   */
   public SocketInfo(SocketChannel dataChannel, Socket socket, int SocketIdentifier)
   {
     this.dataChannel = dataChannel;
@@ -140,6 +182,12 @@ public class SocketInfo
     byteInfoVector = new Vector<ByteRangeInfo>();
   }
 
+  /**
+   *
+   * @param operType
+   * @param putObject
+   * @return
+   */
   public Object queueOperations(int operType, byte[] putObject)
   {
     synchronized (queueMonitor)
@@ -169,6 +217,13 @@ public class SocketInfo
     }
   }
 
+  /**
+   *
+   * @param oper
+   * @param startSeqNum
+   * @param length
+   * @return
+   */
   public Object byteInfoVectorOperations(int oper, long startSeqNum, int length)
   {
     synchronized (byteInfoVectorMonitor)
@@ -201,6 +256,12 @@ public class SocketInfo
     }
   }
 
+  /**
+   *
+   * @param value
+   * @param oper
+   * @return
+   */
   public int currentChunkWriteOffsetOper(int value, int oper)
   {
     synchronized (currentChunkWriteOffsetMonitor)
@@ -310,10 +371,14 @@ public class SocketInfo
     return active;
   }
 
+  /**
+   *
+   * @param status
+   */
   public synchronized void setStatus(boolean status)
   {
     active = status;
-    log.trace("inside set status");
+    MSocketLogger.getLogger().fine("inside set status");
     if (status == false)
     {
       try
@@ -324,21 +389,33 @@ public class SocketInfo
       catch (Exception ex)
       {
         ex.printStackTrace();
-        log.trace("exceptio in closing during status set");
+        MSocketLogger.getLogger().fine("exceptio in closing during status set");
       }
     }
   }
 
+  /**
+   *
+   * @return
+   */
   public Socket getSocket()
   {
     return socket;
   }
 
+  /**
+   *
+   * @return
+   */
   public SocketChannel getDataChannel()
   {
     return dataChannel;
   }
 
+  /**
+   *
+   * @return
+   */
   public int getSocketIdentifer()
   {
     return SocketIdentifier;
@@ -354,16 +431,28 @@ public class SocketInfo
     return (int) (chunkEndSeqNum - chunkReadOffsetSeqNum);
   }
 
+  /**
+   *
+   * @param s
+   */
   public synchronized void setchunkEndSeqNum(int s)
   {
 	  chunkEndSeqNum = s;
   }
   
+  /**
+   *
+   * @return
+   */
   public  int  getChunkEndSeqNum()
   {
 	  return chunkEndSeqNum;
   }
 
+  /**
+   *
+   * @param s
+   */
   public synchronized void updateChunkReadOffsetSeqNum(int s)
   {
 	  chunkReadOffsetSeqNum += s;
@@ -372,71 +461,123 @@ public class SocketInfo
   /**
    * sometimes need to set it to next seq num as it may not be contigous
    * segment,
+   * @param s
    */
   public synchronized void setChunkReadOffsetSeqNum(int s)
   {
 	  chunkReadOffsetSeqNum = s;
   }
 
+  /**
+   *
+   * @return
+   */
   public int getChunkReadOffsetSeqNum()
   {
     return (int) chunkReadOffsetSeqNum;
   }
 
+  /**
+   *
+   * @param toBeAdded
+   */
   public synchronized void updateSentBytes(long toBeAdded)
   {
     numBytesSent += toBeAdded;
-    log.trace("SentBytes Updated " + numBytesSent + " SocketID " + SocketIdentifier);
+    MSocketLogger.getLogger().fine("SentBytes Updated " + numBytesSent + " SocketID " + SocketIdentifier);
   }
 
+  /**
+   *
+   * @param toBeAdded
+   */
   public synchronized void updateRecvdBytes(long toBeAdded)
   {
     numBytesRecv += toBeAdded;
   }
   
+  /**
+   *
+   */
   public synchronized void setLastNumBytesRecv() {
 		lastNumBytesRecv = numBytesRecv;
 	}
   
+  /**
+   *
+   * @param handleMigSeqNum
+   */
   public synchronized void setHandleMigSeqNum(long handleMigSeqNum) {
 		this.handleMigSeqNum = handleMigSeqNum;
 	}
 	
-	public long getHandleMigSeqNum() {
+  /**
+   *
+   * @return
+   */
+  public long getHandleMigSeqNum() {
 		return this.handleMigSeqNum;
 	}
 
+  /**
+   *
+   * @param RecvdBytes
+   */
   public synchronized void setRecvdBytesOtherSide(long RecvdBytes)
   {
     if (RecvdBytes > numBytesRecvOtherSide)
       numBytesRecvOtherSide = RecvdBytes;
   }
   
+  /**
+   *
+   * @return
+   */
   public long getLastNumBytesRecv() 
   {
 		return lastNumBytesRecv;
   }
 
+  /**
+   *
+   * @return
+   */
   public long getSentBytes()
   {
     return numBytesSent;
   }
 
+  /**
+   *
+   * @return
+   */
   public long getRecvdBytes()
   {
     return numBytesRecv;
   }
 
+  /**
+   *
+   * @return
+   */
   public long getRecvdBytesOtherSide()
   {
     return numBytesRecvOtherSide;
   }
 
+  /**
+   *
+   * @return
+   */
   public long getOutStandingBytes()
   {
     return (numBytesSent - numBytesRecvOtherSide);
   }
 
+  /**
+   *
+   * @return
+   */
   public double getOutStandingBytesRatio()
   {
     double rt = 0;
@@ -447,6 +588,10 @@ public class SocketInfo
     return rt;
   }
 
+  /**
+   *
+   * @param lastKeepAlive
+   */
   public void setLastKeepAlive(long lastKeepAlive)
   {
     if (lastKeepAlive > this.lastKeepAlive)
@@ -455,16 +600,28 @@ public class SocketInfo
     }
   }
 
+  /**
+   *
+   * @return
+   */
   public long getLastKeepAlive()
   {
     return this.lastKeepAlive;
   }
   
+  /**
+   *
+   * @return
+   */
   public boolean getneedToReqeustACK() 
   {
   	return needToRequestACK;
   }
 
+  /**
+   *
+   * @param value
+   */
   public void setneedToReqeustACK( boolean value ) 
   {
 		// each time this flag changes reset it to 0
@@ -472,26 +629,45 @@ public class SocketInfo
 		needToRequestACK = value;
   }
   
+  /**
+   *
+   * @param updateRTT
+   */
   public void setEstimatedRTT(long updateRTT)
   {
 	  estimatedRTT =  updateRTT;
   }
   
+  /**
+   *
+   * @return
+   */
   public long getEstimatedRTT()
   {
 	  return estimatedRTT;
   }
   
+  /**
+   *
+   * @return
+   */
   public long getNumRemChunks()
   {
 	  return numRemChunks;
   }
   
+  /**
+   *
+   */
   public void decrementNumRemChunks()
   {
 	  numRemChunks--;
   }
   
+  /**
+   *
+   * @param l
+   */
   public void setNumRemChunks(long l) 
   {
 	  this.numRemChunks = l;
@@ -500,31 +676,55 @@ public class SocketInfo
   /*
    * is to true if the flowpath is closing
    */
+
+  /**
+   *
+   */
+
   public void setClosing()
   {
 	inClosing = true;  
   }
   
+  /**
+   *
+   * @return
+   */
   public boolean getClosing()
   {
 	return inClosing;  
   }
   
+  /**
+   *
+   */
   public void updateNumFPRecvd()
   {
 	  this.numCloseFPRecvd++;
   }
   
+  /**
+   *
+   * @return
+   */
   public int getNumFPRecvd()
   {
 	  return this.numCloseFPRecvd;
   }
   
+  /**
+   *
+   * @return
+   */
   public int getNumFPRecvdOtherSide()
   {
 	  return this.numCloseFPRecvdOtherSide;
   }
   
+  /**
+   *
+   * @param numFPOtherSide
+   */
   public void setNumFPRecvdOtherSide(int numFPOtherSide)
   {
 	  this.numCloseFPRecvdOtherSide = numFPOtherSide;

@@ -1,3 +1,18 @@
+/* Copyright (1c) 2016 University of Massachusetts
+ * 
+ * Licensed under the Apache License, Version 2.0 (1the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ * 
+ * Initial developer(s): Westy */
 package edu.umass.cs.gnsclient.client;
 
 import java.io.IOException;
@@ -19,7 +34,7 @@ import edu.umass.cs.gigapaxos.interfaces.Request;
 import edu.umass.cs.gigapaxos.interfaces.RequestFuture;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.packets.ResponsePacket;
@@ -45,7 +60,6 @@ import edu.umass.cs.utils.Config;
  * Cleaner implementation of a GNS client using gigapaxos' async client.
  */
 public class GNSClient {
-
   /**
    * If no properties file can be found, this client will attempt to connect
    * to a local reconfigurator at the default port
@@ -55,8 +69,12 @@ public class GNSClient {
           InetAddress.getLoopbackAddress(),
           GNSConfig.DEFAULT_RECONFIGURATOR_PORT);
 
-  // ReconfigurableAppClientAsync instance
-  private final AsyncClient asyncClient;
+  // ReconfigurableAppClientAsync instance, protected and nonfinal so BadClient in an admin test can override this.
+
+  /**
+   *
+   */
+  protected AsyncClient asyncClient;
   // local name server
   private InetSocketAddress GNSProxy = null;
 
@@ -225,6 +243,14 @@ public class GNSClient {
     }
   }
 
+  /**
+   *
+   * @param packet
+   * @param timeout
+   * @return the request
+   * @throws IOException
+   * @throws ClientException
+   */
   protected Request sendSync(CommandPacket packet, final long timeout)
           throws IOException, ClientException {
     ClientRequest request = packet
@@ -242,6 +268,13 @@ public class GNSClient {
     return defaultHandleAndCheckResponse(packet, response);
   }
 
+  /**
+   *
+   * @param packet
+   * @return the request
+   * @throws IOException
+   * @throws ClientException
+   */
   protected Request sendSync(CommandPacket packet) throws IOException,
           ClientException {
     return this.sendSync(packet, 0);
@@ -252,7 +285,7 @@ public class GNSClient {
     return response instanceof ResponsePacket ? (ResponsePacket) response
             : new ResponsePacket(response.getServiceName(),
                     ((ActiveReplicaError) response).getRequestID(),
-                    GNSResponseCode.ACTIVE_REPLICA_EXCEPTION,
+                    ResponseCode.ACTIVE_REPLICA_EXCEPTION,
                     ((ActiveReplicaError) response).getResponseMessage());
   }
 
@@ -318,7 +351,7 @@ public class GNSClient {
               + commandPacket.getSummary());
     }
     return retval[0] != null ? retval[0] : new ResponsePacket(commandPacket.getServiceName(),
-            commandPacket.getRequestID(), GNSResponseCode.TIMEOUT,
+            commandPacket.getRequestID(), ResponseCode.TIMEOUT,
             GNSCommandProtocol.BAD_RESPONSE + " "
             + GNSCommandProtocol.TIMEOUT + " for command "
             + commandPacket.getSummary());
@@ -338,9 +371,10 @@ public class GNSClient {
 
   /**
    * Straightforward async client implementation that expects only one packet
-   * type, {@link Packet.PacketType.COMMAND_RETURN_VALUE}.
+   * type, {@link Packet.PacketType.COMMAND_RETURN_VALUE}. Public in scope so
+   * that it can be overrided for testing purposes.
    */
-  static class AsyncClient extends
+  public static class AsyncClient extends
           ReconfigurableAppClientAsync<CommandPacket> implements
           AppRequestParserBytes {
 
@@ -350,6 +384,14 @@ public class GNSClient {
     static final Set<IntegerPacketType> clientPacketTypes = new HashSet<>(
             Arrays.asList(Packet.PacketType.COMMAND_RETURN_VALUE));
 
+    /**
+     *
+     * @param reconfigurators
+     * @param sslMode
+     * @param clientPortOffset
+     * @param checkConnectivity
+     * @throws IOException
+     */
     public AsyncClient(Set<InetSocketAddress> reconfigurators,
             SSL_MODES sslMode, int clientPortOffset,
             boolean checkConnectivity) throws IOException {
@@ -357,6 +399,12 @@ public class GNSClient {
       this.enableJSONPackets();
     }
 
+    /**
+     *
+     * @param msg
+     * @return the request
+     * @throws RequestParseException
+     */
     @Override
     public Request getRequest(String msg) throws RequestParseException {
       Request response = null;
@@ -370,6 +418,12 @@ public class GNSClient {
       return response;
     }
 
+    /**
+     *
+     * @param json
+     * @return the request
+     * @throws RequestParseException
+     */
     @Override
     public Request getRequestFromJSON(JSONObject json)
             throws RequestParseException {
@@ -393,6 +447,10 @@ public class GNSClient {
       return response;
     }
 
+    /**
+     *
+     * @return the request types
+     */
     @Override
     public Set<IntegerPacketType> getRequestTypes() {
       return clientPacketTypes;
@@ -402,18 +460,26 @@ public class GNSClient {
      * FIXME: This should return a separate packet type meant for
      * admin commands that is different from {@link Packet.PacketType#COMMAND}
      * and carries {@link CommandType} types corresponding to admin commands.
+     * @return 
      */
     @SuppressWarnings("javadoc")
     @Override
     public Set<IntegerPacketType> getMutualAuthRequestTypes() {
       Set<IntegerPacketType> types = new HashSet<IntegerPacketType>(
-              Arrays.asList(Packet.PacketType.ADMIN_REQUEST));
+              Arrays.asList(Packet.PacketType.ADMIN_COMMAND));
       if (InternalCommandPacket.SEPARATE_INTERNAL_TYPE) {
         types.add(Packet.PacketType.INTERNAL_COMMAND);
       }
       return types;
     }
 
+    /**
+     *
+     * @param bytes
+     * @param header
+     * @return the request
+     * @throws RequestParseException
+     */
     @Override
     public Request getRequest(byte[] bytes, NIOHeader header)
             throws RequestParseException {

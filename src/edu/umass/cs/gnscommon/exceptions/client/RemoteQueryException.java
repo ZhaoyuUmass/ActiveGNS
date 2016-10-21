@@ -1,14 +1,18 @@
 package edu.umass.cs.gnscommon.exceptions.client;
 
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 
+/**
+ *
+ * @author westy
+ */
 public class RemoteQueryException extends ClientException {
 
 	/**
 	 * @param code
 	 * @param message
 	 */
-	public RemoteQueryException(GNSResponseCode code, String message) {
+	public RemoteQueryException(ResponseCode code, String message) {
 		super(code, message);
 	}
 
@@ -16,7 +20,7 @@ public class RemoteQueryException extends ClientException {
 	 * @param message
 	 */
 	public RemoteQueryException(String message) {
-		super(GNSResponseCode.REMOTE_QUERY_EXCEPTION, message);
+		super(ResponseCode.REMOTE_QUERY_EXCEPTION, message);
 	}
 
 }

@@ -19,7 +19,6 @@
  */
 package edu.umass.cs.gnsclient.client.singletests;
 
-
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
@@ -46,9 +45,12 @@ public class RemoveGuidTest {
   private static GNSClientCommands client;
   private static GuidEntry masterGuid;
 
+  /**
+   *
+   */
   public RemoveGuidTest() {
     if (client == null) {
-       try {
+      try {
         client = new GNSClientCommands();
         client.setForceCoordinatedReads(true);
       } catch (IOException e) {
@@ -62,6 +64,9 @@ public class RemoveGuidTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_01_RemoveGuidUsingAccount() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -89,6 +94,9 @@ public class RemoveGuidTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_02_RemoveGuid() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -113,6 +121,9 @@ public class RemoveGuidTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_03_RemoveAccount() {
     try {
@@ -120,10 +131,16 @@ public class RemoveGuidTest {
     } catch (Exception e) {
       fail("Exception while removing testGuid: " + e);
     }
+  }
+
+  /**
+   *
+   */
+  @Test
+  public void test_04_CheckForRemoval() {
     try {
-      // this should be using the guid
-      client.lookupAccountRecord(ACCOUNT_ALIAS);
-      fail("lookupAccountRecord for " + ACCOUNT_ALIAS + " should have throw an exception.");
+      client.lookupGuid(ACCOUNT_ALIAS);
+      fail("lookupGuid for " + ACCOUNT_ALIAS + " should have throw an exception.");
     } catch (ClientException e) {
 
     } catch (IOException e) {

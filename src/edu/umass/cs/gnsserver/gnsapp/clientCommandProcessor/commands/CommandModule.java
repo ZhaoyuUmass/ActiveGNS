@@ -51,9 +51,14 @@ public class CommandModule {
   // Indicates if we're using the new command enums
   private static boolean useCommandEnums = true;
 
-  private Map<CommandType, BasicCommand> commandLookupTable;
+  private Map<CommandType, AbstractCommand> commandLookupTable;
 
-  public void addCommand(CommandType commandType, BasicCommand command) {
+  /**
+   *
+   * @param commandType
+   * @param command
+   */
+  public void addCommand(CommandType commandType, AbstractCommand command) {
     if (commandLookupTable.get(commandType) != null) {
       ClientSupportConfig.getLogger().log(Level.SEVERE,
               "Duplicate command: {0}", commandType);
@@ -62,7 +67,7 @@ public class CommandModule {
   }
 
   // Used only for generating the description of all commands
-  private TreeSet<BasicCommand> commands;
+  private TreeSet<AbstractCommand> commands;
   private boolean adminMode = false;
 
   /**
@@ -95,10 +100,10 @@ public class CommandModule {
    * to instantiate
    * @param commands Set where the commands are added
    */
-  protected void addCommands(List<Class<?>> commandClasses, Set<BasicCommand> commands) {
+  protected void addCommands(List<Class<?>> commandClasses, Set<AbstractCommand> commands) {
     for (int i = 0; i < commandClasses.size(); i++) {
       Class<?> clazz = commandClasses.get(i);
-      BasicCommand command = createCommandInstance(clazz);
+      AbstractCommand command = createCommandInstance(clazz);
       if (command != null) {
         commandLookupTable.put(command.getCommandType(), command);
         // Used only for generating the description of all commands
@@ -116,10 +121,10 @@ public class CommandModule {
    * to instantiate
    * @param commands Set where the commands are added
    */
-  protected void addCommands(Class<?>[] commandClasses, Set<BasicCommand> commands) {
+  protected void addCommands(Class<?>[] commandClasses, Set<AbstractCommand> commands) {
     for (int i = 0; i < commandClasses.length; i++) {
       Class<?> clazz = commandClasses[i];
-      BasicCommand command = createCommandInstance(clazz);
+      AbstractCommand command = createCommandInstance(clazz);
       if (command != null) {
         commandLookupTable.put(command.getCommandType(), command);
         // Legacy - used only for generating the description of all commands
@@ -128,7 +133,7 @@ public class CommandModule {
     }
   }
 
-  private BasicCommand createCommandInstance(Class<?> clazz) {
+  private AbstractCommand createCommandInstance(Class<?> clazz) {
     try {
       Constructor<?> constructor;
       try {
@@ -136,7 +141,7 @@ public class CommandModule {
       } catch (NoSuchMethodException e) {
         constructor = clazz.getConstructor(new Class<?>[]{CommandModule.class});
       }
-      BasicCommand command = (BasicCommand) constructor.newInstance(new Object[]{this});
+      AbstractCommand command = (AbstractCommand) constructor.newInstance(new Object[]{this});
       ClientCommandProcessorConfig.getLogger().log(Level.FINER,
               "Creating command {0}: {1} with {2}: {3}",
               new Object[]{command.getCommandType().getInt(), clazz.getCanonicalName(),
@@ -153,11 +158,21 @@ public class CommandModule {
     return null;
   }
 
-  public BasicCommand lookupCommand(CommandType commandType) {
+  /**
+   *
+   * @param commandType
+   * @return the command
+   */
+  public AbstractCommand lookupCommand(CommandType commandType) {
     return commandLookupTable.get(commandType);
   }
 
-  public BasicCommand lookupCommand(String commandName) {
+  /**
+   *
+   * @param commandName
+   * @return the command
+   */
+  public AbstractCommand lookupCommand(String commandName) {
     try {
       return lookupCommand(CommandType.valueOf(commandName));
     } catch (IllegalArgumentException e) {
@@ -173,8 +188,8 @@ public class CommandModule {
    * @param json
    * @return the command or null if the command indicator is not valid
    */
-  public BasicCommand lookupCommandHandler(JSONObject json) {
-    BasicCommand command = null;
+  public AbstractCommand lookupCommandHandler(JSONObject json) {
+    AbstractCommand command = null;
     if (json.has(COMMAND_INT)) {
       try {
         command = lookupCommand(CommandType.getCommandType(json.getInt(COMMAND_INT)));
@@ -219,7 +234,7 @@ public class CommandModule {
    * @param json
    * @return the command or null if the COMMANDNAME is not valid
    */
-  public BasicCommand lookupCommandFromCommandName(JSONObject json) {
+  public AbstractCommand lookupCommandFromCommandName(JSONObject json) {
     String action;
     try {
       action = json.getString(COMMANDNAME);
@@ -253,13 +268,13 @@ public class CommandModule {
    */
   public String allCommandDescriptions(CommandDescriptionFormat format) {
     StringBuilder result = new StringBuilder();
-    List<BasicCommand> commandList = new ArrayList<>(commands);
+    List<AbstractCommand> commandList = new ArrayList<>(commands);
     // First sort by name
     Collections.sort(commandList, CommandNameComparator);
     // The sort them by package
     Collections.sort(commandList, CommandPackageComparator);
     String lastPackageName = null;
-    for (BasicCommand command : commandList) {
+    for (AbstractCommand command : commandList) {
       String packageName = command.getClass().getPackage().getName();
       if (!packageName.equals(lastPackageName)) {
         if (format.equals(CommandDescriptionFormat.TCP_Wiki) && lastPackageName != null) {
@@ -294,14 +309,6 @@ public class CommandModule {
     return JSONMissing(json, parameters) == null;
   }
 
-  /**
-   * Return true if we are in admin mode.
-   *
-   * @return true if we are in admin mode
-   */
-  public boolean isAdminMode() {
-    return adminMode;
-  }
 
   /**
    * Set admin mode.
@@ -312,11 +319,11 @@ public class CommandModule {
     this.adminMode = adminMode;
   }
 
-  private static Comparator<BasicCommand> CommandPackageComparator
-          = new Comparator<BasicCommand>() {
+  private static Comparator<AbstractCommand> CommandPackageComparator
+          = new Comparator<AbstractCommand>() {
 
     @Override
-    public int compare(BasicCommand command1, BasicCommand command2) {
+    public int compare(AbstractCommand command1, AbstractCommand command2) {
 
       String packageName1 = command1.getClass().getPackage().getName();
       String packageName2 = command2.getClass().getPackage().getName();
@@ -333,11 +340,11 @@ public class CommandModule {
   /**
    *
    */
-  private static Comparator<BasicCommand> CommandNameComparator
-          = new Comparator<BasicCommand>() {
+  private static Comparator<AbstractCommand> CommandNameComparator
+          = new Comparator<AbstractCommand>() {
 
     @Override
-    public int compare(BasicCommand command1, BasicCommand command2) {
+    public int compare(AbstractCommand command1, AbstractCommand command2) {
 
       String commandName1 = command1.getCommandType().toString();
       String commandName2 = command2.getCommandType().toString();

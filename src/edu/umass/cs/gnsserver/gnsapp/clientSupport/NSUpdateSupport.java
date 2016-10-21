@@ -7,7 +7,7 @@
  */
 package edu.umass.cs.gnsserver.gnsapp.clientSupport;
 
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
@@ -18,13 +18,11 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Activ
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.InternalField;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.MetaDataTypeName;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.UpdateOperation;
-import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
-import edu.umass.cs.gnsserver.utils.AclResult;
 import edu.umass.cs.gnsserver.utils.ResultValue;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
@@ -53,6 +51,7 @@ public class NSUpdateSupport {
   /**
    * Executes a local updateEntireValuesMap operation.
    *
+   * @param header
    * @param guid
    * @param field
    * @param writer
@@ -78,7 +77,7 @@ public class NSUpdateSupport {
    * @throws FieldNotFoundException
  * @throws InternalRequestException 
    */
-  public static GNSResponseCode executeUpdateLocal(InternalRequestHeader header, String guid, String field,
+  public static ResponseCode executeUpdateLocal(InternalRequestHeader header, String guid, String field,
           String writer, String signature, String message, Date timestamp,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, GNSApplicationInterface<String> app, boolean doNotReplyToClient)
@@ -88,7 +87,7 @@ public class NSUpdateSupport {
     ClientSupportConfig.getLogger().log(Level.FINE,
             "Processing local update {0} / {1} {2} {3}",
             new Object[]{guid, field, operation, updateValue});
-    GNSResponseCode errorCode = GNSResponseCode.NO_ERROR;
+    ResponseCode errorCode = ResponseCode.NO_ERROR;
     // writer will be the INTERNAL_OP_SECRET for super secret internal system accesses
     if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(writer)) {
       if (field != null) {
@@ -102,7 +101,7 @@ public class NSUpdateSupport {
       } else {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "Name {0} key={1} : ACCESS_ERROR", new Object[]{guid, field});
-        return GNSResponseCode.ACCESS_ERROR;
+        return ResponseCode.ACCESS_ERROR;
       }
     } else {
     	if(header != null){
@@ -112,7 +111,7 @@ public class NSUpdateSupport {
 	    	}else if (userJSON != null) {
 	    		List<String> fields = userJSON.getKeys();
 	    		for (String aField : fields) {
-	    	        AclResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
+	    	        AclCheckResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
 	    	        if (aclResult.getResponseCode().isExceptionOrError()) {
 	    	          errorCode = aclResult.getResponseCode();
 	    	        }
@@ -122,9 +121,9 @@ public class NSUpdateSupport {
     }
     // Check for stale commands.
     if (timestamp != null) {
-      if (timestamp.before(DateUtils.addMinutes(new Date(), 
+      if (timestamp.before(DateUtils.addMinutes(new Date(),
               -Config.getGlobalInt(GNSConfig.GNSC.STALE_COMMAND_INTERVAL_IN_MINUTES)))) {
-        errorCode = GNSResponseCode.STALE_COMMAND_VALUE;
+        errorCode = ResponseCode.STALE_COMMAND_VALUE;
       }
     }
     // return an error packet if one of the checks doesn't pass
@@ -136,20 +135,18 @@ public class NSUpdateSupport {
       NameRecord nameRecord = getNameRecord(guid, field, operation, app.getDB());
       updateNameRecord(header, nameRecord, guid, field, operation, updateValue, oldValue, argument, userJSON,
               app.getDB(), app.getActiveCodeHandler());
-      return GNSResponseCode.NO_ERROR;
+      return ResponseCode.NO_ERROR;
     } else // Handle special case of a create index
-    {
-      if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
+     if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "Creating index for {0} {1}", new Object[]{field, updateValue});
         app.getDB().createIndex(field, (String) updateValue.get(0));
 
-        return GNSResponseCode.NO_ERROR;
+        return ResponseCode.NO_ERROR;
       } else {
         ClientSupportConfig.getLogger().log(Level.SEVERE, "Invalid index value:{0}", updateValue);
-        return GNSResponseCode.UPDATE_ERROR;
+        return ResponseCode.UPDATE_ERROR;
       }
-    }
   }
 
   private static NameRecord getNameRecord(String guid, String field, UpdateOperation operation, BasicRecordMap db) throws RecordNotFoundException, FailedDBOperationException {
@@ -157,21 +154,19 @@ public class NSUpdateSupport {
       // some operations don't require a read first
       return new NameRecord(db, guid);
     } else //try {
-    {
-      if (field == null) {
+     if (field == null) {
         return NameRecord.getNameRecord(db, guid);
       } else {
         return NameRecord.getNameRecordMultiUserFields(db, guid,
                 ColumnFieldType.LIST_STRING, field);
       }
-    }
   }
 
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
-    if (activeCodeHandler != null && AppOptionsOld.enableActiveCode ) {    	
+    if (activeCodeHandler != null && GNSConfig.enableActiveCode ) {    	
         JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
         newValue = result!=null?new ValuesMap(result):null;
     }
@@ -186,49 +181,4 @@ public class NSUpdateSupport {
     nameRecord.updateNameRecord(field, updateValue, oldValue, argument, newValue, operation);
     
   }
-  /*
-  private static ValuesMap handleActiveCode(InternalRequestHeader header, String guid, String field, ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws InternalRequestException {
-	  long t = System.nanoTime();
-	  // Only do active field handling for user fields.
-	  //FIXME: field could be null as it's an internalField, then a bug is triggered
-	  //This is a temporary fix to the problem
-	  if(field==null){
-		 field = (String) userJSON.keys().next();
-	  }
-	  
-	ValuesMap newResult = userJSON;
-    if ( !InternalField.isInternalField(field) ) {
-      NameRecord activeCodeNameRecord = null;
-      try {
-        activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,
-                ColumnFieldType.USER_JSON, ActiveCode.ON_WRITE);
-      } catch (RecordNotFoundException | FailedDBOperationException e) {
-    	// code can not be retrieved, return original value
-    	  return userJSON;
-      }
-      
-      ValuesMap codeMap = null;
-      try {
-        codeMap = activeCodeNameRecord.getValuesMap();
-      } catch (FieldNotFoundException e) {
-    	// No code deployed, return original value
-    	  return userJSON;
-      }
-      int hopLimit = 1;
-      
-      if (codeMap != null && userJSON != null) {
-        String code;
-		try {
-			code = codeMap.getString(ActiveCode.ON_WRITE);
-		} catch (JSONException e) {
-			// no code deployed, return original value
-			return userJSON;
-		}		
-        newResult = activeCodeHandler.runCode(header, code, guid, field, "write", userJSON, hopLimit);
-      }
-    }
-    DelayProfiler.updateDelayNano("activeTotal", t);
-    return newResult;
-  }
-	*/
 }

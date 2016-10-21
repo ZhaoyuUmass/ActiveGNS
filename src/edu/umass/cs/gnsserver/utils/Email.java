@@ -22,7 +22,9 @@ package edu.umass.cs.gnsserver.utils;
 import edu.umass.cs.gnscommon.utils.Format;
 import com.sun.mail.smtp.SMTPTransport;
 import com.sun.mail.util.MailSSLSocketFactory;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.main.GNSConfig.GNSC;
+import edu.umass.cs.utils.Config;
 import java.security.GeneralSecurityException;
 import java.util.Date;
 import javax.mail.Message;
@@ -42,7 +44,7 @@ import javax.mail.MessagingException;
  * @author westy
  */
 public class Email {
-  
+
   private static final Logger LOG = Logger.getLogger(Email.class.getName());
 
   /**
@@ -61,8 +63,12 @@ public class Email {
    * @return true if successful
    */
   public static boolean email(String subject, String recipient, String text) {
-      if (!GNSC.isDontTryLocalEmail() && emailLocal(subject, recipient, text, true)) {
+    if (!Config.getGlobalBoolean(GNSC.DONT_TRY_LOCAL_EMAIL) && emailLocal(subject, recipient, text, true)) {
       return true;
+      // We can't do any of the relay cases if there is no admin password
+    } else if (Config.getGlobalString(GNSC.ADMIN_PASSWORD).isEmpty()) {
+      getLogger().log(Level.WARNING, "Unable to send email to {0} because there is no admin password", recipient);
+      return false;
     } else if (simpleMail(subject, recipient, text, true)) {
       return true;
     } else if (emailSSL(subject, recipient, text, true)) {
@@ -70,7 +76,7 @@ public class Email {
     } else if (emailTLS(subject, recipient, text, true)) {
       return true;
       //now run it again with error messages turned on
-    } else if (!GNSC.isDontTryLocalEmail() && emailLocal(subject, recipient, text, false)) {
+    } else if (!Config.getGlobalBoolean(GNSC.DONT_TRY_LOCAL_EMAIL) && emailLocal(subject, recipient, text, false)) {
       return true;
     } else if (simpleMail(subject, recipient, text, false)) {
       return true;
@@ -95,17 +101,27 @@ public class Email {
 
    */
 
-  /**
-   *
-   */
-  public static final String ACCOUNT_CONTACT_EMAIL = "admin@gns.name";
-  private static final String CONTACT = "deadDOG8";
   private static final String SMTP_HOST = "smtp.gmail.com";
 
+  /**
+   *
+   * @param subject
+   * @param recipient
+   * @param text
+   * @return true if the mail was sent
+   */
   public static boolean simpleMail(String subject, String recipient, String text) {
     return simpleMail(subject, recipient, text, true);
   }
 
+  /**
+   *
+   * @param subject
+   * @param recipient
+   * @param text
+   * @param suppressWarning
+   * @return true if the mail was sent
+   */
   public static boolean simpleMail(String subject, String recipient, String text, boolean suppressWarning) {
     try {
       MailSSLSocketFactory sf = new MailSSLSocketFactory();
@@ -119,14 +135,15 @@ public class Email {
       Session session = Session.getInstance(props);
 
       Message message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(ACCOUNT_CONTACT_EMAIL));
+      message.setFrom(new InternetAddress(Config.getGlobalString(GNSConfig.GNSC.SUPPORT_EMAIL)));
       message.setRecipients(Message.RecipientType.TO,
               InternetAddress.parse(recipient));
       message.setSubject(subject);
       message.setText(text);
       SMTPTransport t = (SMTPTransport) session.getTransport("smtp");
       try {
-        t.connect(SMTP_HOST, ACCOUNT_CONTACT_EMAIL, CONTACT);
+        t.connect(SMTP_HOST, Config.getGlobalString(GNSConfig.GNSC.ADMIN_EMAIL),
+                Config.getGlobalString(GNSConfig.GNSC.ADMIN_PASSWORD));
         t.sendMessage(message, message.getAllRecipients());
         getLogger().log(Level.FINE, "Email response: {0}", t.getLastServerResponse());
       } finally {
@@ -178,12 +195,13 @@ public class Email {
               new javax.mail.Authenticator() {
         @Override
         protected PasswordAuthentication getPasswordAuthentication() {
-          return new PasswordAuthentication(ACCOUNT_CONTACT_EMAIL, CONTACT);
+          return new PasswordAuthentication(Config.getGlobalString(GNSConfig.GNSC.ADMIN_EMAIL), 
+                  Config.getGlobalString(GNSConfig.GNSC.ADMIN_PASSWORD));
         }
       });
 
       Message message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(ACCOUNT_CONTACT_EMAIL));
+      message.setFrom(new InternetAddress(Config.getGlobalString(GNSConfig.GNSC.SUPPORT_EMAIL)));
       message.setRecipients(Message.RecipientType.TO,
               InternetAddress.parse(recipient));
       message.setSubject(subject);
@@ -226,8 +244,8 @@ public class Email {
    */
   // TLS doesn't work with Dreamhost
   public static boolean emailTLS(String subject, String recipient, String text, boolean suppressWarning) {
-    final String username = "admin@gns.name";
-    final String contactString = "deadDOG8";
+    final String username = Config.getGlobalString(GNSConfig.GNSC.ADMIN_EMAIL);
+    final String contactString = Config.getGlobalString(GNSConfig.GNSC.ADMIN_PASSWORD);
 
     try {
       Properties props = new Properties();
@@ -245,14 +263,14 @@ public class Email {
       });
 
       Message message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(ACCOUNT_CONTACT_EMAIL));
+      message.setFrom(new InternetAddress(Config.getGlobalString(GNSConfig.GNSC.SUPPORT_EMAIL)));
       message.setRecipients(Message.RecipientType.TO,
               InternetAddress.parse(recipient));
       message.setSubject(subject);
       message.setText(text);
 
       Transport.send(message);
-      getLogger().log(Level.INFO,
+      getLogger().log(Level.FINE,
               "Successfully sent email to {0} with message: {1}", new Object[]{recipient, text});
       return true;
 
@@ -302,7 +320,7 @@ public class Email {
       MimeMessage message = new MimeMessage(session);
 
       // Set From: header field of the header.
-      message.setFrom(new InternetAddress(ACCOUNT_CONTACT_EMAIL));
+      message.setFrom(new InternetAddress(Config.getGlobalString(GNSConfig.GNSC.SUPPORT_EMAIL)));
 
       // Set To: header field of the header.
       message.addRecipient(Message.RecipientType.TO,
@@ -326,7 +344,15 @@ public class Email {
     }
   }
 
+  /**
+   *
+   * @param args
+   */
   public static void main(String[] args) {
-      email("hello", "westy@cs.umass.edu", "this is another test on " + Format.formatPrettyDateUTC(new Date()));
+    email("hello", "westy@cs.umass.edu", 
+            "This is another email on " + Format.formatPrettyDateUTC(new Date()) + "."
+            + "\n The support email is " + Config.getGlobalString(GNSConfig.GNSC.SUPPORT_EMAIL) + "."
+            + "Thanks, \nHave a nice day."
+    );
   }
 }

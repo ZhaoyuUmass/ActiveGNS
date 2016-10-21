@@ -34,8 +34,7 @@ public class ActiveNonBlockingWorker {
 	 * @param ifile
 	 * @param ofile
 	 * @param id 
-	 * @param numThread 
-	 * @param isTest
+	 * @param numThread
 	 */
 	protected ActiveNonBlockingWorker(String ifile, String ofile, int id, int numThread) {
 		this.id = id;

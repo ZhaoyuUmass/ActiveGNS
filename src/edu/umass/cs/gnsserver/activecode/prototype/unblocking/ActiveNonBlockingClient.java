@@ -250,7 +250,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	 * @param ofile
 	 * @param id
 	 * @param workerNumThread
-	 * @return
+	 * @return a process
 	 * @throws IOException
 	 */
 	private Process startWorker(String ifile, String ofile, int id) throws IOException{
@@ -289,7 +289,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	 * 
 	 * @param port1
 	 * @param id
-	 * @return
+	 * @return a process
 	 * @throws IOException
 	 */
 	private Process startWorker(int port1, int port2, int id) throws IOException{
@@ -323,7 +323,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		return process;
 	}
 	
-	protected ActiveMessage receiveMessage(){		
+  /**
+   *
+   * @return a message
+   */
+  protected ActiveMessage receiveMessage(){		
 		ActiveMessage am = null;
 		try {
 			am = (ActiveMessage) channel.receiveMessage();
@@ -333,7 +337,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		return am;
 	}
 	
-	protected synchronized void sendMessage(ActiveMessage am){
+  /**
+   *
+   * @param am
+   */
+  protected synchronized void sendMessage(ActiveMessage am){
 		try {
 			channel.sendMessage(am);
 		} catch (IOException e) {
@@ -364,6 +372,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	 * @param valuesMap
 	 * @param ttl
 	 * @return executed result sent back from worker
+   * @throws edu.umass.cs.gnsserver.activecode.prototype.ActiveException
 	 */
 	@Override
 	public JSONObject runCode(InternalRequestHeader header, String guid, String field, 

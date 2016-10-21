@@ -24,24 +24,36 @@ package edu.umass.cs.msocket.contextsocket;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Logger;
-
 import edu.umass.cs.msocket.MSocket;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
+/**
+ *
+ * @author westy
+ */
 public class ContextSocketMessage 
 {
-	public static final int      DATA_MESG     = 1;
-	
-	public static final String[] Mesg_Type_Str = {"DATA_MESG"};
 
-	public static final int      HEADER_SIZE   = (Integer.SIZE * 2) / 8;
+  /**
+   *
+   */
+  public static final int      DATA_MESG     = 1;
+	
+  /**
+   *
+   */
+  public static final String[] Mesg_Type_Str = {"DATA_MESG"};
+
+  /**
+   *
+   */
+  public static final int      HEADER_SIZE   = (Integer.SIZE * 2) / 8;
 	final int                    type;
 	final int                    length;
 	  
 	final byte[]                 msg;
 	  
 	private final int arrayCopyOffset;
-	private static Logger  log            = Logger.getLogger(ContextSocketMessage.class.getName());
 	
 	  /*
 	   * If the byte[] argument b is null or longer than the specified length
@@ -49,6 +61,15 @@ public class ContextSocketMessage
 	   * We need to allow length>0 and msg==null in the case of a header-only
 	   * DataMessage.
 	   */
+
+  /**
+   *
+   * @param type
+   * @param l
+   * @param b
+   * @param offset
+   */
+
 	  public ContextSocketMessage(int type, int l, byte[] b, int offset)
 	  {
 	    this.type = type;
@@ -60,17 +81,29 @@ public class ContextSocketMessage
 	    msg = b;
 	  }
 	  
-	  public static int sizeofHeader()
+  /**
+   *
+   * @return
+   */
+  public static int sizeofHeader()
 	  {
 		  return HEADER_SIZE;
 	  }
 	  
-	  public int size()
+  /**
+   *
+   * @return
+   */
+  public int size()
 	  {
 		  return sizeofHeader() + length;
 	  }
 	  
-	  public byte[] getBytes()
+  /**
+   *
+   * @return
+   */
+  public byte[] getBytes()
 	  {
 	    ByteBuffer buf = ByteBuffer.allocate(ContextSocketMessage.HEADER_SIZE + (msg != null ? length : 0));
 	    buf.putInt(type);
@@ -80,7 +113,7 @@ public class ContextSocketMessage
 	    	buf.put(msg, arrayCopyOffset, length);
 	    	if(length>0)
 	    	{
-	    		log.trace("DataMessage: msg[0] "+msg[0]);
+	    		MSocketLogger.getLogger().fine("DataMessage: msg[0] "+msg[0]);
 	    	}
 	      }
 	    buf.flip();
@@ -92,6 +125,13 @@ public class ContextSocketMessage
 	   * DataMessage object, i.e., there is no excess bytes beyond the header and
 	   * the message body. If that is not the case, it will return null.
 	   */
+
+  /**
+   *
+   * @param b
+   * @return
+   */
+
 	  public static ContextSocketMessage getDataMessage(byte[] b)
 	  {
 	    if (b == null || b.length < ContextSocketMessage.HEADER_SIZE)
@@ -103,7 +143,12 @@ public class ContextSocketMessage
 	    return dm;
 	  }
 	
-	  public static ContextSocketMessage getDataMessageHeader(byte[] b)
+  /**
+   *
+   * @param b
+   * @return
+   */
+  public static ContextSocketMessage getDataMessageHeader(byte[] b)
 	  {
 	    if (b == null || b.length < ContextSocketMessage.HEADER_SIZE)
 	      return null;
@@ -118,7 +163,13 @@ public class ContextSocketMessage
 	    return s;
 	  }
 	  
-	  public static ContextSocketMessage readDataMessageHeader(MSocket readMSocket) throws IOException
+  /**
+   *
+   * @param readMSocket
+   * @return
+   * @throws IOException
+   */
+  public static ContextSocketMessage readDataMessageHeader(MSocket readMSocket) throws IOException
 	  {
 		    int nreadHeader = 0;
 		    byte[] readBuf = new byte[ContextSocketMessage.sizeofHeader()];
@@ -147,7 +198,11 @@ public class ContextSocketMessage
 		    return gm;
 	  }
 	  
-	  public static void main(String[] args)
+  /**
+   *
+   * @param args
+   */
+  public static void main(String[] args)
 	  {
 	    byte[] b = "Testing the waters to get a feel".getBytes();
 	    ContextSocketMessage dm = new ContextSocketMessage(0,b.length, b, 0);
@@ -155,6 +210,6 @@ public class ContextSocketMessage
 	
 	    ContextSocketMessage dec = ContextSocketMessage.getDataMessage(enc);
 	    enc[11] = 98;
-	    log.debug(dec);
+	    MSocketLogger.getLogger().fine(dec.toString());
 	  }
 }

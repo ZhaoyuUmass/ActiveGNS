@@ -25,7 +25,7 @@ package edu.umass.cs.msocket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * This class implements the Output buffer of MSocket. Data is stored in the
@@ -36,6 +36,10 @@ import org.apache.log4j.Logger;
 
 public class OutBuffer
 {
+
+  /**
+   *
+   */
   public static final int MAX_OUTBUFFER_SIZE = 30000000;                                   // 30MB
 
   ArrayList<byte[]>       sbuf               = null;
@@ -88,13 +92,18 @@ public class OutBuffer
                                                                                             // for
                                                                                             // ACK
 
-  private static Logger   log                = Logger.getLogger(OutBuffer.class.getName());
-
   OutBuffer()
   {
     sbuf = new ArrayList<byte[]>();
   }
 
+  /**
+   *
+   * @param src
+   * @param offset
+   * @param length
+   * @return
+   */
   public synchronized boolean add(byte[] src, int offset, int length)
   {
     if (src.length < offset + length)
@@ -102,7 +111,7 @@ public class OutBuffer
     // FIXME: may need to improve here
     if ((getOutbufferSize() + length) > (java.lang.Runtime.getRuntime().maxMemory() / 2))
     {
-      log.trace("Local write fail JVM Heap memeory threshold exceeded");
+      MSocketLogger.getLogger().fine("Local write fail JVM Heap memeory threshold exceeded");
       return false;
     }
     byte[] dst = null;
@@ -115,6 +124,10 @@ public class OutBuffer
     return true;
   }
 
+  /**
+   *
+   * @return
+   */
   public synchronized int getOutbufferSize()
   {
     int i = 0;
@@ -126,11 +139,21 @@ public class OutBuffer
     return sizeinbytes;
   }
 
+  /**
+   *
+   * @param b
+   * @return
+   */
   public boolean add(byte[] b)
   {
     return add(b, 0, b.length);
   }
 
+  /**
+   *
+   * @param ack
+   * @return
+   */
   public synchronized boolean ack(long ack)
   {
     if (ack - dataBaseSeq <= 0 || ack - dataSendSeq > 0)
@@ -150,6 +173,9 @@ public class OutBuffer
     return true;
   }
 
+  /**
+   *
+   */
   public void freeOutBuffer()
   {
     long curStart = dataStartSeq;
@@ -174,16 +200,27 @@ public class OutBuffer
     }
   }
 
+  /**
+   *
+   */
   public synchronized void releaseOutBuffer()
   {
     sbuf.clear();
   }
 
+  /**
+   *
+   * @return
+   */
   public synchronized long getDataBaseSeq()
   {
     return dataBaseSeq;
   }
 
+  /**
+   *
+   * @param bs
+   */
   public synchronized void setDataBaseSeq(long bs)
   {
     if ((bs - dataStartSeq >= 0) && (bs - dataSendSeq <= 0) && (bs > dataBaseSeq))
@@ -193,6 +230,10 @@ public class OutBuffer
     }
   }
 
+  /**
+   *
+   * @return
+   */
   public synchronized byte[] getUnacked()
   {
     if (dataSendSeq - dataBaseSeq <= 0)
@@ -210,10 +251,16 @@ public class OutBuffer
       curStart += b.length;
     }
     if (buf.array().length == 0)
-      log.trace("base=" + this.dataBaseSeq + "send=" + this.dataSendSeq);
+      MSocketLogger.getLogger().fine("base=" + this.dataBaseSeq + "send=" + this.dataSendSeq);
     return buf.array();
   }
 
+  /**
+   *
+   * @param startSeqNum
+   * @param EndSeqNum
+   * @return
+   */
   public synchronized byte[] getDataFromOutBuffer(long startSeqNum, long EndSeqNum)
   {
     if (EndSeqNum - startSeqNum <= 0)
@@ -243,7 +290,7 @@ public class OutBuffer
       curStart += b.length;
     }
     if (buf.array().length == 0)
-      log.trace("base=" + startSeqNum + "send=" + EndSeqNum);
+      MSocketLogger.getLogger().fine("base=" + startSeqNum + "send=" + EndSeqNum);
     return buf.array();
   }
 
@@ -259,6 +306,10 @@ public class OutBuffer
     return s;
   }
 
+  /**
+   *
+   * @param args
+   */
   public static void main(String[] args)
   {
 
@@ -266,13 +317,13 @@ public class OutBuffer
     byte[] b1 = "Test1".getBytes();
     byte[] b2 = "Test2".getBytes();
     ob.add(b1);
-    log.trace(ob);
+    MSocketLogger.getLogger().fine(ob.toString());
     ob.add(b2);
-    log.trace(ob);
+    MSocketLogger.getLogger().fine(ob.toString());
     ob.ack(3);
-    log.trace(ob);
+    MSocketLogger.getLogger().fine(ob.toString());
     ob.ack(4);
-    log.trace(ob);
-    log.trace(new String(ob.getUnacked()));
+    MSocketLogger.getLogger().fine(ob.toString());
+    MSocketLogger.getLogger().fine(new String(ob.getUnacked()));
   }
 }

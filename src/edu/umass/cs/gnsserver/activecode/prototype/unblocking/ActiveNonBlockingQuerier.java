@@ -141,7 +141,12 @@ public class ActiveNonBlockingQuerier implements Querier {
 			}
 	}
 	
-	protected void release(ActiveMessage response, boolean isDone){
+  /**
+   *
+   * @param response
+   * @param isDone
+   */
+  protected void release(ActiveMessage response, boolean isDone){
 		monitor.setResult(response, isDone);
 	}
 	

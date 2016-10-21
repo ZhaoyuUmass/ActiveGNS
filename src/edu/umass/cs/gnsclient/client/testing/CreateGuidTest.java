@@ -53,7 +53,6 @@ public class CreateGuidTest {
    * Creates a SimpleLatencyTest with the given arguments.
    *
    * @param alias
-   * @param portString
    */
   public CreateGuidTest(String alias) {
     if (client == null) {
@@ -75,7 +74,7 @@ public class CreateGuidTest {
     CreateEntity();
   }
 
-  public void CreateEntity() {
+  private void CreateEntity() {
     String alias = "testGUID" + RandomString.randomString(6);
     GuidEntry guidEntry = null;
     try {

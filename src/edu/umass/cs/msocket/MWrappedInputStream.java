@@ -25,7 +25,7 @@ package edu.umass.cs.msocket;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * This class implements the InputStream of the MSocket.
@@ -38,9 +38,7 @@ public class MWrappedInputStream extends InputStream
 {
   private ConnectionInfo cinfo = null;
 
-  private static Logger  log   = Logger.getLogger(MWrappedInputStream.class.getName());
-
-  MWrappedInputStream(ConnectionInfo cinfo, long fid) throws IOException
+  MWrappedInputStream(ConnectionInfo cinfo) throws IOException
   {
     this.cinfo = cinfo;
   }
@@ -50,13 +48,17 @@ public class MWrappedInputStream extends InputStream
     int numread = read(b, 0, b.length);
     if (numread > 0)
     {
-      log.trace("msocket read " + numread);
+      MSocketLogger.getLogger().fine("msocket read " + numread);
     }
     return numread;
   }
 
   /**
     *
+   * @param offset
+   * @param length
+   * @return 
+   * @throws java.io.IOException
     */
   public synchronized int read(byte[] b, int offset, int length) throws IOException
   {
@@ -67,7 +69,7 @@ public class MWrappedInputStream extends InputStream
     if (cinfo.getMSocketState() == MSocketConstants.CLOSED)
       throw new IOException(" socket already closed");
     
-    log.trace(cinfo.getServerOrClient()+" app read called");
+    MSocketLogger.getLogger().fine(cinfo.getServerOrClient()+" app read called");
     int nread = 0;
     
     while(nread == 0)
@@ -106,7 +108,7 @@ public class MWrappedInputStream extends InputStream
 	    	{
 	    		return -1;
 	    	} else {
-	    		log.trace(cinfo.getServerOrClient()+" nread == 0, need to check for blocking");
+	    		MSocketLogger.getLogger().fine(cinfo.getServerOrClient()+" nread == 0, need to check for blocking");
 			      
 			      // if state is not active, then it means other side
 			      // has issued a close, and all the data should be there
@@ -122,6 +124,14 @@ public class MWrappedInputStream extends InputStream
     return nread;
   }
   
+  /**
+   *
+   * @param b
+   * @param offset
+   * @param length
+   * @return
+   * @throws IOException
+   */
   public synchronized int nonBlockingRead(byte[] b, int offset, int length) throws IOException
   {
     if (cinfo == null)
@@ -131,7 +141,7 @@ public class MWrappedInputStream extends InputStream
     if (cinfo.getMSocketState() == MSocketConstants.CLOSED)
       throw new IOException(" socket already closed");
     
-    log.trace(cinfo.getServerOrClient()+" app read called");
+    MSocketLogger.getLogger().fine(cinfo.getServerOrClient()+" app read called");
     int nread = 0;
     
   
@@ -175,6 +185,8 @@ public class MWrappedInputStream extends InputStream
   }
 
   /**
+   * @return 
+   * @throws java.io.IOException
    * @Override
    * @see java.io.InputStream#read()
    */

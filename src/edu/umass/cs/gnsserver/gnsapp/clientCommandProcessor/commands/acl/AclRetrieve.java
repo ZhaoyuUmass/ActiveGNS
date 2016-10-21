@@ -28,14 +28,15 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Field
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.MetaDataTypeName;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -46,7 +47,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class AclRetrieve extends BasicCommand {
+public class AclRetrieve extends AbstractCommand {
 
   /**
    *
@@ -56,17 +57,15 @@ public class AclRetrieve extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.AclRetrieve;
   }
 
-  
-
-//  @Override
-//  public String getCommandName() {
-//    return ACL_RETRIEVE;
-//  }
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, ParseException {
@@ -81,12 +80,12 @@ public class AclRetrieve extends BasicCommand {
 
     MetaDataTypeName access;
     if ((access = MetaDataTypeName.valueOf(accessType)) == null) {
-      return new CommandResponse(GNSResponseCode.BAD_ACL_TYPE_ERROR, BAD_RESPONSE + " " + BAD_ACL_TYPE
-              + "Should be one of " + MetaDataTypeName.values().toString());
+      return new CommandResponse(ResponseCode.BAD_ACL_TYPE_ERROR, BAD_RESPONSE + " " + BAD_ACL_TYPE
+              + "Should be one of " + Arrays.toString(MetaDataTypeName.values()));
     }
     JSONArray guids = SharedGuidUtils.convertPublicKeysToGuids(new JSONArray(FieldMetaData.lookup(access,
             guid, field, reader, signature, message, timestamp, handler)));
-    return new CommandResponse(GNSResponseCode.NO_ERROR, guids.toString());
+    return new CommandResponse(ResponseCode.NO_ERROR, guids.toString());
   }
 
   

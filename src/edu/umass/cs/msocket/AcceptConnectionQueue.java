@@ -36,10 +36,25 @@ import java.util.Queue;
 public class AcceptConnectionQueue
 {
   private Queue<Object>   AcceptQueue;
+
+  /**
+   *
+   */
   public static final int GET_SIZE = 1;
+
+  /**
+   *
+   */
   public static final int PUT      = 2;
+
+  /**
+   *
+   */
   public static final int GET      = 3;
 
+  /**
+   * Accept the connection queue.
+   */
   public AcceptConnectionQueue()
   {
     AcceptQueue = new LinkedList<Object>();
@@ -50,7 +65,7 @@ public class AcceptConnectionQueue
    * 
    * @param Type
    * @param ReadySocket
-   * @return
+   * @return the element
    */
   public synchronized Object getFromQueue(int Type, Object ReadySocket)
   {

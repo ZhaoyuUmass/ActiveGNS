@@ -35,7 +35,7 @@ import org.junit.Test;
 
 import edu.umass.cs.msocket.MServerSocket;
 import edu.umass.cs.msocket.MSocket;
-import edu.umass.cs.msocket.common.policies.NoProxyPolicy;
+import edu.umass.cs.msocket.common.proxy.policies.NoProxyPolicy;
 
 /**
  * This class defines a MSocketConnectionTests. We assume that the GNS is
@@ -127,6 +127,13 @@ public class MSocketConnectionTests
     }
   }
 
+  /**
+   *
+   * @param is
+   * @param os
+   * @param value
+   * @throws IOException
+   */
   protected void echoTest(InputStream is, OutputStream os, int value) throws IOException
   {
 	  System.out.println("MSocket writing " + value);

@@ -30,8 +30,12 @@ import com.sun.net.httpserver.HttpServer;
 
 import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnscommon.CommandType;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_RESPONSE;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.OPERATION_NOT_SUPPORTED;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.QUERY_PROCESSING_ERROR;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATURE;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATUREFULLMESSAGE;
 import edu.umass.cs.gnsserver.main.GNSConfig;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -41,16 +45,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
-
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.*;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import static edu.umass.cs.gnsserver.httpserver.Defs.KEYSEP;
 import static edu.umass.cs.gnsserver.httpserver.Defs.QUERYPREFIX;
 import static edu.umass.cs.gnsserver.httpserver.Defs.VALSEP;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandHandler;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.utils.Format;
@@ -58,12 +60,11 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSAccessSupport;
 import edu.umass.cs.gnsserver.utils.Util;
 import edu.umass.cs.reconfiguration.ReconfigurationConfig;
-
+import edu.umass.cs.utils.Config;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.json.JSONObject;
 
@@ -74,38 +75,59 @@ import org.json.JSONObject;
  */
 public class GNSHttpServer {
 
-  private static final String GNSPATH = GNSConfig.GNS_URL_PATH;
-  private static final int STARTING_PORT = 8080;
+  /**
+   *
+   */
+  protected static final String GNS_PATH = Config.getGlobalString(GNSConfig.GNSC.HTTP_SERVER_GNS_URL_PATH);
+  private HttpServer httpServer = null;
   private int port;
   // handles command processing
   private final CommandModule commandModule;
-  private final ClientRequestHandlerInterface requestHandler;
+
+  /**
+   *
+   */
+  protected final ClientRequestHandlerInterface requestHandler;
   private final Date serverStartDate = new Date();
 
   private final static Logger LOG = Logger.getLogger(GNSHttpServer.class.getName());
-
-  public GNSHttpServer(ClientRequestHandlerInterface requestHandler) {
+  
+  /**
+   *
+   * @param port
+   * @param requestHandler
+   */
+  public GNSHttpServer(int port, ClientRequestHandlerInterface requestHandler) {
     this.commandModule = new CommandModule();
     this.requestHandler = requestHandler;
-    runServer();
-    requestHandler.setHttpServerPort(port);
+    runServer(port);
   }
 
   /**
    * Start the server.
+   * @param startingPort
    */
-  public final void runServer() {
+  public final void runServer(int startingPort) {
     int cnt = 0;
     do {
       // Find the first port after starting port that actually works.
       // Usually if 8080 is busy we can get 8081.
-      if (tryPort(STARTING_PORT + cnt)) {
-        port = STARTING_PORT + cnt;
+      if (tryPort(startingPort + cnt)) {
+        port = startingPort + cnt;
         break;
       }
     } while (cnt++ < 100);
   }
-
+  
+  /**
+   * Stop everything.
+   */
+  public void stop() {
+    if (httpServer != null) {
+      httpServer.stop(0);
+    }
+  }
+ 
   /**
    * Try to start the http server at the port.
    *
@@ -115,12 +137,14 @@ public class GNSHttpServer {
   public boolean tryPort(int port) {
     try {
       InetSocketAddress addr = new InetSocketAddress(port);
-      HttpServer server = HttpServer.create(addr, 0);
+      httpServer = HttpServer.create(addr, 0);
 
-      server.createContext("/", new EchoHandler());
-      server.createContext("/" + GNSPATH, new DefaultHandler());
-      server.setExecutor(Executors.newCachedThreadPool());
-      server.start();
+      httpServer.createContext("/", new EchoHandler());
+      httpServer.createContext("/" + GNS_PATH, new DefaultHandler());
+      httpServer.setExecutor(Executors.newCachedThreadPool());
+      httpServer.start();
+      // Need to do this for the places where we expose the insecure http service to the user
+      requestHandler.setHttpServerPort(port);
       LOG.log(Level.INFO,
               "HTTP server is listening on port {0}", port);
       return true;
@@ -132,8 +156,15 @@ public class GNSHttpServer {
     }
   }
 
-  private class DefaultHandler implements HttpHandler {
+  /**
+   * The default handler.
+   */
+  protected class DefaultHandler implements HttpHandler {
 
+    /**
+     *
+     * @param exchange
+     */
     @Override
     public void handle(HttpExchange exchange) {
       try {
@@ -153,7 +184,7 @@ public class GNSHttpServer {
           String path = uri.getPath();
           String query = uri.getQuery() != null ? uri.getQuery() : ""; // stupidly it returns null for empty query
 
-          String action = path.replaceFirst("/" + GNSPATH + "/", "");
+          String action = path.replaceFirst("/" + GNS_PATH + "/", "");
 
           CommandResponse response;
           if (!action.isEmpty()) {
@@ -161,16 +192,16 @@ public class GNSHttpServer {
                     "Action: {0} Query:{1}", new Object[]{action, query});
             response = processQuery(host, action, query);
           } else {
-            response = new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE
+            response = new CommandResponse(ResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE
                     + " " + OPERATION_NOT_SUPPORTED + " Don't understand " + action + " " + query);
           }
-          LOG.log(Level.FINER, "Response: {0}", response);
+          LOG.log(Level.FINER, "Response: " + response);
           // FIXME: This totally ignores the error code.
           responseBody.write(response.getReturnValue().getBytes());
           responseBody.close();
         }
       } catch (Exception e) {
-        LOG.log(Level.SEVERE, "Error: {0}", e);
+        LOG.log(Level.SEVERE, "Error: " + e);
         e.printStackTrace();
         try {
           String response = BAD_RESPONSE + " " + QUERY_PROCESSING_ERROR + " " + e;
@@ -202,10 +233,10 @@ public class GNSHttpServer {
     }
     JSONObject jsonFormattedCommand = new JSONObject(queryMap);
 
-    BasicCommand command;
+    AbstractCommand command;
     try {
-      command = commandModule.lookupCommand(CommandType.valueOf(action));
-      // handle actions that valueOf can't parse
+      // allows for "dump" as well as "Dump".
+      command = commandModule.lookupCommand(CommandType.getCommandForHttp(action));
       if (command != null) {
         return CommandHandler.executeCommand(command, jsonFormattedCommand, requestHandler);
       }
@@ -213,7 +244,7 @@ public class GNSHttpServer {
     } catch (IllegalArgumentException e) {
       LOG.log(Level.FINE, "lookupCommand failed for {0}", action);
     }
-    return new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED,
+    return new CommandResponse(ResponseCode.OPERATION_NOT_SUPPORTED,
             BAD_RESPONSE + " " + OPERATION_NOT_SUPPORTED
             + " Sorry, don't understand " + action + QUERYPREFIX + queryString);
   }
@@ -233,8 +264,13 @@ public class GNSHttpServer {
   /**
    * Returns info about the server.
    */
-  private class EchoHandler implements HttpHandler {
+  protected class EchoHandler implements HttpHandler {
 
+    /**
+     *
+     * @param exchange
+     * @throws IOException
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
       String requestMethod = exchange.getRequestMethod();

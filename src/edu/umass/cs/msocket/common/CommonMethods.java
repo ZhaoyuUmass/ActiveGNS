@@ -31,7 +31,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
+
+
 /**
  * This class implements common methods as static functions, these are accessed
  * from many places. Getting active interface address of a device is implemented
@@ -41,10 +43,12 @@ import org.apache.log4j.Logger;
  * @version 1.0
  */
 public class CommonMethods
-{
-	
-	private static Logger log = Logger.getLogger(CommonMethods.class.getName());
-	
+{	
+
+  /**
+   *
+   * @return
+   */
   public static Vector<String> getActiveInterfaceStringAddresses()
   {
     Vector<String> CurrentInterfaceIPs = new Vector<String>();
@@ -79,6 +83,10 @@ public class CommonMethods
     return CurrentInterfaceIPs;
   }
 
+  /**
+   *
+   * @return
+   */
   public static Vector<InetAddress> getActiveInterfaceInetAddresses()
   {
     Vector<InetAddress> CurrentInterfaceIPs = new Vector<InetAddress>();
@@ -130,6 +138,11 @@ public class CommonMethods
     return toBeReturned;
   }
   
+  /**
+   *
+   * @param s
+   * @return
+   */
   public static byte[] hexStringToByteArray(String s) 
   {
 	  int len = s.length();
@@ -146,7 +159,7 @@ public class CommonMethods
    * returns the public IP
    * 
    * @return
-   * @throws Exception
+   * @throws java.io.IOException
    */
   public static String returnPublicIP() throws IOException
   {
@@ -166,7 +179,7 @@ public class CommonMethods
       }
       catch (Exception ex)
       {
-        log.trace("excp in public IP determine returnPublicIP");
+        MSocketLogger.getLogger().fine("excp in public IP determine returnPublicIP");
         if (i == numTry)
         {
           throw new IOException(ex);
@@ -181,7 +194,7 @@ public class CommonMethods
   /**
    * determines if server is behind NAT
    * @return
-   * @throws Exception
+   * @throws java.io.IOException
    */
   public static boolean isServerBehindNAT() throws IOException
   {
@@ -203,7 +216,7 @@ public class CommonMethods
    * returns preferably public Ip, or any other local Ip, or null if none
    * 
    * @return
-   * @throws Exception
+   * @throws java.io.IOException
    */
   public static InetAddress returnLocalPublicIP() throws IOException
   {

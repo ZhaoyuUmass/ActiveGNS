@@ -19,23 +19,31 @@
  */
 package edu.umass.cs.gnsclient.client.util;
 
+import edu.umass.cs.gnscommon.utils.Base64;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
  *
+ * Also in the PHP client:
+ * hash('sha256', $password . "42shabiz" . $username)
  * @author westy
  */
 public class Password {
 
-  // Code is duplicated in the client.
-  // From the PHP code hash('sha256', $password . "42shabiz" . $username);
   private static final String SALT = "42shabiz";
 
-  public static byte[] encryptPassword(String password, String alias) throws NoSuchAlgorithmException {
+  /**
+   *
+   * @param password
+   * @param alias
+   * @return the password encrypted and encoded using base64
+   * @throws NoSuchAlgorithmException
+   */
+  public static String encryptAndEncodePassword(String password, String alias) throws NoSuchAlgorithmException {
     MessageDigest md = MessageDigest.getInstance("SHA-256");
     md.update((password + SALT + alias).getBytes());
-    return md.digest();
+    return Base64.encodeToString(md.digest(), false);
   }
 
 }

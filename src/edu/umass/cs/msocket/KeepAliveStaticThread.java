@@ -26,7 +26,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * 
@@ -52,55 +52,65 @@ public class KeepAliveStaticThread implements Runnable
 	
 	private static long                     				localClock				= 0;
 	
-	private static Logger log         												= Logger.getLogger(KeepAliveStaticThread.class.getName());
-	
 	/**
 	 * MSockets register for keep alives
 	 * 
-	 * @param cInfo
+   * @param cinfo
 	 */
 	public synchronized static void registerForKeepAlive(ConnectionInfo cinfo)
 	{
 		createSingleton();
-		TimerTaskClass timertask = new TimerTaskClass(cinfo.getMSocket());
-		StoreInfo storeinfo = new StoreInfo(cinfo, timertask);
-		log.trace("cinfo registered to registerForKeepAlive "+cinfo.getFlowID());
+		TimerTaskClass timertask = new TimerTaskClass(cinfo);
+		StoreInfo storeinfo = new StoreInfo( timertask);
+		MSocketLogger.getLogger().fine("cinfo registered to registerForKeepAlive "
+					+cinfo.getConnID());
 		
 		if( cinfo.getServerOrClient() == MSocketConstants.SERVER )
 		{
 			//System.out.println("\n\n\n server registered \n\n\n");
-			registeredServerMSockets.put(cinfo.getFlowID(), storeinfo);
+			registeredServerMSockets.put(cinfo.getConnID(), storeinfo);
 		}
 		else if( cinfo.getServerOrClient() == MSocketConstants.CLIENT )
 		{
 			//System.out.println("\n\n\n client registered \n\n\n");
-			registeredClientMSockets.put(cinfo.getFlowID(), storeinfo);
+			registeredClientMSockets.put(cinfo.getConnID(), storeinfo);
 		}
 		//registeredMSockets.add(storeinfo);
 	}
 	
-	public synchronized static void unregisterForKeepAlive(ConnectionInfo cinfo)
+  /**
+   *
+   * @param cinfo
+   */
+  public synchronized static void unregisterForKeepAlive(ConnectionInfo cinfo)
 	{
 		createSingleton();
 		
 		if( cinfo.getServerOrClient() == MSocketConstants.SERVER )
 		{
-			registeredServerMSockets.remove(cinfo.getFlowID());
+			registeredServerMSockets.remove(cinfo.getConnID());
 		}
 		else if( cinfo.getServerOrClient() == MSocketConstants.CLIENT )
 		{
-			registeredClientMSockets.remove(cinfo.getFlowID());
+			registeredClientMSockets.remove(cinfo.getConnID());
 		}
 		//registeredMSockets.remove(cinfo.getFlowID());
 	}
 	
-	public synchronized static long getLocalClock()
+  /**
+   *
+   * @return
+   */
+  public synchronized static long getLocalClock()
 	{
 		createSingleton();
 		return localClock;
 	}
 	
-	public static void stopKeepAlive()
+  /**
+   * Stop it.
+   */
+  public static void stopKeepAlive()
 	{
 		runstatus = false;
 	}
@@ -181,24 +191,19 @@ public class KeepAliveStaticThread implements Runnable
 		registeredClientMSockets.clear();
 		registeredServerMSockets.clear();
 		keepAliveObj = null;
-		log.info("Keep alive static thread exits");
+		MSocketLogger.getLogger().fine("Keep alive static thread exits");
 	}
 	
 	private static class StoreInfo
 	{
-		private final ConnectionInfo cinfo;
 		private final TimerTaskClass timertask;
 		
-		public StoreInfo(ConnectionInfo cinfo, TimerTaskClass timertask)
+		public StoreInfo(TimerTaskClass timertask)
 		{
-			this.cinfo = cinfo;
 			this.timertask = timertask;
 		}
 		
-		public ConnectionInfo getConnectionInfo()
-		{
-			return cinfo;
-		}
+		
 		
 		public TimerTaskClass getTimerTask()
 		{

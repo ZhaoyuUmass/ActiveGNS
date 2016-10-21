@@ -25,8 +25,8 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.FieldAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -35,7 +35,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class SelectWithin extends BasicCommand {
+public class SelectWithin extends AbstractCommand {
 
   /**
    *
@@ -45,12 +45,15 @@ public class SelectWithin extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   * 
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.SelectWithin;
   }
-
-  
 
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws JSONException {

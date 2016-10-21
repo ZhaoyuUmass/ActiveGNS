@@ -33,9 +33,9 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.ACCESS_DENIED;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_RESPONSE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.OPERATION_NOT_SUPPORTED;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.PASSKEY;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +43,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class ListParameters extends BasicCommand {
+public class ListParameters extends AbstractCommand {
 
   /**
    *
@@ -53,31 +53,18 @@ public class ListParameters extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.ListParameters;
   }
 
-  
-
-//  @Override
-//  public String getCommandName() {
-//    return LIST_PARAMETERS;
-//  }
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws JSONException {
-    if (module.isAdminMode()) {
-  	  //If the user cannot be authenticated, return an ACCESS_ERROR and abort.
-  	  String passkey = json.getString(PASSKEY);
-  	  if (!Admin.authenticate(passkey)){
-  		  GNSConfig.getLogger().log(Level.INFO, "A client failed to authenticate for "+ getCommandType().toString()+ " : " + json.toString());
-  		  return new CommandResponse(GNSResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
-  	              + " Failed to authenticate " + getCommandType().toString() + " with key : " + passkey);
-  	  }
-      return new CommandResponse(GNSResponseCode.NO_ERROR, SystemParameter.listParameters());
-    }
-    return new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE + " " + OPERATION_NOT_SUPPORTED
-            + " Don't understand " + CommandType.ListParameters.toString());
+      return new CommandResponse(ResponseCode.NO_ERROR, SystemParameter.listParameters());
   }
 
   

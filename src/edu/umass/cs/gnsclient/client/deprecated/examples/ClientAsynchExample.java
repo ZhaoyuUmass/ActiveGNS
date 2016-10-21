@@ -46,8 +46,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
 
+import edu.umass.cs.gnscommon.ResponseCode;
 import org.json.JSONObject;
 
 /**
@@ -71,6 +71,17 @@ public class ClientAsynchExample {
 
   private static final String ACCOUNT_ALIAS = "gnstest@cs.umass.edu"; // REPLACE THIS WITH YOUR ACCOUNT ALIAS
 
+  /**
+   *
+   * @param args
+   * @throws IOException
+   * @throws InvalidKeySpecException
+   * @throws NoSuchAlgorithmException
+   * @throws ClientException
+   * @throws InvalidKeyException
+   * @throws SignatureException
+   * @throws Exception
+   */
   public static void main(String[] args) throws IOException,
           InvalidKeySpecException, NoSuchAlgorithmException, ClientException,
           InvalidKeyException, SignatureException, Exception {
@@ -158,7 +169,7 @@ public class ClientAsynchExample {
           if (removed instanceof ResponsePacket) {
             ResponsePacket commandResult = ((ResponsePacket) removed);
             System.out.println("commandResult for  " + id + " is "
-                    + (commandResult.getErrorCode().equals(GNSResponseCode.NO_ERROR)
+                    + (commandResult.getErrorCode().equals(ResponseCode.NO_ERROR)
                     ? commandResult.getReturnValue()
                     : commandResult.getErrorCode().toString())
             //                  + "\n"

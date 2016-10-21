@@ -66,6 +66,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   public GroupAndAclTest() {
     if (client == null) {
       try {
@@ -82,6 +85,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_01_testCreateGuids() {
     try {
@@ -96,6 +102,9 @@ public class GroupAndAclTest {
 
   private static GuidEntry guidToDeleteEntry;
 
+  /**
+   *
+   */
   @Test
   public void test_210_GroupCreate() {
     String mygroupName = "mygroup" + RandomString.randomString(6);
@@ -112,6 +121,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_211_GroupAdd() {
     try {
@@ -143,6 +155,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_212_GroupRemoveGuid() {
     waitSettle();
@@ -162,6 +177,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_213_GroupRemoveCheck() {
     waitSettle();
@@ -178,6 +196,9 @@ public class GroupAndAclTest {
 
   private static GuidEntry groupAccessUserEntry = null;
 
+  /**
+   *
+   */
   @Test
   public void test_220_GroupAndACLCreateGuids() {
     //testGroup();
@@ -195,7 +216,7 @@ public class GroupAndAclTest {
     try {
       groupAccessUserEntry = client.guidCreate(masterGuid, groupAccessUserName);
       // remove all fields read by all
-      client.aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      client.aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
     } catch (Exception e) {
       fail("Exception creating group user: " + e);
     }
@@ -214,6 +235,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_221_GroupAndACLTestBadAccess() {
     try {
@@ -228,6 +252,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_222_GroupAndACLTestGoodAccess() {
     try {
@@ -237,6 +264,9 @@ public class GroupAndAclTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_223_GroupAndACLTestRemoveGuid() {
 

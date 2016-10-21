@@ -28,9 +28,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.GuidI
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.admin.Admin;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -48,7 +48,7 @@ import org.json.JSONObject;
  * @author westy
  */
 @Deprecated
-public class RemoveTag extends BasicCommand {
+public class RemoveTag extends AbstractCommand {
 
   /**
    *
@@ -58,6 +58,10 @@ public class RemoveTag extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.Unknown;
@@ -72,13 +76,6 @@ public class RemoveTag extends BasicCommand {
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, ParseException {
-	  //If the user cannot be authenticated, return an ACCESS_ERROR and abort.
-	  String passkey = json.getString(PASSKEY);
-	  if (!Admin.authenticate(passkey)){
-		  GNSConfig.getLogger().log(Level.INFO, "A client failed to authenticate for "+ getCommandType().toString()+ " : " + json.toString());
-		  return new CommandResponse(GNSResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
-	              + " Failed to authenticate " + getCommandType().toString() + " with key : " + passkey);
-	  }
     String guid = json.getString(GUID);
     String tag = json.getString(NAME);
     // signature and message can be empty for unsigned cases
@@ -87,7 +84,7 @@ public class RemoveTag extends BasicCommand {
     Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
     GuidInfo guidInfo;
     if ((guidInfo = AccountAccess.lookupGuidInfoLocally(guid, handler)) == null) {
-      return new CommandResponse(GNSResponseCode.BAD_GUID_ERROR, BAD_RESPONSE + " " + BAD_GUID + " " + guid);
+      return new CommandResponse(ResponseCode.BAD_GUID_ERROR, BAD_RESPONSE + " " + BAD_GUID + " " + guid);
     }
     return AccountAccess.removeTag(guidInfo, tag, guid, signature, message, timestamp, handler);
   }

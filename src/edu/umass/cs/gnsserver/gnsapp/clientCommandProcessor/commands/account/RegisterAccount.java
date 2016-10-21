@@ -25,7 +25,7 @@ import edu.umass.cs.gnscommon.SharedGuidUtils;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnscommon.CommandType;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_RESPONSE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_SIGNATURE;
@@ -35,7 +35,8 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.PUBLIC_KEY;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATURE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATUREFULLMESSAGE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.UNSPECIFIED_ERROR;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSAccessSupport;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class RegisterAccount extends BasicCommand {
+public class RegisterAccount extends AbstractCommand {
 
   /**
    * Creates a RegisterAccount instance.
@@ -63,6 +64,10 @@ public class RegisterAccount extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.RegisterAccount;
@@ -76,30 +81,30 @@ public class RegisterAccount extends BasicCommand {
     String password = json.getString(PASSWORD);
     String signature = json.optString(SIGNATURE, null);
     String message = json.optString(SIGNATUREFULLMESSAGE, null);
-
+    
     String guid = SharedGuidUtils.createGuidStringFromBase64PublicKey(publicKey);
     // FIXME: this lacking signature check is for temporary backward compatability... remove it.
     // See RegisterAccountUnsigned
     if (signature != null && message != null) {
       if (!NSAccessSupport.verifySignature(publicKey, signature, message)) {
-        return new CommandResponse(GNSResponseCode.SIGNATURE_ERROR, BAD_RESPONSE + " " + BAD_SIGNATURE);
+        return new CommandResponse(ResponseCode.SIGNATURE_ERROR, BAD_RESPONSE + " " + BAD_SIGNATURE);
       }
     }
     try {
       CommandResponse result = AccountAccess.addAccountWithVerification(
-              handler.getHTTPServerHostPortString(),
+              handler.getHttpServerHostPortString(),
               name, guid, publicKey,
               password, handler);
       if (result.getExceptionOrErrorCode().isOKResult()) {
         // Everything is hunkey dorey so return the new guid
-        return new CommandResponse(GNSResponseCode.NO_ERROR, guid);
+        return new CommandResponse(ResponseCode.NO_ERROR, guid);
       } else {
     	  assert(result.getExceptionOrErrorCode()!=null);
         // Otherwise return the error response.
         return result;
       }
     } catch (ClientException | IOException e) {
-      return new CommandResponse(GNSResponseCode.UNSPECIFIED_ERROR, BAD_RESPONSE + " " + UNSPECIFIED_ERROR + " " + e.getMessage());
+      return new CommandResponse(ResponseCode.UNSPECIFIED_ERROR, BAD_RESPONSE + " " + UNSPECIFIED_ERROR + " " + e.getMessage());
     }
   }
 

@@ -23,13 +23,14 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandler
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
+import edu.umass.cs.gnscommon.GNSProtocol;
+
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.ACCESS_DENIED;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_RESPONSE;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.OK_RESPONSE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.PASSKEY;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.UNSPECIFIED_ERROR;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.utils.Config;
 
@@ -50,10 +51,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- *
+ * This class no longer needs to be used as authentication is being done by Mutual Auth, and so anyone with access to this command could do anything anyways.
  * @author westy
  */
-public class Admin extends BasicCommand {
+@Deprecated
+public class Admin extends AbstractCommand {
 
   private static ArrayList<String> adminAuthStrings;
 
@@ -66,40 +68,9 @@ public class Admin extends BasicCommand {
   }
 
   /**
-   * Compares the provided passkey against the line entries in the file specified by the system property "admin.file".
    *
-   * @param	passkey	The passkey to be verified
-   * @return Returns true if the passkey is valid and should provide admin access, and false otherwise.
+   * @return the command type
    */
-  public static boolean authenticate(String passkey) {
-    //If adminAuthStrings has not yet been initialized then read in the admin passkeys from the file specified by the system property "admin.file"
-    if (adminAuthStrings == null) {
-      //Parse the file specified by admin.file for admin authorization strings.  Each line is a new string that can grant admin access if any correspond to the client provided passkey.
-      adminAuthStrings = new ArrayList<String>();
-      String filePath = Config.getGlobalString(GNSConfig.GNSC.ADMIN_FILE); //System.getProperty("admin.file");
-      if (filePath != null) {
-        filePath = Paths.get(".").toAbsolutePath().normalize().toString() + "/" + filePath;
-        File file = new File(filePath);
-        try {
-          BufferedReader reader = new BufferedReader(new FileReader(file));
-          String line = reader.readLine();
-          while (line != null) {
-            adminAuthStrings.add(line);
-            GNSConfig.getLogger().log(Level.FINE, "Adding {0}" + " to admin auth strings.", line);
-            line = reader.readLine();
-          }
-          reader.close();
-        } catch (IOException ie) {
-          GNSConfig.getLogger().log(Level.INFO, "Failed to open admin file specified by system property admin.file : " + filePath + " ... Defaulting to no admin access.");
-        }
-      } else {
-        GNSConfig.getLogger().log(Level.INFO, "No admin file specified by system property admin.file ... Defaulting to no admin access.");
-      }
-    }
-    //Authenticate the passkey
-    return adminAuthStrings.contains(passkey);
-  }
-
   @Override
   public CommandType getCommandType() {
     return CommandType.Admin;
@@ -110,19 +81,19 @@ public class Admin extends BasicCommand {
           JSONException, NoSuchAlgorithmException, SignatureException {
     String passkey = json.getString(PASSKEY);
     try {
-      GNSConfig.getLogger().log(Level.INFO, "Http host:port = {0}", handler.getHTTPServerHostPortString());
+      GNSConfig.getLogger().log(Level.INFO, "Http host:port = {0}", handler.getHttpServerHostPortString());
       //Compares the passkey directly against the list in the file specified by admin.auth.  We could instead use hashing here and store the hashes and salt in the file.
-      if (authenticate(passkey)) {
+      if ("on".equals(passkey)) {
         module.setAdminMode(true);
-        return new CommandResponse(GNSResponseCode.NO_ERROR, OK_RESPONSE);
+        return new CommandResponse(ResponseCode.NO_ERROR, GNSProtocol.OK_RESPONSE.toString());
       } else if ("off".equals(passkey)) {
         module.setAdminMode(false);
-        return new CommandResponse(GNSResponseCode.NO_ERROR, OK_RESPONSE);
+        return new CommandResponse(ResponseCode.NO_ERROR, GNSProtocol.OK_RESPONSE.toString());
       }
-      return new CommandResponse(GNSResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
+      return new CommandResponse(ResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
               + " Failed to authenticate " + getCommandType().toString() + " with key : " + passkey);
     } catch (UnknownHostException e) {
-      return new CommandResponse(GNSResponseCode.UNSPECIFIED_ERROR, BAD_RESPONSE
+      return new CommandResponse(ResponseCode.UNSPECIFIED_ERROR, BAD_RESPONSE
               + " " + UNSPECIFIED_ERROR + " Unable to determine host address");
     }
   }

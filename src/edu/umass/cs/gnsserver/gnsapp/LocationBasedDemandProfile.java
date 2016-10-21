@@ -22,7 +22,6 @@ package edu.umass.cs.gnsserver.gnsapp;
 import com.google.common.net.InetAddresses;
 
 import edu.umass.cs.gigapaxos.interfaces.Request;
-import edu.umass.cs.gnscommon.CommandType;
 
 import java.util.ArrayList;
 
@@ -30,9 +29,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import edu.umass.cs.gnscommon.GNSCommandProtocol;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
-import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.Util;
 import edu.umass.cs.reconfiguration.interfaces.ReplicableRequest;
 import edu.umass.cs.reconfiguration.reconfigurationutils.AbstractDemandProfile;
@@ -162,6 +160,10 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
     LOG.log(Level.FINE, "%%%%%%%%%%%%%%%%%%%%%%%%%>>> {0} VOTES MAP AFTER READ: {1}", new Object[]{this.name, this.votesMap});
   }
 
+  /**
+   *
+   * @return the stats
+   */
   @Override
   public JSONObject getStats() {
     LOG.log(Level.FINE, "%%%%%%%%%%%%%%%%%%%%%%%%%>>> {0} VOTES MAP BEFORE GET STATS: {1}", new Object[]{this.name, this.votesMap});
@@ -198,7 +200,7 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
    * locality based placement.
    *
    * @param request
-   * @return
+   * @return true if it should be ignore
    */
   private static boolean shouldIgnore(Request request) {
     if (!(request instanceof CommandPacket)) {
@@ -208,10 +210,14 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
     CommandPacket command = (CommandPacket) request;
     return command.getCommandType().isCreateDelete()
             || command.getCommandType().isSelect();
-//    return GNSCommandProtocol.CREATE_DELETE_COMMANDS.contains(command.getCommandName())
-//            || GNSCommandProtocol.SELECT.equals(command.getCommandName());
   }
 
+  /**
+   *
+   * @param request
+   * @param sender
+   * @param nodeConfig
+   */
   @Override
   public void register(Request request, InetAddress sender, InterfaceGetActiveIPs nodeConfig) {
     if (!request.getServiceName().equals(this.name)) {
@@ -276,6 +282,9 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
     return result;
   }
 
+  /**
+   * Reset everything.
+   */
   @Override
   public void reset() {
     this.interArrivalTime = 0.0;
@@ -291,6 +300,10 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
     return new LocationBasedDemandProfile(this);
   }
 
+  /**
+   *
+   * @param dp
+   */
   @Override
   public void combine(AbstractDemandProfile dp) {
     LocationBasedDemandProfile update = (LocationBasedDemandProfile) dp;
@@ -306,11 +319,18 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
     LOG.log(Level.FINE, "%%%%%%%%%%%%%%%%%%%%%%%%%>>> AFTER COMBINE:{0}", this.toString());
   }
 
+  /**
+   *
+   * @return true if we should report
+   */
   @Override
   public boolean shouldReport() {
     return getNumRequests() >= NUMBER_OF_REQUESTS_BETWEEN_REPORTS;
   }
 
+  /**
+   * Was this just rconfigured.
+   */
   @Override
   public void justReconfigured() {
     this.lastReconfiguredProfile = this.clone();
@@ -318,6 +338,12 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
             this.lastReconfiguredProfile.toString());
   }
 
+  /**
+   *
+   * @param curActives
+   * @param nodeConfig
+   * @return true if we should reconfigure
+   */
   @Override
   public ArrayList<InetAddress> shouldReconfigure(ArrayList<InetAddress> curActives, InterfaceGetActiveIPs nodeConfig) {
     // This happens when called from a reconfigurator
@@ -432,14 +458,14 @@ public class LocationBasedDemandProfile extends AbstractDemandProfile {
 
     if (updateCount == 0) {
       // no updates, replicate everywhere.
-      return Math.min(actualReplicasCount, AppOptionsOld.maxReplica);
+      return Math.min(actualReplicasCount, GNSConfig.maxReplica);
     } else {
       // Can't be bigger than the number of actual replicas or the max configured amount
-      return Math.min(Math.min(actualReplicasCount, AppOptionsOld.maxReplica),
+      return Math.min(Math.min(actualReplicasCount, GNSConfig.maxReplica),
               // Or smaller than the min configured amount
-              Math.max(AppOptionsOld.minReplica,
+              Math.max(GNSConfig.minReplica,
                       (int) StrictMath.round((lookupCount
-                              / (updateCount * AppOptionsOld.normalizingConstant)))));
+                              / (updateCount * GNSConfig.normalizingConstant)))));
     }
   }
 

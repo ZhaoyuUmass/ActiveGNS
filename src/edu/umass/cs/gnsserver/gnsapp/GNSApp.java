@@ -31,6 +31,7 @@ import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
 import edu.umass.cs.gnscommon.exceptions.server.RecordExistsException;
 import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
+import edu.umass.cs.gnscommon.packets.AdminCommandPacket;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.packets.ResponsePacket;
 import edu.umass.cs.gnsserver.database.NoSQLRecords;
@@ -50,8 +51,6 @@ import edu.umass.cs.gnsserver.nodeconfig.GNSNodeConfig;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandler;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Admintercessor;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandHandler;
-import edu.umass.cs.gnsserver.gnsapp.deprecated.AppOptionsOld;
-import edu.umass.cs.gnsserver.gnsapp.deprecated.AppReconfigurableNode;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
 import edu.umass.cs.gnsserver.gnsapp.packet.BasicPacketWithClientAddress;
 import edu.umass.cs.gnsserver.gnamed.DnsTranslator;
@@ -65,6 +64,7 @@ import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.GNSRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.httpserver.GNSHttpServer;
+import edu.umass.cs.gnsserver.httpserver.GNSHttpsServer;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.localnameserver.LocalNameServer;
 import edu.umass.cs.gnsserver.utils.Shutdownable;
@@ -139,9 +139,13 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
   private ContextServiceGNSInterface contextServiceGNSClient;
 
   /**
-   *
+   * The non-secure http server
    */
   GNSHttpServer httpServer = null;
+  /**
+   * The secure http server
+   */
+  GNSHttpsServer httpsServer = null;
   /**
    *
    */
@@ -155,8 +159,14 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
    */
   private DnsTranslator dnsTranslator = null;
 
-  // Which one doesn't need to exists anymore?
+  // FIXME: Which one doesn't need to exists anymore?
+  /**
+   * Handles admin requests from the client
+   */
   ListenerAdmin ccpListenerAdmin = null;
+  /**
+   * Handles admin requests for each replica
+   */
   AppAdmin appAdmin = null;
 
   /**
@@ -166,9 +176,13 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
    * @throws IOException
    */
   public GNSApp(String[] args) throws IOException {
-    AppReconfigurableNode.initOptions(args);
+    //AppReconfigurableNode.initOptions(args);
   }
 
+  /**
+   *
+   * @param messenger
+   */
   @Override
   @SuppressWarnings("unchecked")
   public void setClientMessenger(SSLMessenger<?, JSONObject> messenger) {
@@ -188,6 +202,8 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
   private static PacketType[] types = {PacketType.COMMAND,
     PacketType.SELECT_REQUEST, PacketType.SELECT_RESPONSE,
     PacketType.ADMIN_REQUEST, PacketType.INTERNAL_COMMAND};
+
+  private static PacketType[] mutualAuthTypes = {PacketType.ADMIN_COMMAND};
 
   /**
    * arun: The code below {@link #incrResponseCount(ClientRequest)} and
@@ -236,6 +252,12 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     return false;
   }
 
+  /**
+   *
+   * @param request
+   * @param doNotReplyToClient
+   * @return true if the command is successfully executed
+   */
   @SuppressWarnings("unchecked")
   // we explicitly check type
   @Override
@@ -277,6 +299,9 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
           break;
         case COMMAND:
           CommandHandler.handleCommandPacket((CommandPacket) request, doNotReplyToClient, this);
+          break;
+        case ADMIN_COMMAND:
+          CommandHandler.handleCommandPacket((AdminCommandPacket) request, doNotReplyToClient, this);
           break;
         default:
           assert (false) : (this
@@ -338,6 +363,12 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     if (appAdmin != null) {
       appAdmin.shutdown();
     }
+    if (httpServer != null) {
+      httpServer.stop();
+    }
+    if (httpsServer != null) {
+      httpsServer.stop();
+    }
   }
 
   /**
@@ -384,7 +415,8 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     appAdmin.start();
     GNSConfig.getLogger().log(Level.INFO, "{0} Admin thread initialized", nodeID);
     // Start up some servers
-    httpServer = new GNSHttpServer(requestHandler);
+    httpServer = new GNSHttpServer(Config.getGlobalInt(GNSConfig.GNSC.HTTP_SERVER_CLEAR_PORT), requestHandler);
+    httpsServer = new GNSHttpsServer(Config.getGlobalInt(GNSConfig.GNSC.HTTP_SERVER_SECURE_PORT), requestHandler);
     if (Config.getGlobalString(GNSConfig.GNSC.LOCAL_NAME_SERVER_NODES).contains("all")
             || Config.getGlobalString(GNSConfig.GNSC.LOCAL_NAME_SERVER_NODES).contains(nodeID)) {
       localNameServer = new LocalNameServer();
@@ -393,11 +425,16 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
             || Config.getGlobalString(GNSConfig.GNSC.DNS_SERVER_NODES).contains(nodeID)) {
       startDNS();
     }
-    this.activeCodeHandler = AppOptionsOld.enableActiveCode ? new ActiveCodeHandler(nodeID) : null;
+    this.activeCodeHandler = GNSConfig.enableActiveCode ? new ActiveCodeHandler(nodeID) : null;
 
     // context service init
-    if (AppOptionsOld.enableContextService) {
-      String[] parsed = AppOptionsOld.contextServiceIpPort.split(":");
+    if (Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_CNS)) {
+      String nodeAddressString = Config.getGlobalString(GNSConfig.GNSC.CNS_NODE_ADDRESS);
+
+      String[] parsed = nodeAddressString.split(":");
+
+      assert (parsed.length == 2);
+
       String host = parsed[0];
       int port = Integer.parseInt(parsed[1]);
       GNSConfig.getLogger().fine("ContextServiceGNSClient initialization started");
@@ -409,6 +446,13 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
   }
 
   // For InterfaceApplication
+
+  /**
+   *
+   * @param string
+   * @return the request
+   * @throws RequestParseException
+   */
   @Override
   public Request getRequest(String string) throws RequestParseException {
     GNSConfig.getLogger().log(Level.FINE,
@@ -471,7 +515,7 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
    * {@link Byteable#toBytes()} method for GNSApp packets.
    *
    * @param msgBytes
-   * @return
+   * @return a request
    * @throws RequestParseException
    */
   private static Request fromBytes(byte[] msgBytes)
@@ -488,26 +532,46 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     }
   }
 
+  /**
+   *
+   * @param msgBytes
+   * @param header
+   * @return the request
+   * @throws RequestParseException
+   */
   @Override
   public Request getRequest(byte[] msgBytes, NIOHeader header)
           throws RequestParseException {
     return getRequestStatic(msgBytes, header, nodeConfig);
   }
 
+  /**
+   *
+   * @return a set of packet types
+   */
   @Override
   public Set<IntegerPacketType> getRequestTypes() {
     return new HashSet<>(Arrays.asList(types));
   }
 
+  /**
+   *
+   * @return a set of packet types
+   */
   @Override
   public Set<IntegerPacketType> getMutualAuthRequestTypes() {
-    Set<IntegerPacketType> maTypes = new HashSet<>(Arrays.asList(types));
+    Set<IntegerPacketType> maTypes = new HashSet<>(Arrays.asList(mutualAuthTypes));
     if (InternalCommandPacket.SEPARATE_INTERNAL_TYPE) {
       maTypes.add(PacketType.INTERNAL_COMMAND);
     }
     return maTypes;
   }
 
+  /**
+   *
+   * @param request
+   * @return true if the command successfully executes
+   */
   @Override
   public boolean execute(Request request) {
     return this.execute(request, false);
@@ -519,6 +583,11 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     curValueRequestFields.add(NameRecord.VALUES_MAP);
   }
 
+  /**
+   *
+   * @param name
+   * @return the record
+   */
   @Override
   public String checkpoint(String name) {
     try {
@@ -565,8 +634,7 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
         NameRecord.removeNameRecord(nameRecordDB, name);
       } else // state does not equal null so we either create a new record
       // or update the existing one
-      {
-        if (!NameRecord.containsRecord(nameRecordDB, name)) {
+       if (!NameRecord.containsRecord(nameRecordDB, name)) {
           // create a new record
           try {
             ValuesMap valuesMap = new ValuesMap(new JSONObject(state));
@@ -588,7 +656,6 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
                     "Problem updating state: {0}", e.getMessage());
           }
         }
-      }
       return true;
     } catch (FailedDBOperationException e) {
       GNSConfig.getLogger().log(Level.SEVERE,
@@ -613,21 +680,44 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     return null; // new StopPacket(name, epoch);
   }
 
+  /**
+   *
+   * @param name
+   * @param epoch
+   * @return the state
+   */
   @Override
   public String getFinalState(String name, int epoch) {
     throw new RuntimeException("This method should not have been called");
   }
 
+  /**
+   *
+   * @param name
+   * @param epoch
+   * @param state
+   */
   @Override
   public void putInitialState(String name, int epoch, String state) {
     throw new RuntimeException("This method should not have been called");
   }
 
+  /**
+   *
+   * @param name
+   * @param epoch
+   * @return the state
+   */
   @Override
   public boolean deleteFinalState(String name, int epoch) {
     throw new RuntimeException("This method should not have been called");
   }
 
+  /**
+   *
+   * @param name
+   * @return the epoch
+   */
   @Override
   public Integer getEpoch(String name) {
     throw new RuntimeException("This method should not have been called");
@@ -651,6 +741,9 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
     return nodeConfig;
   }
 
+  /**
+   *
+   */
   protected static final boolean DELEGATE_CLIENT_MESSAGING = true;
 
   /**

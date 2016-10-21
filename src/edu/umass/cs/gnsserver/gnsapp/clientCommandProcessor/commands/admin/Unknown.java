@@ -23,8 +23,8 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandler
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +40,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class Unknown extends BasicCommand {
+public class Unknown extends AbstractCommand {
 
   /**
    *
@@ -50,13 +50,15 @@ public class Unknown extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.Unknown;
   }
-
   
-
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler)
           throws InvalidKeyException, InvalidKeySpecException, JSONException,

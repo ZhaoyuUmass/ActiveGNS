@@ -40,7 +40,12 @@ import java.util.prefs.BackingStoreException;
 
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 import edu.umass.cs.gnscommon.utils.ByteUtils;
+import edu.umass.cs.gnsclient.client.GNSClientConfig;
+import edu.umass.cs.gnsclient.client.util.keystorage.AbstractKeyStorage;
+import edu.umass.cs.gnsclient.client.util.keystorage.JavaPreferencesKeyStore;
+import edu.umass.cs.gnsclient.client.util.keystorage.SimpleKeyStore;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
+import edu.umass.cs.utils.Config;
 
 /**
  * @author westy
@@ -52,15 +57,18 @@ public class KeyPairUtils {
    */
   public static final boolean IS_ANDROID = System.getProperty("java.vm.name").equalsIgnoreCase("Dalvik");
 
-  private static final SimpleKeyStore KEYSTORE = new SimpleKeyStore();
-  //private static Preferences keyStore = Preferences.userRoot().node(KeyPairUtils.class.getName());
- 
+  //private static final SimpleKeyStore KEYSTORE = new SimpleKeyStore();
+  //private static Preferences KEYSTORE = Preferences.userRoot().node(KeyPairUtils.class.getName());
   // Added these and made the shorter because there is a maximum key length limit!
   private static final String GUID = "GU";
   private static final String PUBLIC = "PU";
   private static final String PRIVATE = "PR";
   private static final String DEFAULT_GUID = "D_GUID";
   private static final String DEFAULT_GNS = "D_GNS";
+
+  private static final Object SINGLETON_OBJ_LOCK = new Object();
+
+  private static AbstractKeyStorage keyStorageObj = null;
 
   /**
    * Retrieves the public/private key pair for the given user.
@@ -78,9 +86,11 @@ public class KeyPairUtils {
       return KeyPairUtilsAndroid.getGuidEntryFromPreferences(gnsName, username);
     }
 
-    String guid = KEYSTORE.get(generateKey(gnsName, username, GUID), "");
-    String publicString = KEYSTORE.get(generateKey(gnsName, username, PUBLIC), "");
-    String privateString = KEYSTORE.get(generateKey(gnsName, username, PRIVATE), "");
+    createSingleton();
+
+    String guid = keyStorageObj.get(generateKey(gnsName, username, GUID), "");
+    String publicString = keyStorageObj.get(generateKey(gnsName, username, PUBLIC), "");
+    String privateString = keyStorageObj.get(generateKey(gnsName, username, PRIVATE), "");
     if (!guid.isEmpty() && !publicString.isEmpty() && !privateString.isEmpty()) {
       try {
         byte[] encodedPublicKey = ByteUtils.hexStringToByteArray(publicString);
@@ -111,9 +121,12 @@ public class KeyPairUtils {
       KeyPairUtilsAndroid.removeKeyPairFromPreferences(gnsName, username);
       return;
     }
-    KEYSTORE.remove(generateKey(gnsName, username, PUBLIC));
-    KEYSTORE.remove(generateKey(gnsName, username, PRIVATE));
-    KEYSTORE.remove(generateKey(gnsName, username, GUID));
+
+    createSingleton();
+
+    keyStorageObj.remove(generateKey(gnsName, username, PUBLIC));
+    keyStorageObj.remove(generateKey(gnsName, username, PRIVATE));
+    keyStorageObj.remove(generateKey(gnsName, username, GUID));
   }
 
   /**
@@ -129,11 +142,14 @@ public class KeyPairUtils {
       KeyPairUtilsAndroid.saveKeyPairToPreferences(gnsName, username, guid, keyPair);
       return;
     }
+
+    createSingleton();
+
     String publicString = ByteUtils.toHex(keyPair.getPublic().getEncoded());
     String privateString = ByteUtils.toHex(keyPair.getPrivate().getEncoded());
-    KEYSTORE.put(generateKey(gnsName, username, PUBLIC), publicString);
-    KEYSTORE.put(generateKey(gnsName, username, PRIVATE), privateString);
-    KEYSTORE.put(generateKey(gnsName, username, GUID), guid);
+    keyStorageObj.put(generateKey(gnsName, username, PUBLIC), publicString);
+    keyStorageObj.put(generateKey(gnsName, username, PRIVATE), privateString);
+    keyStorageObj.put(generateKey(gnsName, username, GUID), guid);
   }
 
   /**
@@ -160,10 +176,12 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       KeyPairUtilsAndroid.setDefaultGuidEntryToPreferences(gnsName, username);
     } else {
-      KEYSTORE.put(gnsName + DEFAULT_GUID, username);
+
+      createSingleton();
+      keyStorageObj.put(gnsName + DEFAULT_GUID, username);
     }
   }
-  
+
   /**
    * Set the default GUID to use in the user preferences (usually the account
    * GUID)
@@ -174,7 +192,9 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       KeyPairUtilsAndroid.removeDefaultGuidEntryFromPreferences(gnsName);
     } else {
-      KEYSTORE.remove(gnsName + DEFAULT_GUID);
+
+      createSingleton();
+      keyStorageObj.remove(gnsName + DEFAULT_GUID);
     }
   }
 
@@ -189,7 +209,8 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       return KeyPairUtilsAndroid.getDefaultGuidEntryFromPreferences(gnsName);
     } else {
-      return getGuidEntry(gnsName, KEYSTORE.get(gnsName + DEFAULT_GUID, null));
+      createSingleton();
+      return getGuidEntry(gnsName, keyStorageObj.get(gnsName + DEFAULT_GUID, null));
     }
   }
 
@@ -205,7 +226,8 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       KeyPairUtilsAndroid.setDefaultGnsToPreferences(gnsHostPort);
     } else {
-      KEYSTORE.put(DEFAULT_GNS, gnsHostPort);
+      createSingleton();
+      keyStorageObj.put(DEFAULT_GNS, gnsHostPort);
     }
   }
 
@@ -220,10 +242,11 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       return KeyPairUtilsAndroid.getDefaultGnsFromPreferences();
     } else {
-      return KEYSTORE.get(DEFAULT_GNS, null);
+      createSingleton();
+      return keyStorageObj.get(DEFAULT_GNS, null);
     }
   }
-  
+
   /**
    * Remove the default GNS to use in the user preferences.
    */
@@ -232,16 +255,16 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       KeyPairUtilsAndroid.removeDefaultGnsFromPreferences();
     } else {
-      KEYSTORE.remove(DEFAULT_GNS);
+      createSingleton();
+      keyStorageObj.remove(DEFAULT_GNS);
     }
   }
-  
 
   /**
    * Reads a private key from a PKCS#8 formatted file
    *
    * @param filename
-   * @return
+   * @return the private key
    * @throws IOException
    * @throws InvalidKeySpecException
    * @throws NoSuchAlgorithmException
@@ -265,6 +288,7 @@ public class KeyPairUtils {
    *
    * @param privateKey private key to save
    * @param filename file to save the key to
+   * @return true if the key is written
    */
   public static boolean writePrivateKeyToPKCS8File(PrivateKey privateKey, String filename) {
     byte[] keyBytes = privateKey.getEncoded();
@@ -308,23 +332,25 @@ public class KeyPairUtils {
     if (IS_ANDROID) {
       return KeyPairUtilsAndroid.getAllGuids(gnsName);
     }
+    createSingleton();
 
     List<GuidEntry> guids = new LinkedList<>();
     //try {
-      String[] keys = KEYSTORE.keys();
-      for (String key : keys) {
-        if ((gnsName == null || key.startsWith(gnsName + "#")) && key.endsWith(GUID)) {
-          //System.out.println(key);
-          //userPreferences.remove(key);
-          String actualGNSName = gnsName != null ? gnsName : key.substring(0, key.indexOf('#'));
-          String userName = key.substring(key.indexOf('#') + 1, key.lastIndexOf('-'));
-          GuidEntry guid = getGuidEntry(actualGNSName, userName);
-          if (guid != null) // (will be null for default)
-          {
-            guids.add(guid);
-          }
+
+    String[] keys = keyStorageObj.keys();
+    for (String key : keys) {
+      if ((gnsName == null || key.startsWith(gnsName + "#")) && key.endsWith(GUID)) {
+        //System.out.println(key);
+        //userPreferences.remove(key);
+        String actualGNSName = gnsName != null ? gnsName : key.substring(0, key.indexOf('#'));
+        String userName = key.substring(key.indexOf('#') + 1, key.lastIndexOf('-'));
+        GuidEntry guid = getGuidEntry(actualGNSName, userName);
+        if (guid != null) // (will be null for default)
+        {
+          guids.add(guid);
         }
       }
+    }
 //    } catch (BackingStoreException e) {
 //      e.printStackTrace();
 //    }
@@ -336,28 +362,50 @@ public class KeyPairUtils {
   private static String generateKey(String gnsName, String username, String suffix) {
     String string = gnsName + "#" + username + "-" + suffix;
     if (string.length() > SimpleKeyStore.MAX_KEY_LENGTH) {
-      return string.substring(string.length() -  SimpleKeyStore.MAX_KEY_LENGTH);
+      return string.substring(string.length() - SimpleKeyStore.MAX_KEY_LENGTH);
     } else {
       return string;
     }
   }
 
-  public static void main(String args[]) throws BackingStoreException {
-    if ((args.length == 1) && "-clear".equals(args[0])) {
-      KEYSTORE.clear();
-      //keyStore.removeNode();
-      System.out.println(KEYSTORE.toString() + " cleared.");
-    } else if ((args.length == 1) && "-size".equals(args[0])) {
-      System.out.println(KEYSTORE.toString() + " contains " + KEYSTORE.keys().length + " keys");
-    } else {
-      if (args.length < 3) {
-        List<GuidEntry> allGuids = getAllGuids(args.length > 0 ? args[0] : null);
-        for (GuidEntry entry : allGuids) {
-          System.out.println(entry.toString());
+  private static void createSingleton() {
+    // Doing a check before so that the lock is 
+    // not unnecessarily acquired.
+    if (keyStorageObj == null) {
+      synchronized (SINGLETON_OBJ_LOCK) {
+        if (keyStorageObj == null) {
+          if (Config.getGlobalBoolean(GNSClientConfig.GNSCC.USE_JAVA_PREFERENCE)) {
+            keyStorageObj = new JavaPreferencesKeyStore();
+          } else {
+            // if java preferences not enabled then use DerbyDB
+            keyStorageObj = new SimpleKeyStore();
+          }
         }
-      } else if (args.length == 3) {
-        copyKeyPair(args[0], args[1], args[2]);
       }
+    }
+    assert (keyStorageObj != null);
+  }
+
+  /**
+   *
+   * @param args
+   * @throws BackingStoreException
+   */
+  public static void main(String args[]) throws BackingStoreException {
+    createSingleton();
+    if ((args.length == 1) && "-clear".equals(args[0])) {
+      keyStorageObj.clear();
+      //keyStore.removeNode();
+      System.out.println(keyStorageObj.toString() + " cleared.");
+    } else if ((args.length == 1) && "-size".equals(args[0])) {
+      System.out.println(keyStorageObj.toString() + " contains " + keyStorageObj.keys().length + " keys");
+    } else if (args.length < 3) {
+      List<GuidEntry> allGuids = getAllGuids(args.length > 0 ? args[0] : null);
+      for (GuidEntry entry : allGuids) {
+        System.out.println(entry.toString());
+      }
+    } else if (args.length == 3) {
+      copyKeyPair(args[0], args[1], args[2]);
     }
     System.exit(0);
   }

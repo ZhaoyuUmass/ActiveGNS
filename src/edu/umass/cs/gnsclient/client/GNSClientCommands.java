@@ -33,7 +33,6 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.ACCOUNT_GUID;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.ACL_TYPE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.AC_ACTION;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.AC_CODE;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_FIELDS;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.CODE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELD;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELDS;
@@ -50,7 +49,6 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.NAME;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.NAMES;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.NEAR;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.OLD_VALUE;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.PASSKEY;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.PASSWORD;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.PUBLIC_KEY;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.PUBLIC_KEYS;
@@ -61,20 +59,24 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.USER_JSON;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.VALUE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.WITHIN;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.WRITER;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_GUIDS;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ENTIRE_RECORD;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
+import edu.umass.cs.gnscommon.exceptions.client.DuplicateNameException;
 import edu.umass.cs.gnscommon.exceptions.client.FieldNotFoundException;
 import edu.umass.cs.gnscommon.exceptions.client.InvalidGuidException;
+import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.packets.ResponsePacket;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.nio.JSONPacket;
-import edu.umass.cs.reconfiguration.ReconfigurationConfig.RC;
+import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 
 import java.io.UnsupportedEncodingException;
@@ -93,8 +95,6 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 
 import org.json.JSONException;
-
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_GUIDS;
 
 /**
  * This class defines a client to communicate with a GNS instance over TCP. This
@@ -163,7 +163,7 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
    */
   private String getResponse(CommandType commandType, GuidEntry querier,
           Object... keysAndValues) throws ClientException, IOException {
-    GNSCommand commandPacket = null;
+    CommandPacket commandPacket = null;
     return record(// just instrumentation
             commandType,
             CommandUtils.checkResponse(this
@@ -220,11 +220,12 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
    * @return Constructed CommandPacket
    * @throws ClientException
    */
-  private static GNSCommand getCommand(CommandType type, GuidEntry querier,
+  private static CommandPacket getCommand(CommandType type, GuidEntry querier,
           Object... keysAndValues) throws ClientException {
-    GNSCommand packet = new GNSCommand(
-            //CommandPacket(randomLong(),
-            CommandUtils.createAndSignCommand(type, querier, keysAndValues));
+    //GNSCommand packet = new GNSCommand(
+    //CommandPacket(randomLong(),
+    //CommandUtils.createAndSignCommand(type, querier, keysAndValues));
+    CommandPacket packet = GNSCommand.getCommand(type, querier, keysAndValues);
     return packet;
   }
 
@@ -328,10 +329,9 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
    */
   public JSONObject read(String targetGuid, GuidEntry reader)
           throws Exception {
-    return new JSONObject(getResponse(
-            reader != null ? CommandType.ReadArray
-                    : CommandType.ReadArrayUnsigned, reader, GUID,
-            targetGuid, FIELD, ALL_FIELDS, READER,
+    return new JSONObject(getResponse(reader != null ? CommandType.ReadArray
+            : CommandType.ReadArrayUnsigned, reader, GUID,
+            targetGuid, FIELD, ENTIRE_RECORD, READER,
             reader != null ? reader.getGuid() : null));
   }
 
@@ -629,11 +629,9 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
   public JSONObject lookupAccountRecord(String accountGuid)
           throws IOException, ClientException {
     try {
-      return new JSONObject(getResponse(
-              CommandType.LookupAccountRecord, GUID, accountGuid));
+      return new JSONObject(getResponse(CommandType.LookupAccountRecord, GUID, accountGuid));
     } catch (JSONException e) {
-      throw new ClientException(
-              "Failed to parse LOOKUP_ACCOUNT_RECORD response", e);
+      throw new ClientException("Failed to parse LOOKUP_ACCOUNT_RECORD response", e);
     }
   }
 
@@ -746,15 +744,38 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
   }
 
   /**
+   *
+   * @param guid
+   * @return the email
+   * @throws Exception
+   */
+  public String accountResendAuthenticationEmail(GuidEntry guid)
+          throws Exception {
+    return getResponse(CommandType.ResendAuthenticationEmail, guid, GUID,
+            guid.getGuid());
+  }
+
+  /**
    * Deletes the account given by name
    *
    * @param guid
-   * GuidEntry
    * @throws Exception
    */
   public void accountGuidRemove(GuidEntry guid) throws Exception {
     getResponse(CommandType.RemoveAccount, guid, GUID, guid.getGuid(),
             NAME, guid.getEntityName());
+  }
+
+  /**
+   * Deletes the account given by name using the password to authenticate.
+   *
+   * @param name
+   * @param password
+   * @throws Exception
+   */
+  public void accountGuidRemoveWithPassword(String name, String password) throws Exception {
+    String encodedPassword = Password.encryptAndEncodePassword(password, name);
+    getResponse(CommandType.RemoveAccountWithPassword, NAME, name, PASSWORD, encodedPassword);
   }
 
   /**
@@ -1139,6 +1160,83 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
     return aclGet(accessType.name(), guid, field, accesserGuid);
   }
 
+  /**
+   *
+   * @param accessType
+   * @param guid
+   * @param field
+   * @param writerGuid
+   * @throws Exception
+   */
+  public void aclCreateField(AclAccessType accessType, GuidEntry guid, String field,
+          String writerGuid) throws Exception {
+    getResponse(CommandType.AclCreateField, guid, ACL_TYPE, accessType.name(), GUID,
+            guid.getGuid(), FIELD, field, WRITER, writerGuid);
+  }
+
+  /**
+   *
+   * @param accessType
+   * @param guid
+   * @param field
+   * @throws Exception
+   */
+  public void aclCreateField(AclAccessType accessType, GuidEntry guid, String field) throws Exception {
+    aclCreateField(accessType, guid, field, guid.getGuid());
+  }
+
+  /**
+   *
+   * @param accessType
+   * @param guid
+   * @param field
+   * @param writerGuid
+   * @throws Exception
+   */
+  public void aclDeleteField(AclAccessType accessType, GuidEntry guid, String field,
+          String writerGuid) throws Exception {
+    getResponse(CommandType.AclDeleteField, guid, ACL_TYPE, accessType.name(),
+            GUID, guid.getGuid(), FIELD, field, WRITER, writerGuid);
+  }
+
+  /**
+   *
+   * @param accessType
+   * @param guid
+   * @param field
+   * @throws Exception
+   */
+  public void aclDeleteField(AclAccessType accessType, GuidEntry guid, String field) throws Exception {
+    aclDeleteField(accessType, guid, field, guid.getGuid());
+  }
+
+  /**
+   *
+   * @param accessType
+   * @param guid
+   * @param field
+   * @param readerGuid
+   * @return
+   * @throws Exception
+   */
+  public boolean aclFieldExists(AclAccessType accessType, GuidEntry guid, String field,
+          String readerGuid) throws Exception {
+    return Boolean.valueOf(getResponse(CommandType.AclFieldExists, guid, ACL_TYPE, accessType.name(),
+            GUID, guid.getGuid(), FIELD, field, READER, readerGuid));
+  }
+
+  /**
+   * 
+   * @param accessType
+   * @param guid
+   * @param field
+   * @return
+   * @throws Exception 
+   */
+  public boolean aclFieldExists(AclAccessType accessType, GuidEntry guid, String field) throws Exception {
+    return aclFieldExists(accessType, guid, field, guid.getGuid());
+  }
+
   // ALIASES
   /**
    * Creates an alias entity name for the given guid. The alias can be used
@@ -1192,7 +1290,7 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
    * @param accountGuid
    * @param name
    * @param publicKey
-   * @return
+   * @return the guid string
    * @throws Exception
    */
   private String guidCreateHelper(GuidEntry accountGuid, String name,
@@ -1225,20 +1323,13 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
           throws UnsupportedEncodingException, IOException, ClientException,
           InvalidGuidException, NoSuchAlgorithmException {
     long startTime = System.currentTimeMillis();
-    String result
-            = //password != null ? 
-            getResponse(
-                    CommandType.RegisterAccount, guidEntry, NAME, alias,
-                    PUBLIC_KEY, Base64.encodeToString(
-                            guidEntry.publicKey.getEncoded(), false), PASSWORD,
-                    password != null
-                            ? Base64.encodeToString(
-                                    Password.encryptPassword(password, alias), false)
-                            : "");
-//            : getResponse(CommandType.RegisterAccountSansPassword,
-//                    guidEntry.getPrivateKey(), guidEntry.publicKey, NAME,
-//                    alias, PUBLIC_KEY, Base64.encodeToString(
-//                            guidEntry.publicKey.getEncoded(), false));
+    String result = getResponse(
+            CommandType.RegisterAccount, guidEntry, NAME, alias,
+            PUBLIC_KEY, Base64.encodeToString(
+                    guidEntry.publicKey.getEncoded(), false), PASSWORD,
+            password != null
+                    ? Password.encryptAndEncodePassword(password, alias)
+                    : "");
     DelayProfiler.updateDelay("accountGuidCreate", startTime);
     return result;
   }
@@ -1953,7 +2044,7 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
   }
 
   /**
-   * Replaces the first element of field in target with the value 
+   * Replaces the first element of field in target with the value
    * (assuming that value is a array).
    *
    * @param target
@@ -2052,7 +2143,7 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
   }
 
   /**
-   * Reads the first value (assuming that value is a array) for a key 
+   * Reads the first value (assuming that value is a array) for a key
    * from the GNS server for the given guid.
    * The guid of the user attempting access is also needed. Signs the query
    * using the private key of the reader guid
@@ -2106,43 +2197,101 @@ public class GNSClientCommands extends GNSClient //implements GNSClientInterface
   }
 
   /**
-   * Enables admin mode on the server.
-   * 
-   * @param passkey
-   * @return ???
-   * @throws Exception
-   */
-  public String adminEnable(String passkey) throws Exception {
-    return getResponse(CommandType.Admin, NAME,
-            RC.BROADCAST_NAME.getDefaultValue(), PASSKEY, passkey);
-  }
-
-  /**
    * @param field
    * @param value
-   * @param passkey
    * @throws Exception
    */
-  @Deprecated
-  public void parameterSet(String field, Object value, String passkey)
+  public void parameterSet(String field, Object value)
           throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
     getResponse(CommandType.SetParameter, NAME,
-            RC.BROADCAST_NAME.getDefaultValue(), FIELD, field, VALUE,
-            value, PASSKEY, passkey);
+            "Admin", FIELD, field, VALUE, value);
   }
 
   /**
    * @param name
-   * @param passkey
    * @return ???
    * @throws Exception
    *
    */
-  @Deprecated
-  public String parameterGet(String name, String passkey) throws Exception {
+  public String parameterGet(String name) throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
     return getResponse(CommandType.GetParameter, NAME,
-            RC.BROADCAST_NAME.getDefaultValue(), FIELD, name, PASSKEY,
-            passkey);
+            "Admin", FIELD, name);
+  }
+
+  /**
+   * @return All system parameters and their values?
+   * @throws Exception
+   *
+   */
+  public String parameterList() throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
+    return getResponse(CommandType.ListParameters, NAME,
+            "Admin");
+  }
+
+  /**
+   *
+   * @return The contents of the GNS.
+   * @throws Exception
+   */
+  public String dump() throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
+    return getResponse(CommandType.Dump, NAME,
+            "Admin");
+  }
+
+  /**
+   * Clears the local name server cache.
+   *
+   * @return the result of the clear cache command
+   * @throws Exception
+   */
+  public String clearCache() throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
+    return getResponse(CommandType.ClearCache, NAME, "Admin");
+  }
+
+  /**
+   *
+   * @return Returns the contents of the local name server cache.
+   * @throws Exception
+   */
+  public String dumpCache() throws Exception {
+    //Create the admin account if it doesn't already exist.
+    try {
+      accountGuidCreate("Admin", Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+    } catch (DuplicateNameException dne) {
+      //Do nothing if it already exists.
+    }
+    return getResponse(CommandType.DumpCache, NAME,
+            "Admin");
   }
 
   @Override

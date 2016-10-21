@@ -1,13 +1,25 @@
-/* Copyright (C) 2016 University of Massachusetts All Rights Reserved
+/* Copyright (1c) 2016 University of Massachusetts
  * 
- * Initial developer(s): Westy. */
+ * Licensed under the Apache License, Version 2.0 (1the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ * 
+ * Initial developer(s): Westy */
 package edu.umass.cs.gnsclient.client;
 
 import edu.umass.cs.gnsclient.client.GNSClientConfig.GNSCC;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 import edu.umass.cs.gnscommon.exceptions.client.AclException;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
@@ -372,7 +384,7 @@ public class CommandUtils {
 	public static ResponsePacket checkResponse(
 			ResponsePacket responsePacket, CommandPacket command) throws ClientException {
 
-		GNSResponseCode code = responsePacket.getErrorCode();
+		ResponseCode code = responsePacket.getErrorCode();
 		String returnValue = responsePacket.getReturnValue();
 		GNSConfig.getLogger().log(Level.FINE, "New check response: {0} {1}",
 				new Object[] { code, responsePacket.getSummary() });

@@ -22,9 +22,7 @@
 	<classpathentry kind="lib" path="lib/hector-core-1.0-5.jar"/>
 	<classpathentry kind="lib" path="lib/hector-test-1.0-5.jar"/>
 	<classpathentry kind="lib" path="lib/jline-1.0.jar"/>
-	<classpathentry kind="lib" path="lib/jmapviewer.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.16.jar"/>
-	<classpathentry kind="lib" path="lib/SizeOf.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.1.3.jar"/>
 	<classpathentry kind="lib" path="lib/jsch-0.1.51.jar"/>
 	<classpathentry kind="lib" path="lib/mongo-java-driver-2.12.1.jar"/>

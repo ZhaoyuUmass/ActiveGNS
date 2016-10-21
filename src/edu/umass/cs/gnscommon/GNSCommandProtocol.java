@@ -36,16 +36,17 @@ public class GNSCommandProtocol {
   //
   // Response codes
   //
-  /**
-   * Indicates that a command that does not return a value has completed successfully.
-   * See {@link edu.umass.cs.gnscommon.GNSResponseCode#NO_ERROR}.
-   */
-  public final static String OK_RESPONSE = "+OK+";
+//	Moved to GNSProtocol:
+//  /**
+//   * Indicates that a command that does not return a value has completed successfully.
+//   * See {@link edu.umass.cs.gnscommon.GNSResponseCode#NO_ERROR}.
+//   */
+//  public final static String x_OK_RESPONSE_x = "+OK+";
   /**
    * A prefix used in the command return value to indicate an anomolous condition.
    * Always accompanied by an additional string value which indicates the
    * particular exception or error that occurred.
-   * 
+   *
    */
   public final static String BAD_RESPONSE = "+NO+";
   /**
@@ -96,10 +97,10 @@ public class GNSCommandProtocol {
    */
   public final static String ALREADY_VERIFIED_EXCEPTION = "+ALREADYVERIFIED+";
 
-	/**
-	 * Indicates that a remote query on the server side failed.
-	 */
-	public static final String REMOTE_QUERY_EXCEPTION = "+REMOTEQUERY+";
+  /**
+   * Indicates that a remote query on the server side failed.
+   */
+  public static final String REMOTE_QUERY_EXCEPTION = "+REMOTEQUERY+";
 
   /**
    * Indicates that a command is trying to access a field using an
@@ -120,7 +121,7 @@ public class GNSCommandProtocol {
   /**
    * Indicates that a command is trying to use an alias that does not exist.
    * See {@link edu.umass.cs.gnscommon.GNSResponseCode#BAD_ALIAS_EXCEPTION}.
-   * 
+   *
    */
   public final static String BAD_ALIAS = "+BADALIAS+";
   /**
@@ -168,7 +169,7 @@ public class GNSCommandProtocol {
    * See {@link edu.umass.cs.gnscommon.GNSResponseCode#UPDATE_ERROR}.
    */
   public final static String UPDATE_ERROR = "+UPDATEERROR+";
-   /**
+  /**
    * Indicates that a command resulted in an error while updating a record.
    * See {@link edu.umass.cs.gnscommon.GNSResponseCode#UPDATE_ERROR}.
    */
@@ -329,7 +330,7 @@ public class GNSCommandProtocol {
   /**
    * Used in commands to represent the use of all fields.
    */
-  public final static String ALL_FIELDS = "+ALL+";
+  public final static String ENTIRE_RECORD = "+ALL+";
   /**
    * Used in commands to represent the use of all guids.
    */
@@ -369,10 +370,9 @@ public class GNSCommandProtocol {
    */
   public final static String SIGNATUREFULLMESSAGE = "_signatureFullMessage_";
 
-
   // Special fields for ACL
   /**
-   * 
+   *
    */
   public final static String GROUP_ACL = "+GROUP_ACL+";
   // Field names in guid record JSON Object
@@ -482,13 +482,7 @@ public class GNSCommandProtocol {
    * The prefix used to hide GNS internal fields.
    */
   public static final String INTERNAL_PREFIX = "_GNS_";
-  
-  /**
-   * The error message used to indicate that an account is already verified.
-   */
-  @Deprecated
-  public static final String ACCOUNT_ALREADY_VERIFIED = "Account already verified";
-  
+
   /**
    * Creates a GNS field that is hidden from the user.
    *

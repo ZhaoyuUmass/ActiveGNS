@@ -24,7 +24,8 @@ package edu.umass.cs.msocket;
 
 import java.util.ArrayList;
 
-import org.apache.log4j.Logger;
+import edu.umass.cs.msocket.logger.MSocketLogger;
+
 
 /**
  * This class implements the Inbuffer of the MSocket. Out of order data is read
@@ -53,13 +54,16 @@ public class InBufferOutOrder
                                                                                                            // of
                                                                                                            // multipath
 
-  private static Logger           log                = Logger.getLogger(InBufferOutOrder.class.getName());
-
   InBufferOutOrder()
   {
     rbuf = new ArrayList<InBufferStorageChunk>();
   }
 
+  /**
+   *
+   * @param Obj
+   * @return
+   */
   public synchronized boolean putInBuffer(InBufferStorageChunk Obj)
   {
     byteRecvInInbuffer += Obj.chunkSize; // may not be accurate if there are
@@ -75,11 +79,20 @@ public class InBufferOutOrder
     return true;
   }
 
+  /**
+   *
+   * @param b
+   * @return
+   */
   public int getInBuffer(byte[] b)
   {
     return getInBuffer(b, 0, b.length);
   }
 
+  /**
+   *
+   * @return
+   */
   public boolean isInBufferData()
   {
     for (int i = 0; i < rbuf.size(); i++)
@@ -105,6 +118,13 @@ public class InBufferOutOrder
     return false;
   }
 
+  /**
+   *
+   * @param b
+   * @param offset
+   * @param length
+   * @return
+   */
   public synchronized int getInBuffer(byte[] b, int offset, int length)
   {
 
@@ -157,6 +177,8 @@ public class InBufferOutOrder
 	 * if that is the case then it is returned directly from stream
 	 * and not stored in input buffer.
 	 * 
+   * @param chunckStartSeq
+   * @param chunkLength
 	 * @return
 	 */
 	public synchronized boolean isDataInOrder(int chunckStartSeq, int chunkLength) {
@@ -173,17 +195,19 @@ public class InBufferOutOrder
 	 * Copy data read from stream to the app buffer. Also updates the dataReadSeqNum 
 	 * It bypasses the storing of data in input buffer
 	 * @param readFromStream
-	 * @param srcLen
+   * @param startSeqNum
+   * @param chunkLen
 	 * @param appBuffer
 	 * @param offset
 	 * @param appLen
+   * @return 
 	 */
 	public synchronized int copyOrderedDataToAppBuffer(byte[] readFromStream, int startSeqNum, 
 			int chunkLen, byte[] appBuffer, int offset, int appLen) 
 	{
 		if(chunkLen > 0)
 		{
-			log.trace("copyOrderedDataToAppBuffer: "+" startSeqNum "+startSeqNum+" chunkLen "+chunkLen+
+			MSocketLogger.getLogger().fine("copyOrderedDataToAppBuffer: "+" startSeqNum "+startSeqNum+" chunkLen "+chunkLen+
 				" offset "+offset+" appLen "+appLen+" readFromStream[0] "+readFromStream[0]);
 		}
 		int actualCopied =0;
@@ -199,7 +223,11 @@ public class InBufferOutOrder
 		return actualCopied;
 	}
 	
-	public long getDataReadSeqNum() {
+  /**
+   *
+   * @return
+   */
+  public long getDataReadSeqNum() {
 		return dataReadSeq;
 	}
 	

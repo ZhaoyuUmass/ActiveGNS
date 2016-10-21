@@ -26,9 +26,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.GroupAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -45,7 +45,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class GetGroups extends BasicCommand {
+public class GetGroups extends AbstractCommand {
 
   /**
    *
@@ -55,17 +55,15 @@ public class GetGroups extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.GetGroups;
   }
 
-  
-
-//  @Override
-//  public String getCommandName() {
-//    return GET_GROUPS;
-//  }
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, ParseException {
@@ -76,7 +74,7 @@ public class GetGroups extends BasicCommand {
     String signature = json.optString(SIGNATURE, null);
     String message = json.optString(SIGNATUREFULLMESSAGE, null);
     Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
-    return new CommandResponse(GNSResponseCode.NO_ERROR, new JSONArray(GroupAccess.lookupGroupsLocally(guid, reader,
+    return new CommandResponse(ResponseCode.NO_ERROR, new JSONArray(GroupAccess.lookupGroupsLocally(guid, reader,
             signature, message, timestamp, handler)).toString());
   }
 

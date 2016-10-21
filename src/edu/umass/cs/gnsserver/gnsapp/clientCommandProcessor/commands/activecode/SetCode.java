@@ -34,9 +34,10 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Activ
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnscommon.GNSProtocol;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -44,7 +45,7 @@ import java.util.Date;
  * The command to retrieve the active code for the specified GUID and action.
  *
  */
-public class SetCode extends BasicCommand {
+public class SetCode extends AbstractCommand {
 
   /**
    * Create the set instance.
@@ -55,12 +56,14 @@ public class SetCode extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.SetCode;
   }
-
-  
 
   @Override
   public CommandResponse execute(JSONObject json,
@@ -74,13 +77,13 @@ public class SetCode extends BasicCommand {
     String signature = json.getString(SIGNATURE);
     String message = json.getString(SIGNATUREFULLMESSAGE);
     Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
-    GNSResponseCode response = ActiveCode.setCode(guid, action,
+    ResponseCode response = ActiveCode.setCode(guid, action,
             code, writer, signature, message, timestamp, handler);
 
     if (response.isExceptionOrError()) {
       return new CommandResponse(response, BAD_RESPONSE + " " + response.getProtocolCode());
     } else {
-      return new CommandResponse(GNSResponseCode.NO_ERROR, OK_RESPONSE);
+      return new CommandResponse(ResponseCode.NO_ERROR, GNSProtocol.OK_RESPONSE.toString());
     }
   }
 

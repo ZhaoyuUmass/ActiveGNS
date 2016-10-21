@@ -21,6 +21,7 @@ package edu.umass.cs.gnsclient.client.integrationtests;
 
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
+import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
@@ -87,6 +88,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   * The ClientCoreTest.
+   */
   public ClientCoreTest() {
     if (client == null) {
       try {
@@ -111,6 +115,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_010_CreateEntity() {
     String localAlias = "testGUID" + RandomString.randomString(6);
@@ -124,6 +131,9 @@ public class ClientCoreTest {
     assertEquals(localAlias, guidEntry.getEntityName());
   }
 
+  /**
+   *
+   */
   @Test
   public void test_020_RemoveGuid() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -148,6 +158,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_030_RemoveGuidSansAccountInfo() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -172,6 +185,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_040_LookupPrimaryGuid() {
     String testGuidName = "testGUID" + RandomString.randomString(6);
@@ -188,6 +204,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_050_CreateSubGuid() {
     try {
@@ -198,6 +217,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_060_FieldNotFoundException() {
     try {
@@ -210,6 +232,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_070_FieldExistsFalse() {
     try {
@@ -219,6 +244,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_080_CreateFieldForFieldExists() {
     try {
@@ -229,6 +257,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_090_FieldExistsTrue() {
     try {
@@ -238,6 +269,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_100_CreateFields() {
     try {
@@ -250,7 +284,7 @@ public class ClientCoreTest {
     }
     try {
       // remove default read acces for this test
-      client.aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      client.aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       client.fieldCreateOneElementList(westyEntry.getGuid(), "environment", "work", westyEntry);
       client.fieldCreateOneElementList(westyEntry.getGuid(), "ssn", "000-00-0000", westyEntry);
       client.fieldCreateOneElementList(westyEntry.getGuid(), "password", "666flapJack", westyEntry);
@@ -276,6 +310,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_110_ACLPartOne() {
     //testCreateField();
@@ -303,6 +340,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_120_ACLPartTwo() {
     try {
@@ -317,7 +357,7 @@ public class ClientCoreTest {
       }
       barneyEntry = client.guidCreate(masterGuid, barneyName);
       // remove default read access for this test
-      client.aclRemove(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      client.aclRemove(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       client.fieldCreateOneElementList(barneyEntry.getGuid(), "cell", "413-555-1234", barneyEntry);
       client.fieldCreateOneElementList(barneyEntry.getGuid(), "address", "100 Main Street", barneyEntry);
 
@@ -363,6 +403,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_130_ACLALLFields() {
     //testACL();
@@ -377,7 +420,7 @@ public class ClientCoreTest {
       GuidEntry superuserEntry = client.guidCreate(masterGuid, superUserName);
 
       // let superuser read any of barney's fields
-      client.aclAdd(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ALL_FIELDS, superuserEntry.getGuid());
+      client.aclAdd(AclAccessType.READ_WHITELIST, barneyEntry, GNSCommandProtocol.ENTIRE_RECORD, superuserEntry.getGuid());
 
       assertEquals("413-555-1234",
               client.fieldReadArrayFirstElement(barneyEntry.getGuid(), "cell", superuserEntry));
@@ -389,6 +432,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_140_ACLCreateDeeperField() {
     try {
@@ -398,14 +444,14 @@ public class ClientCoreTest {
         fail("Problem updating field: " + e);
       }
       try {
-        client.aclAdd(AclAccessType.READ_WHITELIST, westyEntry, "test.deeper.field", GNSCommandProtocol.ALL_FIELDS);
+        client.aclAdd(AclAccessType.READ_WHITELIST, westyEntry, "test.deeper.field", GNSCommandProtocol.ENTIRE_RECORD);
       } catch (Exception e) {
         fail("Problem adding acl: " + e);
       }
       try {
         JSONArray actual = client.aclGet(AclAccessType.READ_WHITELIST, westyEntry,
                 "test.deeper.field", westyEntry.getGuid());
-        JSONArray expected = new JSONArray(new ArrayList<>(Arrays.asList(GNSCommandProtocol.ALL_FIELDS)));
+        JSONArray expected = new JSONArray(new ArrayList<>(Arrays.asList(GNSCommandProtocol.ENTIRE_RECORD)));
         JSONAssert.assertEquals(expected, actual, true);
       } catch (Exception e) {
         fail("Problem reading acl: " + e);
@@ -415,6 +461,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_170_DB() {
     //testCreateEntity();
@@ -474,6 +523,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_180_DBUpserts() {
     HashSet<String> expected = null;
@@ -529,6 +581,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_190_Substitute() {
     String testSubstituteGuid = "testSubstituteGUID" + RandomString.randomString(6);
@@ -571,6 +626,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_200_SubstituteList() {
     String testSubstituteListGuid = "testSubstituteListGUID" + RandomString.randomString(6);
@@ -616,6 +674,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_210_GroupCreate() {
     String mygroupName = "mygroup" + RandomString.randomString(6);
@@ -632,6 +693,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_211_GroupAdd() {
     try {
@@ -655,6 +719,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_212_GroupRemoveGuid() {
     // now remove a guid and check for group updates
@@ -676,6 +743,9 @@ public class ClientCoreTest {
 
   private static GuidEntry groupAccessUserEntry = null;
 
+  /**
+   *
+   */
   @Test
   public void test_220_GroupAndACLCreateGuids() {
     //testGroup();
@@ -693,7 +763,7 @@ public class ClientCoreTest {
     try {
       groupAccessUserEntry = client.guidCreate(masterGuid, groupAccessUserName);
       // remove all fields read by all
-      client.aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      client.aclRemove(AclAccessType.READ_WHITELIST, groupAccessUserEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
     } catch (Exception e) {
       fail("Exception creating group user: " + e);
     }
@@ -712,6 +782,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_221_GroupAndACLTestBadAccess() {
     try {
@@ -726,6 +799,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_222_GroupAndACLTestGoodAccess() {
     try {
@@ -735,6 +811,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_223_GroupAndACLTestRemoveGuid() {
     try {
@@ -755,6 +834,9 @@ public class ClientCoreTest {
 
   private static String alias = "ALIAS-" + RandomString.randomString(4) + "@blah.org";
 
+  /**
+   *
+   */
   @Test
   public void test_230_AliasAdd() {
     try {
@@ -768,6 +850,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_231_AliasRemove() {
     try {
@@ -782,6 +867,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_232_AliasCheck() {
     try {
@@ -796,6 +884,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_240_WriteAccess() {
     String fieldName = "whereAmI";
@@ -839,6 +930,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_250_UnsignedRead() {
     String unsignedReadFieldName = "allreadaccess";
@@ -850,7 +944,7 @@ public class ClientCoreTest {
 
       client.fieldCreateOneElementList(westyEntry.getGuid(), standardReadFieldName, "bummer", westyEntry);
       // already did this above... doing it again gives us a paxos error
-      //client.removeFromACL(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      //client.removeFromACL(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
       try {
         String result = client.fieldReadArrayFirstElement(westyEntry.getGuid(), standardReadFieldName, null);
         fail("Result of read of westy's " + standardReadFieldName + " as world readable was " + result
@@ -862,6 +956,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_260_UnsignedWrite() {
     String unsignedWriteFieldName = "allwriteaccess";
@@ -884,6 +981,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_270_RemoveField() {
     String fieldToDelete = "fieldToDelete";
@@ -916,6 +1016,9 @@ public class ClientCoreTest {
 
   }
 
+  /**
+   *
+   */
   @Test
   public void test_280_ListOrderAndSetElement() {
     try {
@@ -949,6 +1052,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_310_BasicSelect() {
     try {
@@ -960,6 +1066,9 @@ public class ClientCoreTest {
     }
   }
   
+  /**
+   *
+   */
   @Test
   public void test_320_GeoSpatialSelect() {
     try {
@@ -1002,6 +1111,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_330_QuerySelect() {
     String fieldName = "testQuery";
@@ -1046,6 +1158,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_400_SetFieldNull() {
     String field = "fieldToSetToNull";
@@ -1079,6 +1194,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_410_JSONUpdate() {
     try {
@@ -1191,6 +1309,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_420_NewRead() {
     try {
@@ -1251,6 +1372,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_430_NewUpdate() {
     try {
@@ -1335,6 +1459,9 @@ public class ClientCoreTest {
   private static final String BYTE_TEST_FIELD = "testBytes";
   private static byte[] byteTestValue;
 
+  /**
+   *
+   */
   @Test
   public void test_440_CreateBytesField() {
     try {
@@ -1347,6 +1474,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_441_ReadBytesField() {
     try {
@@ -1361,6 +1491,9 @@ public class ClientCoreTest {
   private static int numberTocreate = 100;
   private static GuidEntry accountGuidForBatch = null;
 
+  /**
+   *
+   */
   @Test
   public void test_510_CreateBatchAccountGuid() {
     // can change the number to create on the command line
@@ -1376,6 +1509,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_511_CreateBatch() {
     Set<String> aliases = new HashSet<>();
@@ -1391,9 +1527,12 @@ public class ClientCoreTest {
     } catch (Exception e) {
       fail("Exception while creating guids: " + e);
     }
-    assertEquals(GNSCommandProtocol.OK_RESPONSE, result);
+    assertEquals(GNSProtocol.OK_RESPONSE.toString(), result);
   }
 
+  /**
+   *
+   */
   @Test
   public void test_512_CheckBatch() {
     try {
@@ -1482,6 +1621,9 @@ public class ClientCoreTest {
 
   private static String createIndexTestField;
 
+  /**
+   *
+   */
   @Test
   public void test_810_CreateField() {
     createIndexTestField = "testField" + RandomString.randomString(6);
@@ -1493,6 +1635,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_820_CreateIndex() {
     try {
@@ -1502,6 +1647,9 @@ public class ClientCoreTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_830_SelectPass() {
     try {
@@ -1561,6 +1709,9 @@ public class ClientCoreTest {
             + "}";
   }
 
+  /**
+   *
+   */
   @Test
   public void test_999_Stop() {
     try {

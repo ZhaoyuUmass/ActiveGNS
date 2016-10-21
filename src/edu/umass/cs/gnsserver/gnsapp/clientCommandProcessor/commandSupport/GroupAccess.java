@@ -19,7 +19,7 @@
  */
 package edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport;
 
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnsserver.utils.ResultValue;
@@ -58,6 +58,11 @@ public class GroupAccess {
 
   /**
    * Sends a request to the NS to add a single GUID to a group.
+   * Updates the GROUP field in a group GUID adding the member to it and 
+   * also updates the reverse field (GROUPS) in the member to indicate 
+   * their membership in the group. The writer can be any GUID but that 
+   * GUID must sign the request and also have ACL access to the GROUP 
+   * field in the group GUID.
    *
    * @param guid
    * @param memberGuid
@@ -70,16 +75,21 @@ public class GroupAccess {
    * @throws org.json.JSONException
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
    */
-  public static GNSResponseCode addToGroup(String guid, String memberGuid, String writer, String signature, String message,
+  public static ResponseCode addToGroup(String guid, String memberGuid, String writer, String signature, String message,
           ClientRequestHandlerInterface handler) throws IOException, JSONException, ClientException {
     // Fixme: This isn't doing any kind of signature or acl check!
     handler.getRemoteQuery().fieldAppendToArray(guid, GROUP, new ResultValue(Arrays.asList(memberGuid)));
     handler.getRemoteQuery().fieldAppendToArray(memberGuid, GROUPS, new ResultValue(Arrays.asList(guid)));
-    return GNSResponseCode.NO_ERROR;
+    return ResponseCode.NO_ERROR;
   }
 
   /**
    * Sends a request to the NS to add a list of GUIDs to a group.
+   * Updates the GROUP field in a group GUID adding the group members to it and 
+   * also updates the reverse field (GROUPS) in all the members to indicate 
+   * their membership in the group. The writer can be any GUID but that 
+   * GUID must sign the request and also have ACL access to the GROUP 
+   * field in the group GUID.
    *
    * @param guid
    * @param members
@@ -92,7 +102,7 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    */
-  public static GNSResponseCode addToGroup(String guid, ResultValue members, String writer, String signature, String message,
+  public static ResponseCode addToGroup(String guid, ResultValue members, String writer, String signature, String message,
           ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
     // Fixme: This isn't doing any kind of signature or acl check!
     // The remote querys don't authenticate.
@@ -100,7 +110,7 @@ public class GroupAccess {
     for (String memberGuid : members.toStringSet()) {
       handler.getRemoteQuery().fieldAppendToArray(memberGuid, GROUPS, new ResultValue(Arrays.asList(guid)));
     }
-    return GNSResponseCode.NO_ERROR;
+    return ResponseCode.NO_ERROR;
   }
 
   /**
@@ -117,13 +127,13 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    */
-  public static GNSResponseCode removeFromGroup(String guid, String memberGuid, String writer, String signature, String message,
+  public static ResponseCode removeFromGroup(String guid, String memberGuid, String writer, String signature, String message,
           ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
     // Fixme: This isn't doing any kind of signature or acl check!
     // The remote querys don't authenticate.
     handler.getRemoteQuery().fieldRemove(guid, GroupAccess.GROUP, memberGuid);
     handler.getRemoteQuery().fieldRemove(memberGuid, GroupAccess.GROUPS, guid);
-    return GNSResponseCode.NO_ERROR;
+    return ResponseCode.NO_ERROR;
   }
 
   /**
@@ -140,7 +150,7 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    */
-  public static GNSResponseCode removeFromGroup(String guid, ResultValue members, String writer, String signature, String message,
+  public static ResponseCode removeFromGroup(String guid, ResultValue members, String writer, String signature, String message,
           ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
     // Fixme: This isn't doing any kind of signature or acl check!
     // The remote querys don't authenticate.
@@ -148,7 +158,7 @@ public class GroupAccess {
     for (String memberGuid : members.toStringSet()) {
       handler.getRemoteQuery().fieldRemove(memberGuid, GroupAccess.GROUPS, guid);
     }
-    return GNSResponseCode.NO_ERROR;
+    return ResponseCode.NO_ERROR;
   }
 
   /**
@@ -165,14 +175,14 @@ public class GroupAccess {
   public static ResultValue lookup(String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    GNSResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid,
             GROUP, null,
             reader, signature, message, timestamp,
             handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new ResultValue();
     }
-    return NSFieldAccess.lookupListFieldLocallyNoAuth(guid, GROUP, handler.getApp().getDB());
+    return NSFieldAccess.lookupListFieldLocallyNoAuthNoExceptions(guid, GROUP, handler.getApp().getDB());
   }
 
   /**
@@ -191,7 +201,7 @@ public class GroupAccess {
   public static ResultValue lookupGroupsAnywhere(String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler, boolean remoteLookup) throws FailedDBOperationException {
-    GNSResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new ResultValue();
@@ -199,15 +209,25 @@ public class GroupAccess {
     return NSFieldAccess.lookupListFieldAnywhere(guid, GROUPS, true, handler);
   }
 
+  /**
+   *
+   * @param guid
+   * @param reader
+   * @param signature
+   * @param message
+   * @param timestamp
+   * @param handler
+   * @return the groups as a ResultValue
+   */
   public static ResultValue lookupGroupsLocally(String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    GNSResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new ResultValue();
     }
-    return NSFieldAccess.lookupListFieldLocallyNoAuth(guid, GROUPS, handler.getApp().getDB());
+    return NSFieldAccess.lookupListFieldLocallyNoAuthNoExceptions(guid, GROUPS, handler.getApp().getDB());
   }
 
   /**

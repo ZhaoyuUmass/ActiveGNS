@@ -37,6 +37,9 @@ import java.util.TimeZone;
 public class Format
 {
 
+  /**
+   * Format methods.
+   */
   public Format()
   {
   }
@@ -53,6 +56,12 @@ public class Format
                                                               }
                                                             };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseTime(String text) throws ParseException
   {
     return formatTime.get().parse(text);
@@ -81,11 +90,22 @@ public class Format
                                                                  }
                                                                };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseLatLong(String text) throws ParseException
   {
     return formatLatLong.get().parse(text);
   }
 
+  /**
+   *
+   * @param x
+   * @return
+   */
   public static String formatLatLong(double x)
   {
     return formatLatLong.get().format(x);
@@ -103,6 +123,12 @@ public class Format
                                                                  }
                                                                };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseUtility(String text) throws ParseException
   {
     return formatUtility.get().parse(text);
@@ -131,6 +157,12 @@ public class Format
                                                              }
                                                            };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parsedBZ(String text) throws ParseException
   {
     return formatdBZ.get().parse(text);
@@ -162,14 +194,20 @@ public class Format
   /**
    * Lots of decimal places. Format is #####.######"
    * 
-   * @param x
+   * @param text
    * @return
+   * @throws java.text.ParseException
    */
   public static Number parseFloatLong(String text) throws ParseException
   {
     return formatFloatLong.get().parse(text);
   }
 
+  /**
+   *
+   * @param x
+   * @return
+   */
   public static String formatFloatLong(double x)
   {
     return formatFloatLong.get().format(x);
@@ -187,6 +225,12 @@ public class Format
                                                                }
                                                              };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseFloat(String text) throws ParseException
   {
     return formatFloat.get().parse(text);
@@ -203,6 +247,9 @@ public class Format
     return formatFloat.get().format(x);
   }
 
+  /**
+   *
+   */
   public final static ThreadLocal<DecimalFormat> formatFloat2 = new ThreadLocal<DecimalFormat>()
                                                               {
                                                                 @Override
@@ -212,6 +259,12 @@ public class Format
                                                                 }
                                                               };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseFloat2(String text) throws ParseException
   {
     return formatFloat2.get().parse(text);
@@ -228,6 +281,9 @@ public class Format
     return formatFloat2.get().format(x);
   }
 
+  /**
+   *
+   */
   public final static ThreadLocal<DecimalFormat> formatDistance = new ThreadLocal<DecimalFormat>()
                                                                 {
                                                                   @Override
@@ -237,6 +293,12 @@ public class Format
                                                                   }
                                                                 };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseDistance(String text) throws ParseException
   {
     return formatDistance.get().parse(text);
@@ -266,6 +328,12 @@ public class Format
                                                                        }
                                                                      };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parsePrettyDate(String text) throws ParseException
   {
     return formatPrettyDate.get().parse(text);
@@ -274,7 +342,7 @@ public class Format
   /**
    * Format is yyyy.MM.dd H:mm:ss zzz"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatPrettyDate(Date date)
@@ -301,7 +369,7 @@ public class Format
   /**
    * Format is yyyy.MM.dd H:mm:ss zzz"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatPrettyDateUTC(Date date)
@@ -321,6 +389,12 @@ public class Format
                                                                  }
                                                                };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseDate(String text) throws ParseException
   {
     return formatDate.get().parse(text);
@@ -329,7 +403,7 @@ public class Format
   /**
    * Format is yyyyMMddHHmmss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDate(Date date)
@@ -355,7 +429,7 @@ public class Format
   /**
    * Format is yyyyMMddHHmmss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDateUTC(Date date)
@@ -363,11 +437,22 @@ public class Format
     return formatDateUTC.get().format(date);
   }
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseDateUTC(String text) throws ParseException
   {
     return formatDateUTC.get().parse(text);
   }
 
+  /**
+   *
+   * @param text
+   * @return
+   */
   public static Date parseDateUTCOrNull(String text)
   {
     try
@@ -392,6 +477,12 @@ public class Format
                                                                       }
                                                                     };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseShortDate(String text) throws ParseException
   {
     return formatShortDate.get().parse(text);
@@ -400,7 +491,7 @@ public class Format
   /**
    * Format is dd/MM/yy HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatShortDate(Date date)
@@ -424,6 +515,12 @@ public class Format
                                                                          }
                                                                        };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseShortDateUTC(String text) throws ParseException
   {
     return formatShortDateUTC.get().parse(text);
@@ -432,7 +529,7 @@ public class Format
   /**
    * Format is dd/MM/yy HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatShortDateUTC(Date date)
@@ -452,6 +549,12 @@ public class Format
                                                                          }
                                                                        };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseDateTimeOnly(String text) throws ParseException
   {
     return formatDateTimeOnly.get().parse(text);
@@ -460,7 +563,7 @@ public class Format
   /**
    * Format is HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDateTimeOnly(Date date)
@@ -469,6 +572,10 @@ public class Format
   }
 
   //
+
+  /**
+   *
+   */
   public final static ThreadLocal<SimpleDateFormat> formatDateTimeOnlyUTC = new ThreadLocal<SimpleDateFormat>()
                                                                           {
                                                                             @Override
@@ -482,6 +589,12 @@ public class Format
                                                                             }
                                                                           };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseDateTimeOnlyUTC(String text) throws ParseException
   {
     return formatDateTimeOnlyUTC.get().parse(text);
@@ -490,7 +603,7 @@ public class Format
   /**
    * Format is HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDateTimeOnlyUTC(Date date)
@@ -504,7 +617,7 @@ public class Format
   /**
    * Format is yyyy.MM.dd H:mm:ss zzz [HH:mm:ss]"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDualDate(Date date)
@@ -512,6 +625,9 @@ public class Format
     return formatPrettyDateUTC.get().format(date) + " [" + formatDateTimeOnly.get().format(date) + "]";
   }
 
+  /**
+   *
+   */
   public final static ThreadLocal<SimpleDateFormat> formatDateTimeOnlyMilleUTC = new ThreadLocal<SimpleDateFormat>()
                                                                                {
                                                                                  @Override
@@ -525,6 +641,12 @@ public class Format
                                                                                  }
                                                                                };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseDateTimeOnlyMilleUTC(String text) throws ParseException
   {
     return formatDateTimeOnlyMilleUTC.get().parse(text);
@@ -533,7 +655,7 @@ public class Format
   /**
    * Format is HH:mm:ss.SSS"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatDateTimeOnlyMilleUTC(Date date)
@@ -556,6 +678,12 @@ public class Format
                                                                     }
                                                                   };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseLogDate(String text) throws ParseException
   {
     return formatLogDate.get().parse(text);
@@ -564,7 +692,7 @@ public class Format
   /**
    * Java log file format. Format is yyyy-MM-dd'T'HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatLogDate(Date date)
@@ -587,6 +715,12 @@ public class Format
                                                                       }
                                                                     };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseMYSQLDate(String text) throws ParseException
   {
     return formatMYSQLDate.get().parse(text);
@@ -595,7 +729,7 @@ public class Format
   /**
    * MySQL likes this. Format is yyyy-MM-dd HH:mm:ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatMYSQLDate(Date date)
@@ -619,6 +753,12 @@ public class Format
                                                                          }
                                                                        };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Date parseFilenameDate(String text) throws ParseException
   {
     return formatFilenameDate.get().parse(text);
@@ -628,7 +768,7 @@ public class Format
    * Good for writing files with the date and time in them. Format is
    * yyyy-MM-dd-HH-mm-ss"
    * 
-   * @param x
+   * @param date
    * @return
    */
   public static String formatFilenameDate(Date date)
@@ -636,6 +776,9 @@ public class Format
     return formatFilenameDate.get().format(date);
   }
 
+  /**
+   *
+   */
   public final static ThreadLocal<DecimalFormat> formatQ = new ThreadLocal<DecimalFormat>()
                                                          {
                                                            @Override
@@ -645,6 +788,12 @@ public class Format
                                                            }
                                                          };
 
+  /**
+   *
+   * @param text
+   * @return
+   * @throws ParseException
+   */
   public static Number parseQ(String text) throws ParseException
   {
     return formatQ.get().parse(text);

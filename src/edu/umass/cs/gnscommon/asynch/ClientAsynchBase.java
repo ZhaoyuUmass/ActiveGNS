@@ -34,7 +34,7 @@ import java.util.Random;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
+import edu.umass.cs.gnscommon.packets.AdminCommandPacket;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
@@ -67,7 +67,6 @@ import edu.umass.cs.gnscommon.utils.CanonicalJSON;
 import edu.umass.cs.gnscommon.utils.Format;
 import edu.umass.cs.gnscommon.CommandType;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.ACCOUNT_GUID;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_FIELDS;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.CODE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.EVERYONE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELD;
@@ -94,6 +93,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ENTIRE_RECORD;
 
 /**
  * This class defines a basic asynchronous client to communicate with a GNS instance over TCP.
@@ -103,6 +103,9 @@ import java.util.logging.Level;
 // FIXME: This might be redundant with the AsyncClient internal class used in GNSClient.
 public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
 
+  /**
+   *
+   */
   public static final Set<IntegerPacketType> CLIENT_PACKET_TYPES
           = new HashSet<>(Arrays.asList(Packet.PacketType.COMMAND,
                   Packet.PacketType.COMMAND_RETURN_VALUE,
@@ -158,6 +161,12 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
 
   private static Stringifiable<String> unstringer = new StringifiableDefault<>("");
 
+  /**
+   *
+   * @param stringified
+   * @return the request
+   * @throws RequestParseException
+   */
   @Override
   // This needs to return null for packet types that we don't want to handle.
   public Request getRequest(String stringified) throws RequestParseException {
@@ -170,6 +179,12 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
     return request;
   }
 
+  /**
+   *
+   * @param json
+   * @return return the request or null if we're not handling this request type
+   * @throws RequestParseException
+   */
   @Override
   // This needs to return null for packet types that we don't want to handle.
   public Request getRequestFromJSON(JSONObject json) throws RequestParseException {
@@ -184,6 +199,10 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
     return request;
   }
 
+  /**
+   *
+   * @return a set of all the request types
+   */
   @Override
   public Set<IntegerPacketType> getRequestTypes() {
     return Collections.unmodifiableSet(CLIENT_PACKET_TYPES);
@@ -200,7 +219,8 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
    */
   private long sendCommandAsynch(JSONObject command, RequestCallback callback) throws IOException, JSONException {
     long id = generateNextRequestID();
-    CommandPacket packet = new CommandPacket(id, command);
+    CommandPacket packet = CommandPacket.getJSONCommandType(command).isMutualAuth() ? 
+    		new AdminCommandPacket(id, command) : new CommandPacket(id, command);
     ClientSupportConfig.getLogger().log(Level.FINER, "{0} sending remote query {1}", new Object[]{this, packet.getSummary()});
     sendRequest(
             packet.setForceCoordinatedReads(true),
@@ -234,7 +254,7 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
     // set up ACL to look like this
     //"_GNS_ACL": {
     //  "READ_WHITELIST": {"+ALL+": {"MD": "+ALL+"]}}}
-    JSONObject acl = AccountAccess.createACL(ALL_FIELDS, Arrays.asList(EVERYONE), null, null);
+    JSONObject acl = AccountAccess.createACL(ENTIRE_RECORD, Arrays.asList(EVERYONE), null, null);
     // prefix is the same for all acls so just pick one to use here
     jsonGuid.put(MetaDataTypeName.READ_WHITELIST.getPrefix(), acl);
 
@@ -303,8 +323,8 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
     //"_GNS_ACL": {
     //  "READ_WHITELIST": {"+ALL+": {"MD": [<publickey>, "+ALL+"]}},
     //  "WRITE_WHITELIST": {"+ALL+": {"MD": [<publickey>]}}
-    JSONObject acl = createACL(ALL_FIELDS, Arrays.asList(EVERYONE, accountGuid.getPublicKeyString()),
-            ALL_FIELDS, Arrays.asList(accountGuid.getPublicKeyString()));
+    JSONObject acl = createACL(ENTIRE_RECORD, Arrays.asList(EVERYONE, accountGuid.getPublicKeyString()),
+            ENTIRE_RECORD, Arrays.asList(accountGuid.getPublicKeyString()));
     // prefix is the same for all acls so just pick one to use here
     jsonGuid.put(MetaDataTypeName.READ_WHITELIST.getPrefix(), acl);
 
@@ -348,8 +368,8 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
       //"_GNS_ACL": {
       //  "READ_WHITELIST": {"+ALL+": {"MD": [<publickey>, "+ALL+"]}},
       //  "WRITE_WHITELIST": {"+ALL+": {"MD": [<publickey>]}}
-      JSONObject acl = createACL(ALL_FIELDS, Arrays.asList(EVERYONE, accountGuid.getPublicKeyString()),
-              ALL_FIELDS, Arrays.asList(accountGuid.getPublicKeyString()));
+      JSONObject acl = createACL(ENTIRE_RECORD, Arrays.asList(EVERYONE, accountGuid.getPublicKeyString()),
+              ENTIRE_RECORD, Arrays.asList(accountGuid.getPublicKeyString()));
       // prefix is the same for all acls so just pick one to use here
       jsonGuid.put(MetaDataTypeName.READ_WHITELIST.getPrefix(), acl);
       state.put(alias, jsonHRN.toString());
@@ -366,7 +386,7 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
    *
    * @param guid the guid to remove
    * @param callback
-   * @return
+   * @return the id of the request
    * @throws Exception
    */
   public long guidRemove(GuidEntry guid, RequestCallback callback) throws Exception {
@@ -380,7 +400,7 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
    * @param accountGuid
    * @param guidToRemove
    * @param callback
-   * @return
+   * @return the id of the request
    * @throws Exception
    */
   public long guidRemove(GuidEntry accountGuid, String guidToRemove, RequestCallback callback) throws Exception {
@@ -394,7 +414,7 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
    *
    * @param alias
    * @param callback
-   * @return
+   * @return the id of the request
    * @throws IOException
    * @throws org.json.JSONException
    * @throws UnsupportedEncodingException
@@ -701,7 +721,7 @@ public class ClientAsynchBase extends ReconfigurableAppClientAsync<Request> {
   /**
    * Return a new request id. Probably should use longs here.
    *
-   * @return
+   * @return the id
    */
   public synchronized long generateNextRequestID() {
     return randomID.nextLong();

@@ -28,9 +28,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,7 +38,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class Dump extends BasicCommand {
+public class Dump extends AbstractCommand {
 
   /**
    *
@@ -48,33 +48,25 @@ public class Dump extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.Dump;
   }
-
   
+  @Override
+  public String[] getCommandParameters(){
+	  String[] params = {NAME};
+	  return params;
+  }
 
   @Override
   @SuppressWarnings("unchecked")
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws JSONException {
-    if (module.isAdminMode()) {
-      if (json.has(PASSKEY)) {
-        //If the user cannot be authenticated, return an ACCESS_ERROR and abort.
-        String passkey = json.getString(PASSKEY);
-        if (!Admin.authenticate(passkey)) {
-          GNSConfig.getLogger().log(Level.INFO, "A client failed to authenticate for " + getCommandType().toString() + " : " + json.toString());
-          return new CommandResponse(GNSResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
-                  + " Failed to authenticate " + getCommandType().toString() + " with key : " + passkey);
-        }
-        return handler.getAdmintercessor().sendDump(handler);
-      } else {
-        return new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE + " " + OPERATION_NOT_SUPPORTED
-                + " " + getCommandType().toString() + " requires " + PASSKEY);
-      }
-    }
-    return new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE + " " + OPERATION_NOT_SUPPORTED
-            + " Don't understand " + getCommandType().toString());
+      return handler.getAdmintercessor().sendDump(handler);
   }
 
   

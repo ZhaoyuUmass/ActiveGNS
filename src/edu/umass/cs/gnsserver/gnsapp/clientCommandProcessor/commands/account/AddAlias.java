@@ -35,9 +35,10 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATUREFULLMESSAGE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.TIMESTAMP;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.TOO_MANY_ALIASES;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.VERIFICATION_ERROR;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.utils.Config;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -51,7 +52,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class AddAlias extends BasicCommand {
+public class AddAlias extends AbstractCommand {
 
   /**
    * Creates an AddAlias instance.
@@ -62,6 +63,10 @@ public class AddAlias extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.AddAlias;
@@ -80,12 +85,12 @@ public class AddAlias extends BasicCommand {
     // Fixme: Does this really need remote access?
     AccountInfo accountInfo = AccountAccess.lookupAccountInfoFromGuidAnywhere(guid, handler);
     if (accountInfo == null) {
-      return new CommandResponse(GNSResponseCode.BAD_ACCOUNT_ERROR, BAD_RESPONSE + " " + BAD_ACCOUNT + " " + guid);
+      return new CommandResponse(ResponseCode.BAD_ACCOUNT_ERROR, BAD_RESPONSE + " " + BAD_ACCOUNT + " " + guid);
     }
     if (!accountInfo.isVerified()) {
-      return new CommandResponse(GNSResponseCode.VERIFICATION_ERROR, BAD_RESPONSE + " " + VERIFICATION_ERROR + " Account not verified");
-    } else if (accountInfo.getAliases().size() > GNSConfig.MAXALIASES) {
-      return new CommandResponse(GNSResponseCode.TOO_MANY_ALIASES_EXCEPTION, BAD_RESPONSE + " " + TOO_MANY_ALIASES);
+      return new CommandResponse(ResponseCode.VERIFICATION_ERROR, BAD_RESPONSE + " " + VERIFICATION_ERROR + " Account not verified");
+    } else if (accountInfo.getAliases().size() > Config.getGlobalInt(GNSConfig.GNSC.ACCOUNT_GUID_MAX_ALIASES)) {
+      return new CommandResponse(ResponseCode.TOO_MANY_ALIASES_EXCEPTION, BAD_RESPONSE + " " + TOO_MANY_ALIASES);
     } else {
       return AccountAccess.addAlias(accountInfo, name, guid, signature, message, timestamp, handler);
     }

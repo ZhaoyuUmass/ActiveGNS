@@ -11,7 +11,7 @@ import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
 import edu.umass.cs.gnscommon.GNSProtocol;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
@@ -27,71 +27,77 @@ import edu.umass.cs.utils.Config;
  *
  */
 public class GNSCommandInternal extends InternalCommandPacket {
-	protected GNSCommandInternal(InternalRequestHeader header,
-			JSONObject command) throws JSONException {
-		super(header, command);
-	}
 
-	/**
-	 * This magic makes the command obviate signature checks. This command is
-	 * usable only at a server because only servers can know of or generate the
-	 * correct {@link GNSConfig.GNSC#INTERNAL_OP_SECRET}.
-	 * 
-	 * @param command
-	 * @return
-	 * @throws JSONException
-	 */
-	private static JSONObject makeInternal(CommandType type, JSONObject command)
-			throws JSONException {
-		// internal commands can not and need not be signed
-		assert (!command.has(GNSCommandProtocol.SIGNATURE));
-		// currently only read/write requests can be internal
-		assert (type.isRead() || type.isUpdate());
-		// only unsigned commands can be modified this way
-		return command.put(type.isRead() ? GNSCommandProtocol.READER
-				: GNSCommandProtocol.WRITER, Config
-				.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
-	}
+  /**
+   *
+   * @param header
+   * @param command
+   * @throws JSONException
+   */
+  protected GNSCommandInternal(InternalRequestHeader header,
+          JSONObject command) throws JSONException {
+    super(header, command);
+  }
 
-	/** The querier is always null in internal commands as it is implicitly
-	 * a trusted server or client.
-	 * 
-	 * @param type
-	 * @param header
-	 * @param keysAndValues
-	 * @return GNSCommandInternal 
-	 * @throws JSONException
-	 * @throws InternalRequestException 
-	 */
-	private static GNSCommandInternal getCommand(CommandType type,
-			InternalRequestHeader header, Object... keysAndValues)
-			throws JSONException, InternalRequestException {
-		return enforceChecks(new GNSCommandInternal(header, makeInternal(
-				type,
-				CommandUtils
-						.createCommand(type, keysAndValues)
+  /**
+   * This magic makes the command obviate signature checks. This command is
+   * usable only at a server because only servers can know of or generate the
+   * correct {@link GNSConfig.GNSC#INTERNAL_OP_SECRET}.
+   *
+   * @param command
+   * @return a JSON Object
+   * @throws JSONException
+   */
+  private static JSONObject makeInternal(CommandType type, JSONObject command)
+          throws JSONException {
+    // internal commands can not and need not be signed
+    assert (!command.has(GNSCommandProtocol.SIGNATURE));
+    // currently only read/write requests can be internal
+    assert (type.isRead() || type.isUpdate());
+    // only unsigned commands can be modified this way
+    return command.put(type.isRead() ? GNSCommandProtocol.READER
+            : GNSCommandProtocol.WRITER, Config
+            .getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET));
+  }
 
-						.put(GNSProtocol.ORIGINATING_GUID.toString(),
-								header.getOriginatingGUID())
+  /**
+   * The querier is always null in internal commands as it is implicitly
+   * a trusted server or client.
+   *
+   * @param type
+   * @param header
+   * @param keysAndValues
+   * @return GNSCommandInternal
+   * @throws JSONException
+   * @throws InternalRequestException
+   */
+  private static GNSCommandInternal getCommand(CommandType type,
+          InternalRequestHeader header, Object... keysAndValues)
+          throws JSONException, InternalRequestException {
+    return enforceChecks(new GNSCommandInternal(header, makeInternal(
+            type,
+            CommandUtils
+            .createCommand(type, keysAndValues)
+            .put(GNSProtocol.ORIGINATING_GUID.toString(),
+                    header.getOriginatingGUID())
+            .put(GNSProtocol.ORIGINATING_QID.toString(),
+                    header.getOriginatingRequestID())
+            .put(GNSProtocol.REQUEST_TTL.toString(),
+                    header.getTTL()))), header);
+  }
 
-						.put(GNSProtocol.ORIGINATING_QID.toString(),
-								header.getOriginatingRequestID())
-
-						.put(GNSProtocol.REQUEST_TTL.toString(),
-								header.getTTL()))), header);
-	}
 
 	private static GNSCommandInternal enforceChecks(
 			GNSCommandInternal gnsCommandInternal, InternalRequestHeader header)
 			throws InternalRequestException {
 		if (header.getTTL() == 0)
 			throw new InternalRequestException(
-					GNSResponseCode.INTERNAL_REQUEST_EXCEPTION, "TTL expired");
+					ResponseCode.INTERNAL_REQUEST_EXCEPTION, "TTL expired");
 		//FIXME: redundant as ActiveGNSClient.executeCommand method also checks this
 		if (header.hasBeenCoordinatedOnce()
 				&& gnsCommandInternal.needsCoordination())
 			throw new InternalRequestException(
-					GNSResponseCode.INTERNAL_REQUEST_EXCEPTION,
+					ResponseCode.INTERNAL_REQUEST_EXCEPTION,
 					"Attempting a second coordinated request in a chain with "
 							+ gnsCommandInternal.getSummary());
 		return gnsCommandInternal;

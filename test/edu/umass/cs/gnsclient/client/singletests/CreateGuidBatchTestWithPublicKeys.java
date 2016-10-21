@@ -22,6 +22,7 @@ package edu.umass.cs.gnsclient.client.singletests;
 
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
+import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
@@ -54,6 +55,9 @@ public class CreateGuidBatchTestWithPublicKeys {
    */
   private static InetSocketAddress address = null;
 
+  /**
+   *
+   */
   public CreateGuidBatchTestWithPublicKeys() {
 
     if (client == null) {
@@ -69,6 +73,9 @@ public class CreateGuidBatchTestWithPublicKeys {
   private static GuidEntry masterGuid = null;
   private static int numberTocreate = 100;
 
+  /**
+   *
+   */
   @Test
   public void test_01_CreateBatchAccountGuid() {
     try {
@@ -79,6 +86,9 @@ public class CreateGuidBatchTestWithPublicKeys {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_02_CreateBatch() {
 
@@ -99,9 +109,12 @@ public class CreateGuidBatchTestWithPublicKeys {
     } catch (Exception e) {
       fail("Exception while creating guids: " + e);
     }
-    assertEquals(GNSCommandProtocol.OK_RESPONSE, result);
+    assertEquals(GNSProtocol.OK_RESPONSE.toString(), result);
   }
 
+  /**
+   *
+   */
   @Test
   public void test_03_CheckBatch() {
     try {

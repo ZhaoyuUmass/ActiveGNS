@@ -34,11 +34,32 @@ import edu.umass.cs.utils.Config;
  */
 public class GNSConfig {
 
+  //FIXME: The owner of this should move it into GNSConfig
   /**
-   *
+   * How long (in seconds) to blacklist active code.
+   */
+  public static long activeCodeBlacklistSeconds = 10;
+  //FIXME: Do this have an equivalent in gigapaxos we can use.
+  /**
+   * Determines the number of replicas based on ratio of lookups to writes.
+   * Used by {@link LocationBasedDemandProfile}.
+   */
+  public static double normalizingConstant = 0.5;
+  //FIXME: The owner of this should move it into GNSConfig
+  /**
+   * Enable active code.
+   */
+  public static boolean enableActiveCode = false;
+  //FIXME: The owner of this should move it into GNSConfig
+  /**
+   * Number of active code worker.
+   */
+  public static int activeCodeWorkerCount = 1;
+
+  /**
+   * The GNS Config.
    */
   public static enum GNSC implements Config.ConfigurableEnum {
-
     /**
      * Enables secret key communication that is ~180x faster at signing and
      * ~8x faster at verification. True by default as there is no reason to
@@ -55,11 +76,22 @@ public class GNSConfig {
      */
     IN_MEMORY_DB(false),
     /**
+     * If this is true it manes that the ENTIRE_RECORD ACL
+     * access overrides the single field ACLS. Put differently even if
+     * a single field ACL doesn't permit access for a guid if the 
+     * ENTIRE_RECORD ACL contains that guid then access is permitted.
+     */
+    NEW_ACL_EXISTS_MODEL(true),
+    /**
      * If enabled, the GNS will cache and return the same value for reads.
      *
      * Code-breaking if enabled. Meant only for instrumentation.
      */
     EXECUTE_NOOP_ENABLED(false),
+    /**
+     * Never set this to false, but if you do you'll disable signature authentication.
+     */
+    ENABLE_SIGNATURE_AUTHENTICATION(true),
     /**
      * A secret shared between the server and a trusted client in order to circumvent
      * account verification. Must be changed using properties file if manual
@@ -112,22 +144,69 @@ public class GNSConfig {
      */
     ADMIN_FILE("conf/admin.file"),
     /**
-     * Commands older than this value (send by a client more than this 
+     * Commands older than this value (send by a client more than this
      * interval ago) will be rejected by the server.
      */
     STALE_COMMAND_INTERVAL_IN_MINUTES(30),
     /**
      * The default port used by mongo. 27017 is the default mongo uses.
      */
+    //
+    // REMOTE QUERY TIMEOUTS
+    //
+    /**
+     * The timeout for synchronous reads in Remote Query.
+     */
+    REPLICA_READ_TIMEOUT(5000),
+    /**
+     * The timeout for synchronous writes in Remote Query.
+     */
+    REPLICA_UPDATE_TIMEOUT(8000),
+    /**
+     * The timeout for synchronous queries to a reconfigurator in Remote Query.
+     */
+    RECON_TIMEOUT(4000),
+    /**
+     * The timeout for select queries.
+     */
+    /* FIXME: arun: need to determine this timeout systematically, not an ad hoc constant. */
+    SELECT_REQUEST_TIMEOUT(5000),
+    //
+    // NO SQL BACKING DATABASE
+    //
+
+    /**
+     *
+     */
     MONGO_PORT(27017),
     /**
      * The class used to represent NoSQL records.
      */
     NOSQL_RECORDS_CLASS("edu.umass.cs.gnsserver.database.MongoRecords"),
+    //
+    // ACCOUNT GUIDS
+    //
+    /**
+     * The maximum number of subguids allowed in an account guid. The upper
+     * limit on this is currently dictated by mongo's 16MB document limit.
+     * https://docs.mongodb.org/manual/reference/limits/#bson-documents
+     */
+    ACCOUNT_GUID_MAX_SUBGUIDS(300000),
+    /**
+     * The maximum number of HRN aliases allowed for a guid.
+     */
+    ACCOUNT_GUID_MAX_ALIASES(100),
+    //
+    // EMAIL VERIFICATION
+    //
     /**
      * If enabled, email verfication will be used when account guids are created.
      */
     ENABLE_EMAIL_VERIFICATION(true),
+    /**
+     * The amount of time an email verification code is valid.
+     */
+    EMAIL_VERIFICATION_TIMEOUT_IN_HOURS(24),
     /**
      * If enabled, email salt will be added to the EMAIL_VERIFICATION code.
      * This is needed so we can disable salting in the case where we're using email verification and
@@ -144,15 +223,61 @@ public class GNSConfig {
      */
     APPLICATION_NAME("an application"),
     /**
+     * The name of the email reply to that is used when sending a verification email.
+     * Should be a valid email address.
+     */
+    SUPPORT_EMAIL("admin@gns.name"),
+    /**
+     * The name of the email that is used to log into the email relay server
+     * when sending a verification email if the local emailer fails.
+     * Should be a valid email address.
+     */
+    ADMIN_EMAIL("admin@gns.name"),
+    /**
+     * The the email account password that is used when sending a verification email
+     * if the local emailer fails.
+     * Should be the empty string if you don't want to use the relay emailer.
+     */
+    ADMIN_PASSWORD(""),
+    /**
+     * Does the verification email include text about validating using the CLI.
+     */
+    INCLUDE_CLI_NOTIFICATION(false),
+    /**
+     * A url that will lookup status for the application when passed a HRN.
+     */
+    STATUS_URL("http://127.0.0.1/status?alias="),
+    //
+    // HTTP Service
+    //
+    /**
+     * Starting port for the non-secure server.
+     */
+    HTTP_SERVER_CLEAR_PORT(8080),
+    /**
+     * Starting port for the secure server.
+     */
+    HTTP_SERVER_SECURE_PORT(9080),
+    /**
+     * The URL path used by the HTTP server.
+     */
+    HTTP_SERVER_GNS_URL_PATH("GNS"),
+    // 
+    // LOCAL NAME SERVER SETUP
+    // 
+    /**
      * Set to "all" or a node id if you want to start an instance of the LocalNameServer when the app starts.
      */
     LOCAL_NAME_SERVER_NODES("none"),
+    //
+    // Domain Name Service
+    //
     /**
      * For the DNS service set to "all" or a node id if you want to start the DNS server when the app starts.
      */
     DNS_SERVER_NODES("none"),
     /**
-     * For the DNS service set to true if you want the DNS server to not lookup 
+     * For the DNS service set to true if you want the DNS server to not lookup
      * records using DNS (will only lookup records in the GNS).
      */
     DNS_GNS_ONLY(false),
@@ -163,7 +288,22 @@ public class GNSConfig {
     /**
      * For the DNS service set to true if you want the DNS server to forward requests to DNS and GNS servers.
      */
-    DNS_ONLY(false);
+    DNS_ONLY(false),
+    //
+    // Contect Name Service
+    //
+    /**
+     * If set to true enables update forwarding to CNS
+     */
+    ENABLE_CNS(false),
+    /**
+     * Ip address:port of one node of CNS.
+     * If ENABLE_CNS is set to true then this option should definitely be set.
+     */
+    CNS_NODE_ADDRESS("node");
+    //
+    // Active
+    //
 
     final Object defaultValue;
 
@@ -171,41 +311,14 @@ public class GNSConfig {
       this.defaultValue = defaultValue;
     }
 
+    /**
+     *
+     *  
+     * @return the default value
+     */
     @Override
     public Object getDefaultValue() {
       return this.defaultValue;
-    }
-
-    /**
-     *
-     * @return true if email verfication will be used when account guids are created
-     */
-    public static boolean isEmailAuthenticationEnabled() {
-      return Config.getGlobalBoolean(GNSC.ENABLE_EMAIL_VERIFICATION);
-    }
-
-    /**
-     *
-     * @return true if email salt will be added to the EMAIL_VERIFICATION code.
-     */
-    public static boolean isEmailAuthenticationSaltEnabled() {
-      return Config.getGlobalBoolean(GNSC.ENABLE_EMAIL_VERIFICATION_SALT);
-    }
-
-    /**
-     *
-     * @return true if the use of the local mailer is disabled when sending verification messages
-     */
-    public static boolean isDontTryLocalEmail() {
-      return Config.getGlobalBoolean(GNSC.DONT_TRY_LOCAL_EMAIL);
-    }
-
-    /**
-     *
-     * @return the application name (currently used by the verification mailer)
-     */
-    public static String getApplicationName() {
-      return Config.getGlobalString(GNSC.APPLICATION_NAME);
     }
 
     private static Class<?> noSqlRecordsclass = getNoSqlRecordsClass();
@@ -238,43 +351,41 @@ public class GNSConfig {
     }
 
     // FIXME: a better default name?
+
+    /**
+     *
+     * @return the config file key
+     */
     @Override
     public String getConfigFileKey() {
       return "gigapaxosConfig";
     }
 
+    /**
+     *
+     * @return the default config file
+     */
     @Override
     public String getDefaultConfigFile() {
       return "gns.server.properties";
     }
   }
 
-  /* FIXME: arun: some parameters below are not relevant any more and need to
-	 * go. I removed the ones not being using static analysis. */
+  //FIXME: Remove this.
   /**
    * The default starting port.
    */
   public static final int DEFAULT_STARTING_PORT = 24400;
+  //FIXME: Do this have an equivalent in gigapaxos we can use.
   /**
-   * The URL path used by the HTTP server.
+   * The minimum number of replicas. Used by {@link LocationBasedDemandProfile}.
    */
-  public static final String GNS_URL_PATH = "GNS";
-  // Useful for testing with resources in conf/testCodeResources if using
-  // "import from build file in IDE". Better way to do this?
+  public static int minReplica = 3;
+  //FIXME: Do this have an equivalent in gigapaxos we can use.
   /**
-   * Hack.
+   * The maximum number of replicas. Used by {@link LocationBasedDemandProfile}.
    */
-  public static final String WESTY_GNS_DIR_PATH = "/Users/westy/Documents/Code/GNS";
-  /**
-   * The maximum number of HRN aliases allowed for a guid.
-   */
-  public static int MAXALIASES = 100;
-  /**
-   * The maximum number of subguids allowed in an account guid. The upper
-   * limit on this is currently dictated by mongo's 16MB document limit.
-   * https://docs.mongodb.org/manual/reference/limits/#bson-documents
-   */
-  public static int MAXGUIDS = 300000;
+  public static int maxReplica = 100;
 
   // This is designed so we can run multiple NSs on the same host if needed
   /**
@@ -341,32 +452,12 @@ public class GNSConfig {
   }
 
   /**
-   * Controls whether email verification is enabled.
-   */
-  public static boolean enableEmailAccountVerification = true;
-  /**
    * Controls whether signature verification is enabled.
    */
   public static boolean enableSignatureAuthentication = true;
-  /**
-   * Default query timeout in ms. How long we wait before retransmitting a
-   * query.
-   */
-  public static int DEFAULT_QUERY_TIMEOUT = 2000;
-  /**
-   * Maximum query wait time in milliseconds. After this amount of time a
-   * negative response will be sent back to a client indicating that a record
-   * could not be found.
-   */
-  public static int DEFAULT_MAX_QUERY_WAIT_TIME = 16000; // was 10
 
   private final static Logger LOG = Logger.getLogger(GNSConfig.class
           .getName());
-  
-	/**
-	 * The default reconfigurator server port number.
-	 */
-	public static final int DEFAULT_RECONFIGURATOR_PORT = 2178;
 
   /**
    * Returns the master GNS logger.
@@ -376,6 +467,11 @@ public class GNSConfig {
   public static Logger getLogger() {
     return LOG;
   }
+
+  /**
+   * The default reconfigurator server port number.
+   */
+  public static final int DEFAULT_RECONFIGURATOR_PORT = 2178;
 
   /**
    * Attempts to look for a MANIFEST file in that contains the Build-Version

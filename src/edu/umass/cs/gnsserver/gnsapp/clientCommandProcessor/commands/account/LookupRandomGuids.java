@@ -24,15 +24,15 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Accou
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.AccountInfo;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnscommon.CommandType;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_ACCOUNT;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_GUID;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.BAD_RESPONSE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.GUID;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.GUIDCNT;
-import edu.umass.cs.gnscommon.GNSResponseCode;
 
+import edu.umass.cs.gnscommon.ResponseCode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,7 +45,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class LookupRandomGuids extends BasicCommand {
+public class LookupRandomGuids extends AbstractCommand {
 
   /**
    * Creates a LookupRandomGuids instance.
@@ -56,6 +56,10 @@ public class LookupRandomGuids extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.LookupRandomGuids;
@@ -67,22 +71,22 @@ public class LookupRandomGuids extends BasicCommand {
     int count = json.getInt(GUIDCNT);
     AccountInfo acccountInfo;
     if ((acccountInfo = AccountAccess.lookupAccountInfoFromGuidLocally(guid, handler)) == null) {
-      return new CommandResponse(GNSResponseCode.BAD_ACCOUNT_ERROR, BAD_RESPONSE + " " + BAD_ACCOUNT + " " + guid);
+      return new CommandResponse(ResponseCode.BAD_ACCOUNT_ERROR, BAD_RESPONSE + " " + BAD_ACCOUNT + " " + guid);
     }
     if (acccountInfo != null) {
       List<String> guids = acccountInfo.getGuids();
       if (count >= guids.size()) {
-        return new CommandResponse(GNSResponseCode.NO_ERROR, new JSONArray(guids).toString());
+        return new CommandResponse(ResponseCode.NO_ERROR, new JSONArray(guids).toString());
       } else {
         Random rand = new Random();
         List<String> result = new ArrayList<>();
         for (int i = 0; i < count; i++) {
           result.add(guids.get(rand.nextInt(guids.size())));
         }
-        return new CommandResponse(GNSResponseCode.NO_ERROR, new JSONArray(result).toString());
+        return new CommandResponse(ResponseCode.NO_ERROR, new JSONArray(result).toString());
       }
     } else {
-      return new CommandResponse(GNSResponseCode.BAD_GUID_ERROR, BAD_RESPONSE + " " + BAD_GUID + " " + guid);
+      return new CommandResponse(ResponseCode.BAD_GUID_ERROR, BAD_RESPONSE + " " + BAD_GUID + " " + guid);
     }
     // }
   }

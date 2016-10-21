@@ -26,13 +26,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.log4j.Logger;
-
 import edu.umass.cs.msocket.common.policies.BlackBoxWritingPolicy;
 import edu.umass.cs.msocket.common.policies.FullDuplicationWritingPolicy;
 import edu.umass.cs.msocket.common.policies.MultipathWritingPolicy;
 import edu.umass.cs.msocket.common.policies.RTTBasedWritingPolicy;
 import edu.umass.cs.msocket.common.policies.RoundRobinWritingPolicy;
+import edu.umass.cs.msocket.logger.MSocketLogger;
 
 /**
  * This class implements the Output stream of the MSocket
@@ -50,16 +49,13 @@ public class MWrappedOutputStream extends OutputStream
   
   private ConnectionInfo cinfo            			= null;
   private MultipathPolicy writePolicy				= MultipathPolicy.MULTIPATH_POLICY_ROUNDROBIN;
-  
-  
-  private static Logger  log              			= Logger.getLogger(MWrappedOutputStream.class.getName());
 
   /**
    * @param out
    * @param cinfo
    * @param fid
    */
-  MWrappedOutputStream(ConnectionInfo cinfo, long fid)
+  MWrappedOutputStream(ConnectionInfo cinfo)
   {
 	  this.cinfo = cinfo;
 	    
@@ -95,6 +91,7 @@ public class MWrappedOutputStream extends OutputStream
 
   /**
     *
+   * @throws java.io.IOException
     */
   public void write(byte[] b) throws IOException
   {
@@ -105,7 +102,6 @@ public class MWrappedOutputStream extends OutputStream
    * @param b
    * @param mgType
    * @throws IOException
-   * @throws InterruptedException
    */
   public void write(byte[] b, int mgType) throws IOException
   { // for sending the close message
@@ -114,6 +110,9 @@ public class MWrappedOutputStream extends OutputStream
 
   /**
     *
+   * @param length
+   * @param offset
+   * @throws java.io.IOException
     */
   public void write(byte[] b, int offset, int length) throws IOException
   { // application calls this function to send data message
@@ -127,7 +126,6 @@ public class MWrappedOutputStream extends OutputStream
    * @param length
    * @param MesgType
    * @throws IOException
-   * @throws InterruptedException
    */
   public synchronized void write(byte[] b, int offset, int length, int MesgType) throws IOException
   {
@@ -145,7 +143,7 @@ public class MWrappedOutputStream extends OutputStream
     {
       {
         cinfo.addOutBuffer(b, offset, length); // first write to outbuffer
-        log.trace("write " + b[0]);
+        MSocketLogger.getLogger().fine("write " + b[0]);
       }
     }
     else
@@ -160,7 +158,7 @@ public class MWrappedOutputStream extends OutputStream
 
     try
     {
-      log.debug("message here length " + length + " dataAckSeq " + cinfo.getDataAckSeq() + "send seq num "
+      MSocketLogger.getLogger().fine("message here length " + length + " dataAckSeq " + cinfo.getDataAckSeq() + "send seq num "
           + cinfo.getDataSendSeq());
       writeInternal(b, offset, length, MesgType);
       cinfo.setState(ConnectionInfo.ALL_READY, true);
@@ -169,7 +167,7 @@ public class MWrappedOutputStream extends OutputStream
     catch (IOException e)
     {
       cinfo.setState(ConnectionInfo.ALL_READY, true);
-      log.debug("IOException blocking starts");
+      MSocketLogger.getLogger().fine("IOException blocking starts");
 
       synchronized (cinfo.getBlockingFlagMonitor())
       {
@@ -193,7 +191,7 @@ public class MWrappedOutputStream extends OutputStream
         throw new IOException(" socket already closed");
       }
 
-      log.trace("IOException blocking ends");
+      MSocketLogger.getLogger().fine("IOException blocking ends");
       // assuming rensendIfNeeded sends the data missed here
     }
     // FIXME; need to check with migration scenario
@@ -211,6 +209,7 @@ public class MWrappedOutputStream extends OutputStream
   }
 
   /**
+   * @throws java.io.IOException
    * @see java.io.OutputStream#write(int)
    */
   public void write(int b) throws IOException
@@ -273,7 +272,7 @@ public class MWrappedOutputStream extends OutputStream
               // at receiving side, recevier will take care of redundantly
               // received data
 
-              log.trace("Using socketID " + Obj.getSocketIdentifer() + " for writing FIN");
+              MSocketLogger.getLogger().fine("Using socketID " + Obj.getSocketIdentifer() + " for writing FIN");
               ByteBuffer writeByBuff = ByteBuffer.wrap(writebuf);
 
               while (writeByBuff.hasRemaining())
@@ -287,7 +286,7 @@ public class MWrappedOutputStream extends OutputStream
             }
             catch (IOException ex)
             {
-              log.trace("Write exception caused on writing FIN");
+              MSocketLogger.getLogger().fine("Write exception caused on writing FIN");
               Obj.setStatus(false);
               FINSuccessful = false;
               Obj.releaseLock();

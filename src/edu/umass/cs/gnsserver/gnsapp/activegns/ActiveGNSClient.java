@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import edu.umass.cs.gigapaxos.interfaces.Request;
 import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSCommand;
-import edu.umass.cs.gnscommon.GNSResponseCode;
+import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
@@ -83,6 +83,10 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 	/** Overrides {@link GNSClient#execute(CommandPacket)} with internal 
 	 * request checks that can only be determined with a {@link GNSClient}
 	 * instance, e.g, dynamically force-coordinated read requests.
+   * @param commandPacket
+   * @return 
+   * @throws java.io.IOException
+   * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
 	 */
 	public Request executeCommand(CommandPacket commandPacket) throws IOException,
 			ClientException {
@@ -91,7 +95,7 @@ public class ActiveGNSClient extends GNSClient implements ActiveDBInterface {
 						.isForceCoordinatedReads()
 						&& commandPacket.getCommandType().isRead()))
 			throw new ClientException(new InternalRequestException(
-					GNSResponseCode.INTERNAL_REQUEST_EXCEPTION,
+					ResponseCode.INTERNAL_REQUEST_EXCEPTION,
 					"Attempting a second coordinated request in a chain with "
 							+ commandPacket.getSummary()));
 		return super.sendSync(commandPacket); //(commandPacket);

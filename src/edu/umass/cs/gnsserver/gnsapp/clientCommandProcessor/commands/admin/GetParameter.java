@@ -26,9 +26,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Syste
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -42,7 +42,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class GetParameter extends BasicCommand {
+public class GetParameter extends AbstractCommand {
 
   /**
    *
@@ -52,37 +52,26 @@ public class GetParameter extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.GetParameter;
   }
 
-  
-
-//  @Override
-//  public String getCommandName() {
-//    return GET_PARAMETER;
-//  }
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException {
     String parameterString = json.getString(FIELD);
-    if (module.isAdminMode()) {
       try {
-    	  //If the user cannot be authenticated, return an ACCESS_ERROR and abort.
-    	  String passkey = json.getString(PASSKEY);
-    	  if (!Admin.authenticate(passkey)){
-    		  GNSConfig.getLogger().log(Level.INFO, "A client failed to authenticate for "+ getCommandType().toString()+ " : " + json.toString());
-    		  return new CommandResponse(GNSResponseCode.ACCESS_ERROR, BAD_RESPONSE + " " + ACCESS_DENIED
-    	              + " Failed to authenticate " + getCommandType().toString() + " with key : " + passkey);
-    	  }
-        return new CommandResponse(GNSResponseCode.NO_ERROR, SystemParameter.valueOf(parameterString.toUpperCase()).getFieldValue().toString());
+        return new CommandResponse(ResponseCode.NO_ERROR, SystemParameter.valueOf(parameterString.toUpperCase()).getFieldValue().toString());
       } catch (Exception e) {
         System.out.println("Problem getting parameter: " + e);
       }
-    }
-    return new CommandResponse(GNSResponseCode.OPERATION_NOT_SUPPORTED, BAD_RESPONSE + " " + OPERATION_NOT_SUPPORTED
-            + " Don't understand " + CommandType.GetParameter.toString() + " " + parameterString);
+    return new CommandResponse(ResponseCode.QUERY_PROCESSING_ERROR, BAD_RESPONSE + " "
+            + " Couldn't get parameter " + CommandType.GetParameter.toString() + " " + parameterString);
   }
 
   

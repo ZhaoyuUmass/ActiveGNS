@@ -2,8 +2,11 @@ package edu.umass.cs.contextservice.integration;
 
 import org.json.JSONObject;
 
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 
+/**
+ * The ContextServiceGNSInterface.
+ */
 public interface ContextServiceGNSInterface {
 
   /**
@@ -25,8 +28,8 @@ public interface ContextServiceGNSInterface {
    * Blocking should preferably set to false, as we don't want gns to block for CS udpates.
    *
    * @param jsonFormattedCommand gns formatted command
-   * @param command BasicCommand
+   * @param command AbstractCommand
    * @param blocking
    */
-  public void sendTiggerOnGnsCommand(JSONObject jsonFormattedCommand, BasicCommand command, boolean blocking);
+  public void sendTiggerOnGnsCommand(JSONObject jsonFormattedCommand, AbstractCommand command, boolean blocking);
 }

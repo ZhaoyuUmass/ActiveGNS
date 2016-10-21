@@ -25,14 +25,13 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.FieldAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_FIELDS;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELD;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.GUID;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.READER;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATURE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATUREFULLMESSAGE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.TIMESTAMP;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 
 import java.security.InvalidKeyException;
@@ -44,6 +43,7 @@ import java.util.Date;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ENTIRE_RECORD;
 
 /**
  * This is the main class for a whole set of commands that support reading of the old style data formatted as
@@ -52,7 +52,7 @@ import org.json.JSONObject;
  *
  * @author westy
  */
-public class ReadArray extends BasicCommand {
+public class ReadArray extends AbstractCommand {
 
   /**
    *
@@ -62,17 +62,15 @@ public class ReadArray extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.ReadArray;
   }
 
-  
-
-//  @Override
-//  public String getCommandName() {
-//    return READ_ARRAY;
-//  }
   @Override
   public CommandResponse execute(InternalRequestHeader header, JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, ParseException {
@@ -96,12 +94,12 @@ public class ReadArray extends BasicCommand {
 
     if (getCommandType().equals(CommandType.ReadArrayOne)
             || getCommandType().equals(CommandType.ReadArrayOneUnsigned)) {
-      if (ALL_FIELDS.equals(field)) {
+      if (ENTIRE_RECORD.equals(field)) {
         return FieldAccess.lookupOneMultipleValues(guid, reader, signature, message, timestamp, handler);
       } else {
         return FieldAccess.lookupOne(guid, field, reader, signature, message, timestamp, handler);
       }
-    } else if (ALL_FIELDS.equals(field)) {
+    } else if (ENTIRE_RECORD.equals(field)) {
       return FieldAccess.lookupMultipleValues(header, guid, reader, signature, message, timestamp, handler);
     } else {
       return FieldAccess.lookupJSONArray(guid, field, reader, signature, message, timestamp, handler);

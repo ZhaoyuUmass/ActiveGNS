@@ -27,7 +27,6 @@ import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.main.GNSConfig.GNSC;
 import edu.umass.cs.gnscommon.utils.Base64;
-
 import java.nio.ByteBuffer;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -35,10 +34,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
-
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.*;
 import edu.umass.cs.gnscommon.utils.ByteUtils;
 import edu.umass.cs.gnscommon.GNSCommandProtocol;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.EVERYONE;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.RSA_ALGORITHM;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATURE_ALGORITHM;
 import edu.umass.cs.gnscommon.SharedGuidUtils;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.MetaDataTypeName;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
@@ -47,7 +47,6 @@ import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 import edu.umass.cs.utils.SessionKeys;
 import edu.umass.cs.utils.Util;
-
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -56,12 +55,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ENTIRE_RECORD;
 
 /**
  * Provides signing and ACL checks for commands.
@@ -99,7 +98,7 @@ public class NSAccessSupport {
    */
   public static boolean verifySignature(String accessorPublicKey, String signature, String message) throws
           InvalidKeyException, SignatureException, UnsupportedEncodingException, InvalidKeySpecException {
-    if (!GNSConfig.enableSignatureAuthentication) {
+    if (!Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_SIGNATURE_AUTHENTICATION)) {
       return true;
     }
     byte[] publickeyBytes = Base64.decode(accessorPublicKey);
@@ -238,6 +237,8 @@ public class NSAccessSupport {
    * @return true if the the reader has access
    * @throws edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException
    */
+  // FIXME: This is only used for checking the case where an accessorGuid is in a group guid
+  // that is in the acl. For this purpose it is overkill and should be fixed.
   public static boolean verifyAccess(MetaDataTypeName accessType, String guid, String field,
           String accessorGuid, GNSApplicationInterface<String> activeReplica) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -247,7 +248,7 @@ public class NSAccessSupport {
       return true; // can always read your own stuff
     } else if (hierarchicalAccessCheck(accessType, guid, field, accessorGuid, activeReplica)) {
       return true; // accessor can see this field
-    } else if (checkForAccess(accessType, guid, ALL_FIELDS, accessorGuid, activeReplica)) {
+    } else if (checkForAccess(accessType, guid, ENTIRE_RECORD, accessorGuid, activeReplica)) {
       return true; // accessor can see all fields
     } else {
       ClientSupportConfig.getLogger().log(Level.FINE,
@@ -295,7 +296,7 @@ public class NSAccessSupport {
    * @param field
    * @param accessorGuid
    * @param activeReplica
-   * @return
+   * @return true if access is allowed
    * @throws FailedDBOperationException 
    */
   private static boolean checkForAccess(MetaDataTypeName accessType, String guid, String field, String accessorGuid,
@@ -303,13 +304,13 @@ public class NSAccessSupport {
     try {
       // FIXME: Tidy this mess up.
       @SuppressWarnings("unchecked")
-      Set<String> allowedusers = (Set<String>) (Set<?>) NSFieldMetaData.lookupOnThisNameServer(accessType,
+      Set<String> allowedusers = (Set<String>) (Set<?>) NSFieldMetaData.lookupLocally(accessType,
               guid, field, activeReplica.getDB());
       ClientSupportConfig.getLogger().log(Level.FINE, "{0} allowed users of {1} : {2}", new Object[]{guid, field, allowedusers});
       if (checkAllowedUsers(accessorGuid, allowedusers, activeReplica)) {
         ClientSupportConfig.getLogger().log(Level.FINE, "User {0} allowed to access {1}",
                 new Object[]{accessorGuid,
-                  field != ALL_FIELDS ? ("user " + guid + "'s " + field + " field")
+                  field != ENTIRE_RECORD ? ("user " + guid + "'s " + field + " field")
                           : ("all of user " + guid + "'s fields")});
         return true;
       }
@@ -333,7 +334,7 @@ public class NSAccessSupport {
    * @param accessorGuid - the guid that we are checking for access
    * @param allowedUsers - the list of publickeys that are in the acl
    * @param activeReplica
-   * @return
+   * @return true if the guid is in the allowed users
    * @throws FailedDBOperationException
    */
   private static boolean checkAllowedUsers(String accessorGuid,
@@ -367,8 +368,9 @@ public class NSAccessSupport {
   public static boolean fieldAccessibleByEveryone(MetaDataTypeName access, String guid, String field,
           GNSApplicationInterface<String> activeReplica) throws FailedDBOperationException {
     try {
-      return NSFieldMetaData.lookupOnThisNameServer(access, guid, field, activeReplica.getDB()).contains(EVERYONE)
-              || NSFieldMetaData.lookupOnThisNameServer(access, guid, ALL_FIELDS, activeReplica.getDB()).contains(EVERYONE);
+      return NSFieldMetaData.lookupLocally(access, guid, field, activeReplica.getDB()).contains(EVERYONE)
+              || 
+              NSFieldMetaData.lookupLocally(access, guid, ENTIRE_RECORD, activeReplica.getDB()).contains(EVERYONE);
     } catch (FieldNotFoundException e) {
       // This is actually a normal result.. so no warning here.
       return false;
@@ -398,7 +400,7 @@ public class NSAccessSupport {
             new Object[]{field});
     try {
       //FIXME: Clean this mess up.
-      return (Set<String>) (Set<?>) NSFieldMetaData.lookupOnThisNameServer(access, guid, field, database);
+      return (Set<String>) (Set<?>) NSFieldMetaData.lookupLocally(access, guid, field, database);
     } catch (FieldNotFoundException e) {
       // do nothing
     } catch (RecordNotFoundException e) {

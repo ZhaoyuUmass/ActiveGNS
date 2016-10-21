@@ -25,7 +25,6 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.FieldAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.ALL_FIELDS;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELD;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.FIELDS;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.GUID;
@@ -33,7 +32,7 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.READER;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATURE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.SIGNATUREFULLMESSAGE;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.TIMESTAMP;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.utils.JSONUtils;
 import java.io.UnsupportedEncodingException;
@@ -46,18 +45,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
+import static edu.umass.cs.gnscommon.GNSCommandProtocol.ENTIRE_RECORD;
 
 /**
  *
  * @author westy
  */
-public class Read extends BasicCommand {
-
-  /**
-   * Necessary parameters
-   */
-  public static final String[] PARAMS = {GUID, FIELD, 
-    READER, SIGNATURE, SIGNATUREFULLMESSAGE};
+public class Read extends AbstractCommand {
 
   /**
    *
@@ -67,6 +61,10 @@ public class Read extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.Read;
@@ -98,7 +96,7 @@ public class Read extends BasicCommand {
       timestamp = null;
     }
 
-    if (ALL_FIELDS.equals(field)) {
+    if (ENTIRE_RECORD.equals(field)) {
       return FieldAccess.lookupMultipleValues(internalHeader, guid, reader,
               signature, message, timestamp, handler);
     } else if (field != null) {

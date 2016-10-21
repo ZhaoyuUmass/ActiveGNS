@@ -41,14 +41,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSGroupAccess;
-import edu.umass.cs.gnsserver.gnsapp.clientSupport.RemoteQuery;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectGroupBehavior;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectOperation;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectRequestPacket;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectResponsePacket;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ResultValue;
+import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.Util;
 
 import java.net.InetSocketAddress;
@@ -131,7 +132,7 @@ public class Select {
 
   /* FIXME: arun: need to determine this timeout systematically, not an ad hoc constant.
    */
-  private static final long SELECT_REQUEST_TIMEOUT = RemoteQuery.DEFAULT_REPLICA_READ_TIMEOUT;
+  private static final long SELECT_REQUEST_TIMEOUT = Config.getGlobalInt(GNSConfig.GNSC.SELECT_REQUEST_TIMEOUT);
 
   /**
    * Handle a select request from a client.
@@ -139,7 +140,7 @@ public class Select {
    *
    * @param packet
    * @param app
-   * @return
+   * @return a select response packet
    * @throws JSONException
    * @throws UnknownHostException
    * @throws FailedDBOperationException

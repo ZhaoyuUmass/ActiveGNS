@@ -1,7 +1,5 @@
 package edu.umass.cs.gnsserver.activecode.prototype;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,6 +10,9 @@ import org.junit.Test;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 
+/**
+ * ActiveClientRobustnessTest.
+ */
 public class ActiveClientRobustnessTest {
 	/**
 	 * This manually crashes the worker to test the worker

@@ -26,16 +26,16 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandDesc
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
 import static edu.umass.cs.gnscommon.GNSCommandProtocol.NEWLINE;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import org.json.JSONObject;
 
 /**
  *
  * @author westy
  */
-public class Help extends BasicCommand {
+public class Help extends AbstractCommand {
 
   /**
    *
@@ -45,6 +45,10 @@ public class Help extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */ 
   @Override
   public CommandType getCommandType() {
     return CommandType.Help;
@@ -59,17 +63,17 @@ public class Help extends BasicCommand {
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) {
     if (json.has("tcp")) {
-      return new CommandResponse(GNSResponseCode.NO_ERROR, "Commands are sent as TCP packets." + NEWLINE + NEWLINE
+      return new CommandResponse(ResponseCode.NO_ERROR, "Commands are sent as TCP packets." + NEWLINE + NEWLINE
               + "Note: We use the terms field and key interchangably below." + NEWLINE + NEWLINE
               + "Commands:" + NEWLINE
               + module.allCommandDescriptions(CommandDescriptionFormat.TCP));
     } else if (json.has("tcpwiki")) {
-      return new CommandResponse(GNSResponseCode.NO_ERROR, "Commands are sent as TCP packets." + NEWLINE + NEWLINE
+      return new CommandResponse(ResponseCode.NO_ERROR, "Commands are sent as TCP packets." + NEWLINE + NEWLINE
               + "Note: We use the terms field and key interchangably below." + NEWLINE + NEWLINE
               + "Commands:" + NEWLINE
               + module.allCommandDescriptions(CommandDescriptionFormat.TCP_Wiki));
     } else {
-      return new CommandResponse(GNSResponseCode.NO_ERROR, "Commands are sent as HTTP GET queries." + NEWLINE + NEWLINE
+      return new CommandResponse(ResponseCode.NO_ERROR, "Commands are sent as HTTP GET queries." + NEWLINE + NEWLINE
               + "Note: We use the terms field and key interchangably below." + NEWLINE + NEWLINE
               + "Commands:" + NEWLINE
               + module.allCommandDescriptions(CommandDescriptionFormat.HTML));

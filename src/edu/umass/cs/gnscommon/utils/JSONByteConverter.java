@@ -1,3 +1,18 @@
+/* Copyright (1c) 2016 University of Massachusetts
+ * 
+ * Licensed under the Apache License, Version 2.0 (1the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ * 
+ * Initial developer(s): Westy */
 package edu.umass.cs.gnscommon.utils;
 
 import java.io.ByteArrayOutputStream;
@@ -27,7 +42,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/**
+ *
+ * @author westy
+ */
 public class JSONByteConverter {
 	//private static ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory()).setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 	private static ObjectMapper objectMapperJackson = new ObjectMapper().setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
@@ -289,6 +307,16 @@ public class JSONByteConverter {
 		return json;
 	}
 	// FIXME: eliminate copyOfRange
+
+  /**
+   *
+   * @param bbuf
+   * @return a json object
+   * @throws JsonParseException
+   * @throws JsonMappingException
+   * @throws IOException
+   * @throws JSONException
+   */
 	public static JSONObject fromBytesMsgpack(ByteBuffer bbuf) throws JsonParseException, JsonMappingException, IOException, JSONException{
 		return fromBytesMsgpack(Arrays.copyOfRange(bbuf.array(), bbuf.position(), bbuf.limit())); 
 	}
@@ -611,7 +639,14 @@ public class JSONByteConverter {
 		JSONObject obj = (JSONObject) valueFromBytes(byteBuffer);
 		return obj;
 	}
-	public static JSONObject fromBytesHardcoded(ByteBuffer bbuf) throws JSONException{
+
+  /**
+   *
+   * @param bbuf
+   * @return a json object
+   * @throws JSONException
+   */
+  public static JSONObject fromBytesHardcoded(ByteBuffer bbuf) throws JSONException{
 		return (JSONObject)valueFromBytes(bbuf);
 	}
 

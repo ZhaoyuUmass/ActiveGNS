@@ -51,6 +51,9 @@ public class UnsignedReadTest {
   private static GNSClientCommands client = null;
   private static GuidEntry masterGuid;
 
+  /**
+   *
+   */
   public UnsignedReadTest() {
     if (client == null) {
       try {
@@ -75,6 +78,9 @@ public class UnsignedReadTest {
   private static final String unsignedOneReadFieldName = "allonereadaccess";
   private static final String standardOneReadFieldName = "standardonereadaccess";
 
+  /**
+   *
+   */
   @Test
   public void test_250_UnsignedReadCreateGuids() {
     try {
@@ -86,7 +92,7 @@ public class UnsignedReadTest {
     try {
       // For this test we remove default all access for reading
       client.aclRemove(AclAccessType.READ_WHITELIST, unsignedReadTestGuid,
-              GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+              GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
     } catch (Exception e) {
       failWithStackTrace("Exception while removing ACL in UnsignedReadCreateGuids: ", e);
     }
@@ -94,7 +100,7 @@ public class UnsignedReadTest {
     try {
       JSONArray expected = new JSONArray(new ArrayList<>(Arrays.asList(masterGuid.getGuid())));
       JSONArray actual = client.aclGet(AclAccessType.READ_WHITELIST, unsignedReadTestGuid,
-              GNSCommandProtocol.ALL_FIELDS, unsignedReadTestGuid.getGuid());
+              GNSCommandProtocol.ENTIRE_RECORD, unsignedReadTestGuid.getGuid());
       JSONAssert.assertEquals(expected, actual, true);
     } catch (Exception e) {
       failWithStackTrace("Exception while retrieving ACL in UnsignedReadCreateGuids: ", e);
@@ -102,6 +108,9 @@ public class UnsignedReadTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_251_UnsignedRead() {
 
@@ -133,6 +142,9 @@ public class UnsignedReadTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_252_UnsignedReadOne() {
     try {

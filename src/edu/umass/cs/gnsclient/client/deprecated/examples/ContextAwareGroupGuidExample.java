@@ -22,7 +22,6 @@ package edu.umass.cs.gnsclient.client.deprecated.examples;
 import edu.umass.cs.gnsclient.client.GNSClientConfig;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnscommon.utils.ByteUtils;
-import edu.umass.cs.gnsclient.client.deprecated.GNSClientInterface;
 import edu.umass.cs.gnsclient.client.util.BasicGuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
@@ -46,7 +45,7 @@ import org.json.JSONArray;
  * The context aware group guid functionality allows one to create a group guid using
  * a query. The GNS will automatically maintain the membership of this group guid using
  * the query. Queries are specified using a syntax similar to that used by MongoDB. See
- * <link>https://gns.name/wiki/index.php?title=Query_Syntax</link> for a description of the
+ * https://gns.name/wiki/index.php?title=Query_Syntax for a description of the
  * query syntax.
  * <p>
  * The main method in this class will create five example guids that have a field containing
@@ -85,6 +84,17 @@ public class ContextAwareGroupGuidExample {
   private static GuidEntry groupOneGuidEntry;
   private static GuidEntry groupTwoGuidEntry;
 
+  /**
+   *
+   * @param args
+   * @throws IOException
+   * @throws InvalidKeySpecException
+   * @throws NoSuchAlgorithmException
+   * @throws ClientException
+   * @throws InvalidKeyException
+   * @throws SignatureException
+   * @throws Exception
+   */
   public static void main(String[] args) throws IOException,
           InvalidKeySpecException, NoSuchAlgorithmException, ClientException,
           InvalidKeyException, SignatureException, Exception {
@@ -209,7 +219,7 @@ public class ContextAwareGroupGuidExample {
    *
    * @param client
    * @param name
-   * @return
+   * @return the GuidEntry
    * @throws Exception
    */
   private static GuidEntry lookupOrCreateAccountGuid(GNSClientCommands client,

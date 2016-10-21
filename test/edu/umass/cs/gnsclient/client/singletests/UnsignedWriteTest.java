@@ -49,6 +49,9 @@ public class UnsignedWriteTest {
   private static GuidEntry masterGuid;
   private static GuidEntry westyEntry;
 
+  /**
+   *
+   */
   public UnsignedWriteTest() {
     if (client == null) {
       try {
@@ -65,6 +68,9 @@ public class UnsignedWriteTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_01_CreateField() {
     try {
@@ -75,13 +81,16 @@ public class UnsignedWriteTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_02_UnsignedRead() {
     String unsignedReadFieldName = "allreadaccess";
     String standardReadFieldName = "standardreadaccess";
     try {
       // remove default access
-      client.aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ALL_FIELDS, GNSCommandProtocol.ALL_GUIDS);
+      client.aclRemove(AclAccessType.READ_WHITELIST, westyEntry, GNSCommandProtocol.ENTIRE_RECORD, GNSCommandProtocol.ALL_GUIDS);
 
       client.fieldCreateOneElementList(westyEntry.getGuid(), unsignedReadFieldName, "funkadelicread", westyEntry);
       client.aclAdd(AclAccessType.READ_WHITELIST, westyEntry, unsignedReadFieldName, GNSCommandProtocol.ALL_GUIDS);
@@ -100,6 +109,9 @@ public class UnsignedWriteTest {
     }
   }
 
+  /**
+   *
+   */
   @Test
   public void test_03_UnsignedWrite() {
     String unsignedWriteFieldName = "allwriteaccess";

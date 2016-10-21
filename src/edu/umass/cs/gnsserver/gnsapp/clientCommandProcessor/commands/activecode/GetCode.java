@@ -34,9 +34,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Activ
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-import edu.umass.cs.gnscommon.GNSResponseCode;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.BasicCommand;
 
+import edu.umass.cs.gnscommon.ResponseCode;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -44,7 +44,7 @@ import java.util.Date;
  * The command to retrieve the active code for the specified GUID and action.
  *
  */
-public class GetCode extends BasicCommand {
+public class GetCode extends AbstractCommand {
 
   /**
    * Creates a Get instance.
@@ -55,12 +55,14 @@ public class GetCode extends BasicCommand {
     super(module);
   }
 
+  /**
+   *
+   * @return the command type
+   */
   @Override
   public CommandType getCommandType() {
     return CommandType.GetCode;
   }
-
-  
 
   @Override
   public CommandResponse execute(JSONObject json,
@@ -74,7 +76,7 @@ public class GetCode extends BasicCommand {
     String message = json.getString(SIGNATUREFULLMESSAGE);
     Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
 
-    return new CommandResponse(GNSResponseCode.NO_ERROR, ActiveCode.getCode(guid, action,
+    return new CommandResponse(ResponseCode.NO_ERROR, ActiveCode.getCode(guid, action,
             reader, signature, message, timestamp, handler));
   }
 
