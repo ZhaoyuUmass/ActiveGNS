@@ -287,7 +287,7 @@ public class NameResolution {
 	    }
     } catch (FailedDBOperationException | JSONException e) {
     	NameResolution.getLogger().log(Level.FINE,
-                ">>>>>>>>>>>> No guid for {0}: {1}", new Object[]{domain, e});
+                "No guid for {0}: {1}", new Object[]{domain, e});
     }
     
     /**
@@ -300,11 +300,11 @@ public class NameResolution {
 			value = NSFieldAccess.lookupFieldsLocalNoAuth(null, guid, fields, ColumnFieldType.USER_JSON, handler);
 		} catch (FailedDBOperationException e) {
 			NameResolution.getLogger().log(Level.FINE,
-	                ">>>>>>>>>>> Fetching record failed for {0}: {1}", new Object[]{domain, e});
+	                "Fetching record failed for {0}: {1}", new Object[]{domain, e});
 		}
     }else{
     	NameResolution.getLogger().log(Level.FINE,
-                ">>>>>>>>>>>>> No guid for {0} is found", new Object[]{domain});
+                "No guid for {0} is found", new Object[]{domain});
     }
     return value;
     

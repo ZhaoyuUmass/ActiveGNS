@@ -129,7 +129,7 @@ public class ActiveHandler {
 	 * @throws ActiveException 
 	 */
 	public JSONObject runCode(InternalRequestHeader header, String guid, String field, String code, JSONObject value, int ttl) throws ActiveException{
-		System.out.println("Running request for guid "+guid+" on field "+field+" with value "+value);	
+		//System.out.println("Running request for guid "+guid+" on field "+field+" with value "+value);	
 		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 2000);
 	}
 	

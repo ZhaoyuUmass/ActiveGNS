@@ -424,6 +424,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		}
 		
 		response = monitor.getResult();
+		//System.out.println("The response from the worker is "+response);
 		
 		if(response == null){
 			/**

@@ -292,7 +292,6 @@ public class ManagedDNSServiceProxy implements Runnable {
 		
 		@Override
 		public void run() {
-			System.out.println("run task...");
 			try {
 				BufferedReader input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 				String queryString = input.readLine();
