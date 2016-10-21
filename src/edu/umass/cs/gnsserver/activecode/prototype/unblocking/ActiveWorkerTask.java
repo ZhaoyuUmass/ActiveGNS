@@ -29,7 +29,7 @@ public class ActiveWorkerTask implements Callable<ActiveMessage>  {
 					null);
 		} catch (NoSuchMethodException | ScriptException e) {
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
-			//e.printStackTrace();
+			e.printStackTrace();
 		}
 
 		return response;

@@ -65,7 +65,7 @@ public class ActiveNonBlockingWorker {
 		ActiveMessage msg = null;
 		while(!Thread.currentThread().isInterrupted()){
 			if((msg = (ActiveMessage) channel.receiveMessage()) != null){
-				// System.out.println("Worker receives message:"+msg);
+				System.out.println("Worker receives message:"+msg);
 				if(msg.type == Type.REQUEST){
 					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel));					
 				} else if (msg.type == Type.RESPONSE ){
