@@ -8,30 +8,31 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.json.JSONException;
+import org.json.JSONArray;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
+import edu.umass.cs.gnsclient.client.testing.GNSClientCapacityTest;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
 import edu.umass.cs.gnscommon.AclAccessType;
-import edu.umass.cs.gnscommon.exceptions.client.ClientException;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
+import edu.umass.cs.utils.DefaultTest;
+import edu.umass.cs.utils.Util;
 
 /**
  * This test checks when a GNS user does not remove his ALL_FIELD ACL,
  * what will happen.
  * 
- * <p>The invariant of ACL is:
- * <p>When the whitelist of a field Y.F exists, then a GUID X can read Y.F if and only if X belongs to the whitelist of Y.F
- * <p>When the whitelist of a field Y.F does not exist, then any GUID X can read Y.F 
- * 
  * @author gaozy
- *
  */
-public class ActiveACLHelloWorldExample {
+@FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
+public class ActiveACLHelloWorldExample extends DefaultTest {
 	
 	private final static int numGuid = 3;
 	
@@ -43,8 +44,11 @@ public class ActiveACLHelloWorldExample {
 	private final static String someValue = "YOU_SHOULD_NOT_SEE_THIS_FIELD";
 	
 	
-	
-	private static void setupClientsAndGuids() throws Exception {
+	/**
+	 * @throws Exception
+	 */
+	@BeforeClass
+	public static void setupClientsAndGuids() throws Exception {
 		client = new GNSClientCommands();
 		entries = new GuidEntry[numGuid];
 		
@@ -69,19 +73,17 @@ public class ActiveACLHelloWorldExample {
 	
 	
 	/**
+	 * This method tests the ACL check without ActiveACL, it needs to guarantee the following invariant.
+	 * <p>The invariant of ACL is:
+	 * <p>When the whitelist of a field Y.F exists, then a GUID X can read Y.F if and only if X belongs to the whitelist of Y.F
+	 * <p>When the whitelist of a field Y.F does not exist, then any GUID X can read Y.F 
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
 	@Test
-	public void test_01_RemoteQuery() throws IOException, InterruptedException{	
+	public void test_01_checkWithoutActiveACL() throws IOException, InterruptedException{
 		
-		try {
-			setupClientsAndGuids();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		System.out.println(">>>>>>>>>> Testing >>>>>>>>>>");
+		System.out.println(">>>>>>>>>> Test without ActiveACL >>>>>>>>>>");
 		
 		String response1 = null;
 		try {
@@ -99,14 +101,90 @@ public class ActiveACLHelloWorldExample {
 		} catch (Exception e) {
 			
 		}
+	}
+	
+	/**
+	 * This method tests the ACL check with ActiveACL, it needs to guarantee the following invariant.
+	 * <p>The invariant of ACL is:
+	 * <p>A GUID X can read Y.F if and only if X satisfies the condition defined by Y 
+	 * 
+	 * Let A be the access GUID, L is the whitelist of Y.F, C is the code of Y
+	 * We are going to test the following cases:
+	 * <p> A is in L, and C allows A to access F, then A should be able to access F
+	 * <p> A is in L, and C does not allow A to access F, then A should not be able to access F
+	 * <p> A is not in L, and C allow F to access F, then A should be able to access F
+	 * @throws Exception 
+	 */
+	@Test
+	public void test_02_checkWithActiveACL() throws Exception{
+		System.out.println(">>>>>>>>>> Test with ActiveACL >>>>>>>>>>");
 		
-		System.out.println("Test passed!");
+		/**
+		 * Prepare code and set up whitelist
+		 */
+		client.aclAdd(AclAccessType.READ_WHITELIST, entries[0], someField, entries[1].getGuid());
+		
+		String allowed_code = new String(Files.readAllBytes(Paths.get("scripts/activeCode/aclAllowAccess.js")));
+		String unallowed_code = new String(Files.readAllBytes(Paths.get("scripts/activeCode/aclNotAllowAccess.js")));
+		
+		allowed_code = allowed_code.replace("//replace with guid", "\""+entries[1].getGuid()+"\"").replace("//replace with public key", "\""+entries[1].getPublicKeyString()+"\"");
+		unallowed_code = unallowed_code.replace("//replace with guid", "\""+entries[2].getGuid()+"\"");
+		
+		System.out.println("The allowed code is:\n"+allowed_code);
+		System.out.println("The unallowed code is:\n"+unallowed_code);
+		/*
+		JSONArray list = client.aclGet(AclAccessType.READ_WHITELIST, entries[0], someField, entries[0].getGuid());
+		System.out.println("The whitelist of the field contains the following guids:");
+		for (int i=0; i<list.length(); i++){
+			System.out.println(list.get(i));
+		}
+		
+		System.out.println("The public key of GUID_1 is "+entries[1].getPublicKeyString());
+		*/
+		
+		client.activeCodeSet(entries[0].getGuid(), ActiveCode.ACL_ACTION, allowed_code, entries[0]);
+		
+		/**
+		 * Test 1: A is in L, and C allows A to access F, then A should be able to access F
+		 */
+		String response1 = client.fieldRead(entries[0].getGuid(), someField, entries[1]);
+		
+		assertEquals(response1, someValue);
+		
+		/**
+		 * Test 2: A is in L, and C does not allow A to access F, then A should not be able to access F
+		 */
+		// First, update the code		
+		client.activeCodeSet(entries[0].getGuid(), ActiveCode.ACL_ACTION, unallowed_code, entries[0]);
+		try{
+			String response2 = client.fieldRead(entries[0].getGuid(), someField, entries[2]);
+			fail("GUID_1 should not be able to access to the field GUID_0_FIELD and see the response :\""+response2+"\"");
+		} catch(Exception e){
+			
+		}
+		
+		
+		
+		/**
+		 * Test 3:A is not in L, and C allow F to access F, then A should be able to access F
+		 */
+		
+		// First, remove GUID_1 from the whitelist		
+		client.activeCodeSet(entries[0].getGuid(), ActiveCode.ACL_ACTION, allowed_code, entries[0]);
+		client.aclRemove(AclAccessType.READ_WHITELIST, entries[0], someField, entries[1].getGuid());
+		Thread.sleep(1000);
+		
+		String response3 = client.fieldRead(entries[0].getGuid(), someField, entries[1]);
+		
+		assertEquals(response3, someValue);
+				
 	}
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args){
+		Util.assertAssertionsEnabled();
 		Result result = JUnitCore.runClasses(ActiveACLHelloWorldExample.class);
 		for (Failure failure : result.getFailures()) {
 			System.out.println(failure.getMessage());

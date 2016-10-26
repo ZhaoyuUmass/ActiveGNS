@@ -262,7 +262,8 @@ public class NSAuthentication {
     	JSONObject value = new JSONObject();
     	try {
 			value.put(ActiveCode.PUBLICKEY_FIELD, publicKey);
-			value.put(ActiveCode.ACCESSOR_GUID, header.getOriginatingRequestID());
+			// FIXME: this is unsafe with remote query
+			value.put(ActiveCode.ACCESSOR_GUID, accessorGuid);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -279,12 +280,7 @@ public class NSAuthentication {
 			 */
 			return publicKey;
 		} catch (JSONException e) {
-			/**
-			 * It is possible that ActiveCode.PUBLICKEY_FIELD does not exist in the returned value. 
-			 * It is caused by the mistake of user's code, and it is safe to return the original value
-			 * of publicKey as the user is not clear with how the code works. 
-			 */
-			return publicKey;
+			return null;
 		}    	
     }
     return publicKey;

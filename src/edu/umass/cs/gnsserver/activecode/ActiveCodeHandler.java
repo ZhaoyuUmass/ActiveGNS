@@ -153,7 +153,7 @@ public class ActiveCodeHandler {
 	 * @throws InternalRequestException 
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
-		//System.out.println("handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+",header:"+header+"}");
+		//System.out.println(">>>>>>>>>>>>>>>> handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+",header:"+header+"}");
 		long t = System.nanoTime();
 		/**
 		 * Only execute active code for user field 
@@ -191,7 +191,7 @@ public class ActiveCodeHandler {
 				newResult = runCode(header, code, guid, field, action, value, 5);
 			}
 		}
-		System.out.println("The result after executing active code is "+newResult);
+		//System.out.println(">>>>>>>>>>>>>>>>> The result after executing active code is "+newResult);
 		DelayProfiler.updateDelayNano("activeTotal", t);
 		return newResult;
 	}
