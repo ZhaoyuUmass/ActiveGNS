@@ -183,16 +183,6 @@ public class NSAuthentication {
         aclCheckPassed = true;
 
         // FIXME: Implement something for group guid case for the new model
-      } else if (Config.getGlobalBoolean(GNSConfig.GNSC.USE_OLD_ACL_MODEL)) {
-        // One final case we need to handle is when the the accessorGuid is actually in a group guid
-        // and the group guid is in the acl in which case we need to explicitly lookup the 
-        // publickey in possibly another server. 
-        GuidInfo accessorGuidInfo;
-        if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
-          ClientSupportConfig.getLogger().log(Level.FINE, "================> Catchall lookup returned: {0}",
-                  accessorGuidInfo);
-          publicKey = accessorGuidInfo.getPublicKey();
-        }
       }
     }
     if (publicKey == null) {
@@ -236,7 +226,7 @@ public class NSAuthentication {
             new Object[]{access.toString(), field, publicKey,
               publicKeys});
     // In the new ACL model this is done differently in the above lookupPublicKeysFromAcl call.
-    if (Config.getGlobalBoolean(GNSConfig.GNSC.USE_OLD_ACL_MODEL) && publicKey == null) {
+    if (Config.getGlobalBoolean(GNSConfig.GNSC.USE_OLD_ACL_MODEL) && publicKey == null && publicKeys.size() == 0) {
       // NOT DONE IN THE NEW ACL MODEL.
       // Also catch all the keys that are stored in the +ALL+ record.
       // This handles the case where the guid attempting access isn't stored in a single field ACL
