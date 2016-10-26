@@ -249,7 +249,7 @@ public class NSAuthentication {
     }
     // See if public keys contains EVERYONE which means we need to go old school and lookup the guid 
     // explicitly because it's not going to have an entry in the ACL
-    if (publicKey == null && publicKeys.size()==0 && publicKeys.contains(EVERYONE)) {
+    if (publicKey == null && publicKeys.contains(EVERYONE)) {
       GuidInfo accessorGuidInfo;
       if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
         ClientSupportConfig.getLogger().log(Level.FINE, 
