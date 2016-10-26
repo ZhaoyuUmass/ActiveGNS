@@ -34,27 +34,12 @@ import edu.umass.cs.utils.Config;
  */
 public class GNSConfig {
 
-  //FIXME: The owner of this should move it into GNSConfig
-  /**
-   * How long (in seconds) to blacklist active code.
-   */
-  public static long activeCodeBlacklistSeconds = 10;
   //FIXME: Do this have an equivalent in gigapaxos we can use.
   /**
    * Determines the number of replicas based on ratio of lookups to writes.
    * Used by {@link LocationBasedDemandProfile}.
    */
   public static double normalizingConstant = 0.5;
-  //FIXME: The owner of this should move it into GNSConfig
-  /**
-   * Enable active code.
-   */
-  public static boolean enableActiveCode = false;
-  //FIXME: The owner of this should move it into GNSConfig
-  /**
-   * Number of active code worker.
-   */
-  public static int activeCodeWorkerCount = 1;
 
   /**
    * The GNS Config.
@@ -298,10 +283,14 @@ public class GNSConfig {
      * Ip address:port of one node of CNS.
      * If ENABLE_CNS is set to true then this option should definitely be set.
      */
-    CNS_NODE_ADDRESS("node");
+    CNS_NODE_ADDRESS("node"),
     //
     // Active
     //
+    /**
+     * Enable active code if true
+     */
+	ENABLE_ACTIVE_CODE(true);
 
     final Object defaultValue;
 

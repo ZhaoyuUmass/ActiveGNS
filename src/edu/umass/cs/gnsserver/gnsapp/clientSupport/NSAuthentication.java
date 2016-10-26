@@ -268,7 +268,7 @@ public class NSAuthentication {
      * Header is not null means that this is a read or write operation. ActiveACL is not
      * interested in the other operations for ACL check.
      */
-    if (GNSConfig.enableActiveCode && header != null){
+    if (Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE) && header != null){
     	JSONObject value = new JSONObject();
     	try {
 			value.put(ActiveCode.PUBLICKEY_FIELD, publicKey);

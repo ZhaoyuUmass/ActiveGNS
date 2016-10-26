@@ -37,6 +37,7 @@ import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ResultValue;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 import edu.umass.cs.utils.Util;
 
@@ -159,7 +160,7 @@ public class NSFieldAccess {
   public static ValuesMap lookupFieldsLocalNoAuth(InternalRequestHeader header, String guid, List<String> fields,
           ColumnFieldType returnFormat, ClientRequestHandlerInterface handler)
           throws FailedDBOperationException {
-    return lookupFieldsLocalNoAuth(header, guid, fields, returnFormat, handler, GNSConfig.enableActiveCode);
+    return lookupFieldsLocalNoAuth(header, guid, fields, returnFormat, handler, Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE) );
 
   }
 
