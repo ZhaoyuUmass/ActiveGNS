@@ -151,7 +151,7 @@ public class NSAuthentication {
     return ResponseCode.NO_ERROR;
   }
 
-  private static AclCheckResult aclCheck(InternalRequestHeader header, String targetGuid, String field,
+  public static AclCheckResult aclCheck(InternalRequestHeader header, String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,

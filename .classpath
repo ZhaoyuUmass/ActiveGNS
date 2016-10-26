@@ -28,7 +28,6 @@
 	<classpathentry kind="lib" path="lib/mongo-java-driver-2.12.1.jar"/>
 	<classpathentry kind="lib" path="lib/dnsjava-2.1.6.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.3.1.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/aspectjrt-1.8.2.jar"/>
 	<classpathentry kind="lib" path="lib/aspectjweaver.jar"/>
 	<classpathentry kind="lib" path="lib/aws-java-sdk-1.11.6.jar"/>
@@ -46,11 +45,11 @@
 	<classpathentry kind="lib" path="lib/jackson-dataformat-cbor-2.6.6.jar"/>
 	<classpathentry kind="lib" path="lib/javax.mail-1.5.5.jar"/>
 	<classpathentry kind="lib" path="lib/joda-time-2.8.1.jar"/>
-	<classpathentry kind="lib" path="lib/junit-4.11.jar"/>
 	<classpathentry kind="lib" path="lib/spring-beans-3.0.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/spring-context-3.0.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/spring-core-3.0.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/spring-test-3.0.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/android.jar"/>
+	<classpathentry kind="lib" path="lib/junit-4.12.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
