@@ -249,7 +249,7 @@ public class NSAuthentication {
     }
     // See if public keys contains EVERYONE which means we need to go old school and lookup the guid 
     // explicitly because it's not going to have an entry in the ACL
-    if (publicKey == null && publicKeys.contains(EVERYONE)) {
+    if (publicKey == null && publicKeys.size()==0 && publicKeys.contains(EVERYONE)) {
       GuidInfo accessorGuidInfo;
       if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
         ClientSupportConfig.getLogger().log(Level.FINE, 
@@ -280,11 +280,21 @@ public class NSAuthentication {
     	JSONObject result = null;
     	try {
 			result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.ACL_ACTION, value, gnsApp.getDB());
-			publicKey = (result!=null)?result.getString(ActiveCode.PUBLICKEY_FIELD):null;
+			if (result!=null)
+				publicKey = result.getString(ActiveCode.PUBLICKEY_FIELD);
 		} catch (InternalRequestException e) {
-			
+			/**
+			 * This is caused by the mistake of user's code, and it is safe to return the original value
+			 * of publicKey as the user is not clear with how the code works.
+			 */
+			return publicKey;
 		} catch (JSONException e) {
-			
+			/**
+			 * It is possible that ActiveCode.PUBLICKEY_FIELD does not exist in the returned value. 
+			 * It is caused by the mistake of user's code, and it is safe to return the original value
+			 * of publicKey as the user is not clear with how the code works. 
+			 */
+			return publicKey;
 		}    	
     }
     return publicKey;

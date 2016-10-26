@@ -83,18 +83,19 @@ public class ActiveACLHelloWorldExample {
 		
 		System.out.println(">>>>>>>>>> Testing >>>>>>>>>>");
 		
-		String response = null;
+		String response1 = null;
 		try {
-			response = client.fieldRead(entries[0].getGuid(), someField, entries[2]);
+			response1 = client.fieldRead(entries[0].getGuid(), someField, entries[2]);
 		} catch (Exception e1) {
 			
 		}
-		assertEquals(response, someValue);
+		assertEquals(response1, someValue);
 		
+		String response2 = null;
 		System.out.println("GUID_1 reads the field GUID_0_FIELD of GUID_0");
 		try {
-			response = client.fieldRead(entries[0].getGuid(), someField, entries[1]);
-			fail("GUID_1 should not be able to access to the field GUID_0_FIELD and see the response :\""+response+"\"");
+			response2 = client.fieldRead(entries[0].getGuid(), someField, entries[1]);
+			fail("GUID_1 should not be able to access to the field GUID_0_FIELD and see the response :\""+response2+"\"");
 		} catch (Exception e) {
 			
 		}
