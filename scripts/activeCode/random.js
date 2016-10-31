@@ -1,9 +1,11 @@
 function run(value, field, querier) {
-	var records = value.get(field);
-	var index = Math.ceil(Math.random()*records.length())-1;
-	for(var i=0; i<records.length(); i++){
-		if(i!=index)
-			records.remove(i);
-	}
-	return value.put(field, records);
+	var a = value.get("A");
+	var records = a.get("record");
+	var rand = records.get(Math.ceil(Math.random()*records.length())-1);
+	var length = records.length();
+	for (var i = length-1; i>=0; i--) {
+		records.remove(i);
+    }
+    records.put(rand);
+	return value.put("A", a.put("record", records).put("ttl",0));
 }
