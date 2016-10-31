@@ -44,7 +44,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Inter
 import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 
 /**
@@ -155,10 +157,12 @@ public class ActiveCodeHandler {
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
 		//System.out.println(">>>>>>>>>>>>>>>> handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+",header:"+header+"}");
 		long t = System.nanoTime();
+		if(!Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE)){
+			return value;
+		}
 		/**
 		 * Only execute active code for user field 
-		 */
-		
+		 */		
 		if(field!=null && InternalField.isInternalField(field) ){
 			return value;
 		}

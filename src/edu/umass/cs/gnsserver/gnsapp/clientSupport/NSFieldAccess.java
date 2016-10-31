@@ -95,7 +95,7 @@ public class NSFieldAccess {
           GNSApplicationInterface<String> gnsApp, boolean handleActiveCode)
           throws FailedDBOperationException {
     ValuesMap valuesMap = lookupFieldLocalNoAuth(guid, field, ColumnFieldType.USER_JSON, gnsApp.getDB());
-    if (handleActiveCode) {
+    if (handleActiveCode ) {
       try {
 		JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.READ_ACTION, valuesMap, gnsApp.getDB());
 		valuesMap = result!=null?new ValuesMap(result):null;

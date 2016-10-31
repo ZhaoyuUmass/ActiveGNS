@@ -166,7 +166,7 @@ public class NSUpdateSupport {
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
           ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
-    if (activeCodeHandler != null && Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE) ) {    	
+    if (activeCodeHandler != null ) {    	
         JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
         newValue = result!=null?new ValuesMap(result):null;
     }
