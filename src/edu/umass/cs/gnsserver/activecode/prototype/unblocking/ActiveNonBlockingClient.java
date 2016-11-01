@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
@@ -344,6 +346,8 @@ public class ActiveNonBlockingClient implements Runnable,Client {
   protected synchronized void sendMessage(ActiveMessage am){
 		try {
 			channel.sendMessage(am);
+			ActiveCodeHandler.getLogger().log(Level.FINE, 
+					"sends request:{0}", new Object[]{am});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -408,7 +412,6 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 					try {
 						monitor.wait();
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					/**
@@ -433,7 +436,10 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		}
 		
 		response = monitor.getResult();
-		//System.out.println("The response from the worker is "+response);
+		
+		ActiveCodeHandler.getLogger().log(Level.FINE,
+				"receive a response from the worker:{0}",
+				new Object[]{response});
 		
 		if(response == null){
 			/**

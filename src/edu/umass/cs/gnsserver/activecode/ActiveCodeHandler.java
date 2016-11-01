@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.json.JSONException;
@@ -128,7 +129,7 @@ public class ActiveCodeHandler {
 		try {
 			return handler.runCode(header, guid, field, code, value, activeCodeTTL);
 		} catch (ActiveException e) {			
-			//e.printStackTrace();
+			ActiveCodeHandler.getLogger().log(Level.INFO, "ActiveGNS request execution failed", e);
 			/**
 			 *  return the original value without executing, as there is an error
 			 *  returned from the worker. The error indicates that the code failed
@@ -155,7 +156,10 @@ public class ActiveCodeHandler {
 	 * @throws InternalRequestException 
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
-		//System.out.println(">>>>>>>>>>>>>>>> handleActiveCode:{guid:"+guid+",field:"+field+",action:"+action+",value:"+value+",header:"+header+"}");
+		ActiveCodeHandler.getLogger().log(Level.FINE, 
+				"receives:{guid:{0},field:{1},action:{2},value:{3},header:{4}}",
+				new Object[]{guid, field, action, value, header});
+		
 		long t = System.nanoTime();
 		if(!Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE)){
 			return value;
@@ -195,7 +199,9 @@ public class ActiveCodeHandler {
 				newResult = runCode(header, code, guid, field, action, value, 5);
 			}
 		}
-		//System.out.println(">>>>>>>>>>>>>>>>> The result after executing active code is "+newResult);
+		ActiveCodeHandler.getLogger().log(Level.FINE, 
+				"The result after executing active code is {0}",
+				new Object[]{newResult});
 		DelayProfiler.updateDelayNano("activeTotal", t);
 		return newResult;
 	}

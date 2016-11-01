@@ -1,6 +1,7 @@
 package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
 
 import javax.script.ScriptException;
 
@@ -28,7 +29,9 @@ public class ActiveWorkerBlockingTask implements Callable<ActiveMessage> {
 					runner.runCode(request.getGuid(), request.getField(), request.getCode(), request.getValue(), request.getTtl(), request.getId()),
 					null);
 		} catch (NoSuchMethodException | ScriptException e) {
-			//e.printStackTrace();
+			ActiveBlockingWorker.getLogger().log(Level.FINE, 
+					"get an exception {0} when executing request {1} with code {2}", 
+					new Object[]{e, request, request.getCode()});
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
 		}
 

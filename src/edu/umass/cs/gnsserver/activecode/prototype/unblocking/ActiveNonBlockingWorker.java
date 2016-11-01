@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONException;
 
@@ -18,6 +20,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
  */
 public class ActiveNonBlockingWorker {
 	
+	private static final Logger logger = Logger.getLogger(ActiveNonBlockingWorker.class.getName());
 	
 	private final ActiveNonBlockingRunner runner;
 	
@@ -50,9 +53,12 @@ public class ActiveNonBlockingWorker {
 		try {
 			runWorker();
 		} catch (JSONException | IOException e) {
-			//e.printStackTrace();
-			// close the channel and exit
+			ActiveNonBlockingWorker.getLogger().log(Level.WARNING, 
+					"{0} catch an exception {1} and terminiates.", 
+					new Object[]{this, e});
+			
 		}finally{
+			// close the channel and exit
 			channel.close();
 		}
 		
@@ -64,7 +70,10 @@ public class ActiveNonBlockingWorker {
 		ActiveMessage msg = null;
 		while(!Thread.currentThread().isInterrupted()){
 			if((msg = (ActiveMessage) channel.receiveMessage()) != null){
-				//System.out.println("Worker receives message:"+msg);
+				ActiveNonBlockingWorker.getLogger().log(Level.FINE,
+						"receive a message:{0}",
+						new Object[]{msg});
+				
 				if(msg.type == Type.REQUEST){
 					taskExecutor.submit(new ActiveWorkerSubmittedTask(executor, runner, msg, channel));					
 				} else if (msg.type == Type.RESPONSE ){
@@ -82,6 +91,13 @@ public class ActiveNonBlockingWorker {
 		return this.getClass().getSimpleName()+id;
 	}
 	
+	
+	/**
+	 * @return logger
+	 */
+	protected static Logger getLogger(){
+		return logger;
+	}
 	
 	/**
 	 * @param args

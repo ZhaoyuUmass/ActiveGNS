@@ -8,6 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONException;
 
@@ -22,6 +24,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
  */
 public class ActiveBlockingWorker {
 	
+	private static final Logger logger = Logger.getLogger(ActiveBlockingWorker.class.getName());
 	
 	private final ActiveBlockingRunner runner;
 	
@@ -52,7 +55,7 @@ public class ActiveBlockingWorker {
 		try {
 			runWorker();
 		} catch (JSONException | IOException e) {
-			// e.printStackTrace();			
+			ActiveBlockingWorker.getLogger().log(Level.WARNING, "{0} catch an exception {1} and terminiates.", new Object[]{this, e});
 		}finally{
 			// close the channel and exit
 			channel.close();
@@ -95,6 +98,12 @@ public class ActiveBlockingWorker {
 		return this.getClass().getSimpleName()+id;
 	}
 	
+	/**
+	 * @return logger
+	 */
+	protected static Logger getLogger(){
+		return logger;
+	}
 	
 	/**
 	 * @param args

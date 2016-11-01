@@ -11,22 +11,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.umass.cs.gigapaxos.PaxosConfig;
-import edu.umass.cs.gigapaxos.PaxosConfig.PC;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.blocking.ActiveBlockingClient;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Client;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
-import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.Util;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
-import edu.umass.cs.reconfiguration.ReconfigurableNode;
-import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 
 /**
@@ -93,7 +90,7 @@ public class ActiveHandler {
 				new Thread((ActiveNonBlockingClient) clientPool[i]).start();
 			}
 		}
-		System.out.println("ActiveHandler has been started with "+numProcess+"("+numThread+" threads) "
+		ActiveCodeHandler.getLogger().log(Level.INFO, "ActiveHandler has been started with "+numProcess+"("+numThread+" threads) "
 				+(blocking?"blocking":"nonblocking")+" worker processes.");
 	}
 	
@@ -128,8 +125,8 @@ public class ActiveHandler {
 	 * @return executed result
 	 * @throws ActiveException 
 	 */
-	public JSONObject runCode(InternalRequestHeader header, String guid, String field, String code, JSONObject value, int ttl) throws ActiveException{
-		//System.out.println("Running request for guid "+guid+" on field "+field+" with value "+value);	
+	public JSONObject runCode(InternalRequestHeader header, String guid, 
+			String field, String code, JSONObject value, int ttl) throws ActiveException{
 		return clientPool[counter.getAndIncrement()%numProcess].runCode(header, guid, field, code, value, ttl, 2000);
 	}
 	

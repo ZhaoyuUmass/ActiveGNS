@@ -6,6 +6,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
@@ -41,7 +42,9 @@ public class ActiveWorkerSubmittedTask implements Runnable {
 		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			// return an error
 			response = new ActiveMessage(request.getId(), null, e.getMessage());
-			//e.printStackTrace();
+			ActiveNonBlockingWorker.getLogger().log(Level.FINE, 
+					"get an exception {0} when executing request {1} with code {2}", 
+					new Object[]{e, request, request.getCode()});
 		}
 		
 		try {

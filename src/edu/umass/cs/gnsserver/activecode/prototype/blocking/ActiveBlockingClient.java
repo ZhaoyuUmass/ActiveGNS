@@ -12,11 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.ActiveCodeConfig;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
@@ -279,6 +281,7 @@ public class ActiveBlockingClient implements Client {
 		ActiveMessage am = null;
 		try {
 			am = (ActiveMessage) channel.receiveMessage();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -288,6 +291,8 @@ public class ActiveBlockingClient implements Client {
 	protected synchronized void sendMessage(ActiveMessage am){
 		try {
 			channel.sendMessage(am);
+			ActiveCodeHandler.getLogger().log(Level.FINE, 
+					"sends request:{0}", new Object[]{am});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -345,13 +350,23 @@ public class ActiveBlockingClient implements Client {
 				}
 				break;
 			} else if (response.type != Type.RESPONSE){
+				ActiveCodeHandler.getLogger().log(Level.FINE,
+						"receive a query from worker:{0}",
+						new Object[]{response});
 				ActiveMessage result = queryHandler.handleQuery(response, header);
 				sendMessage(result);
+				ActiveCodeHandler.getLogger().log(Level.FINE,
+						"send a response to worker:{0} for the query: {1}",
+						new Object[]{result, response});
 			} else{
 				assert(response.type == Type.RESPONSE):"The message type is not RESPONSE";
 				break;
 			}
 		}
+		
+		ActiveCodeHandler.getLogger().log(Level.FINE,
+				"receive a response from the worker:{0}",
+				new Object[]{response});
 		
 		if(response == null){
 			throw new ActiveException("Worker crashed!");
