@@ -63,7 +63,7 @@ public class ActiveCodeHandler {
 	
 	private final String nodeId;
 	
-	private static final Logger logger = Logger.getLogger("ActiveGNS");
+	private static final Logger logger = Logger.getLogger(ActiveCodeHandler.class.getName());
 	
 	private static ActiveHandler handler;
 	
@@ -157,7 +157,7 @@ public class ActiveCodeHandler {
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
 		ActiveCodeHandler.getLogger().log(Level.FINE, 
-				"receives:{guid:{0},field:{1},action:{2},value:{3},header:{4}}",
+				"receives:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
 				new Object[]{guid, field, action, value, header});
 		
 		long t = System.nanoTime();

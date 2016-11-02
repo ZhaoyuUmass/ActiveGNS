@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import org.json.JSONException;
 
@@ -21,6 +23,13 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 public class ActiveNonBlockingWorker {
 	
 	private static final Logger logger = Logger.getLogger(ActiveNonBlockingWorker.class.getName());
+	private static final ConsoleHandler handler = new ConsoleHandler();
+	static {
+		logger.setLevel(Level.ALL);
+		handler.setFormatter(new SimpleFormatter());
+		logger.addHandler(handler);
+	}
+	
 	
 	private final ActiveNonBlockingRunner runner;
 	
@@ -50,13 +59,13 @@ public class ActiveNonBlockingWorker {
 		channel = new ActiveNamedPipe(ifile, ofile);
 		runner = new ActiveNonBlockingRunner(channel);
 		
+		ActiveNonBlockingWorker.getLogger().log(Level.FINE, "{0} starts running", new Object[]{this});
 		try {
 			runWorker();
-		} catch (JSONException | IOException e) {
+		} catch (JSONException | IOException e) {			
 			ActiveNonBlockingWorker.getLogger().log(Level.WARNING, 
 					"{0} catch an exception {1} and terminiates.", 
-					new Object[]{this, e});
-			
+					new Object[]{this, e});			
 		}finally{
 			// close the channel and exit
 			channel.close();
