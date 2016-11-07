@@ -52,12 +52,16 @@ public class HttpClientTest {
   public HttpClientTest() {
     if (client == null) {
       client = new HttpClient("127.0.0.1", 8080);
-      try {
-        masterGuid = GuidUtils.lookupOrCreateAccountGuid(client, ACCOUNT_ALIAS, PASSWORD, true);
+    }
+  }
+  
+  @Test
+  public void test_899_Http_CreateAccountGuid() {
+    try {
+      masterGuid = GuidUtils.lookupOrCreateAccountGuid(client, ACCOUNT_ALIAS, PASSWORD, true);
 
-      } catch (Exception e) {
-        fail("Exception while creating master guid: " + e);
-      }
+    } catch (Exception e) {
+      failWithStackTrace("Exception while creating master guid: " + e);
     }
   }
 
@@ -69,7 +73,7 @@ public class HttpClientTest {
     try {
       assertEquals(masterGuid.getGuid(), client.lookupGuid(ACCOUNT_ALIAS));
     } catch (IOException | ClientException e) {
-      fail("Exception in LookupGuid: " + e);
+      failWithStackTrace("Exception in LookupGuid: " + e);
     }
   }
 

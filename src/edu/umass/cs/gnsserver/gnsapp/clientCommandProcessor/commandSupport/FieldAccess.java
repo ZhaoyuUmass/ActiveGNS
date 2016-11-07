@@ -139,7 +139,9 @@ public class FieldAccess {
     try {
       valuesMap = NSFieldAccess.lookupJSONFieldLocally(header, guid, field, handler.getApp());
       // note: reader can also be null here
-      if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(reader)) {
+      if (!GNSConfig.getInternalOpSecret()
+    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+    		  .equals(reader)) {
         // don't strip internal fields when doing a read for other servers
         valuesMap = valuesMap.removeInternalFields();
       }
@@ -202,7 +204,9 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
     try {
       valuesMap = NSFieldAccess.lookupFieldsLocalNoAuth(header, guid, fields, ColumnFieldType.USER_JSON, handler);
       // note: reader can also be null here
-      if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(reader)) {
+      if (!GNSConfig.getInternalOpSecret()
+    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+    		  .equals(reader)) {
         // don't strip internal fields when doing a read for other servers
         valuesMap = valuesMap.removeInternalFields();
       }
@@ -796,7 +800,9 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
       // if reader is the internal secret this means that this is an internal
       // request that doesn't need to be authenticated
       // note: reader can also be null here
-      if (!Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET).equals(reader)
+      if (!GNSConfig.getInternalOpSecret()
+    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+    		  .equals(reader)
               && (field != null || fields != null)) {
         errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);

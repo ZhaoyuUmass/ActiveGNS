@@ -36,6 +36,7 @@ import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.packets.ResponsePacket;
 import edu.umass.cs.gnsserver.database.NoSQLRecords;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.main.OldHackyConstants;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ListenerAdmin;
 
@@ -425,7 +426,7 @@ public class GNSApp extends AbstractReconfigurablePaxosApp<String> implements
             || Config.getGlobalString(GNSConfig.GNSC.DNS_SERVER_NODES).contains(nodeID)) {
       startDNS();
     }
-    this.activeCodeHandler = Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE) ? new ActiveCodeHandler(nodeID) : null;
+    this.activeCodeHandler = OldHackyConstants.enableActiveCode ? new ActiveCodeHandler(nodeID) : null;
 
     // context service init
     if (Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_CNS)) {
