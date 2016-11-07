@@ -25,6 +25,7 @@ import static edu.umass.cs.gnscommon.GNSCommandProtocol.EVERYONE;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+import edu.umass.cs.gnsserver.main.OldHackyConstants;
 import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.SharedGuidUtils;
 import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
@@ -331,7 +332,7 @@ public class NSAuthentication {
      * Header is not null means that this is a read or write operation. ActiveACL is not
      * interested in the other operations for ACL check.
      */
-    if (Config.getGlobalBoolean(GNSConfig.GNSC.ENABLE_ACTIVE_CODE) && header != null){
+    if (OldHackyConstants.enableActiveCode && header != null){
     	JSONObject value = new JSONObject();
     	try {
 			value.put(ActiveCode.PUBLICKEY_FIELD, publicKey);
