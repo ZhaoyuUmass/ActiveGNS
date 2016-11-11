@@ -34,6 +34,7 @@ import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnsserver.gnsapp.GNSApp;
 import edu.umass.cs.gnsserver.gnsapp.Select;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
+import edu.umass.cs.gnsserver.gnsapp.clientSupport.AclCheckResult;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSAuthentication;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSFieldAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSUpdateSupport;
@@ -51,8 +52,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 
-import edu.umass.cs.gnsserver.gnsapp.clientSupport.AclCheckResult;
-import edu.umass.cs.gnsserver.gnsapp.clientSupport.ClientSupportConfig;
 import edu.umass.cs.gnsserver.gnsapp.deprecated.GNSApplicationInterface;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectGroupBehavior;
 import edu.umass.cs.gnsserver.gnsapp.packet.SelectRequestPacket;
@@ -63,6 +62,7 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.time.DateUtils;
 
 /**
@@ -75,37 +75,16 @@ import org.apache.commons.lang3.time.DateUtils;
  */
 public class FieldAccess {
 
+  private final static Logger LOGGER = Logger.getLogger(FieldAccess.class.getName());
+
   private static final String EMPTY_JSON_ARRAY_STRING = new JSONArray().toString();
   private static final String EMPTY_STRING = "";
-
-  /**
-   * Returns true if the field is specified using dot notation.
-   *
-   * @param field
-   * @return true if the field is specified using dot notation
-   */
-  @Deprecated
-  public static boolean isKeyDotNotation(String field) {
-    return field.indexOf('.') != -1;
-  }
-
-  /**
-   * Returns true if the field doesn't use dot notation or is the all-fields indicator.
-   *
-   * @param field
-   * @return true if the field doesn't use dot notation or is the all-fields indicator
-   */
-  @Deprecated
-  public static boolean isKeyAllFieldsOrTopLevel(String field) {
-    return GNSCommandProtocol.ENTIRE_RECORD.equals(field) || !isKeyDotNotation(field);
-  }
 
   /* false means that even single field queries will return a JSONObject response
    * with a single key and value. The client code has been modified accordingly.
    * The server-side modifications involve changes to AccountAccess to handle
    * lookupGuidLocally and lookupPrimaryGuid differently.
    */
-
   /**
    *
    */
@@ -140,8 +119,8 @@ public class FieldAccess {
       valuesMap = NSFieldAccess.lookupJSONFieldLocally(header, guid, field, handler.getApp());
       // note: reader can also be null here
       if (!GNSConfig.getInternalOpSecret()
-    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
-    		  .equals(reader)) {
+              //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+              .equals(reader)) {
         // don't strip internal fields when doing a read for other servers
         valuesMap = valuesMap.removeInternalFields();
       }
@@ -191,7 +170,7 @@ public class FieldAccess {
    * @param handler
    * @return the value of a single field
    */
-  public static CommandResponse lookupMultipleFields(InternalRequestHeader header, String guid, 
+  public static CommandResponse lookupMultipleFields(InternalRequestHeader header, String guid,
           ArrayList<String> fields,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
@@ -205,8 +184,8 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
       valuesMap = NSFieldAccess.lookupFieldsLocalNoAuth(header, guid, fields, ColumnFieldType.USER_JSON, handler);
       // note: reader can also be null here
       if (!GNSConfig.getInternalOpSecret()
-    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
-    		  .equals(reader)) {
+              //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+              .equals(reader)) {
         // don't strip internal fields when doing a read for other servers
         valuesMap = valuesMap.removeInternalFields();
       }
@@ -445,12 +424,12 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
               operation,
               value, oldValue, argument, null, handler.getApp(), false);
     } catch (JSONException e) {
-      GNSConfig.getLogger().log(Level.FINE, "Update threw error: {0}", e);
+      LOGGER.log(Level.FINE, "Update threw error: {0}", e);
       return ResponseCode.JSON_PARSE_ERROR;
     } catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException |
             SignatureException | IOException | InternalRequestException |
             FailedDBOperationException | RecordNotFoundException | FieldNotFoundException e) {
-      GNSConfig.getLogger().log(Level.FINE, "Update threw error: {0}", e);
+      LOGGER.log(Level.FINE, "Update threw error: {0}", e);
       return ResponseCode.UPDATE_ERROR;
     }
   }
@@ -482,7 +461,7 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
     } catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException |
             SignatureException | JSONException | IOException | InternalRequestException |
             FailedDBOperationException | RecordNotFoundException | FieldNotFoundException e) {
-      GNSConfig.getLogger().log(Level.FINE, "Update threw error: {0}", e);
+      LOGGER.log(Level.FINE, "Update threw error: {0}", e);
       return ResponseCode.UPDATE_ERROR;
     }
   }
@@ -520,7 +499,7 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
    * @param key - the field to createField
    * @param value - the initial value of the field
    * @param writer - the guid performing the createField operation, can be the same as the guid being written. Can be null for globally
- readable or writable fields or the secret for internal operations done without a signature.
+   * readable or writable fields or the secret for internal operations done without a signature.
    * @param signature - the signature of the request. Used for authentication at the server. Can be null for globally
    * readable or writable fields or for internal operations done without a signature.
    * @param message - the message that was signed. Used for authentication at the server. Can be null for globally
@@ -536,14 +515,14 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
             UpdateOperation.SINGLE_FIELD_CREATE, writer, signature, message,
             timestamp, handler);
   }
-  
-   /**
+
+  /**
    * Deletes the field from the guid.
    *
    * @param header
    * @param guid - the guid to update
    * @param key - the field to createField
-   * @param writer - the guid performing the delete operation, can be the same as the guid being written. 
+   * @param writer - the guid performing the delete operation, can be the same as the guid being written.
    * Can be null for globally readable or writable fields or the secret for internal operations done without a signature.
    * @param signature - the signature of the request. Used for authentication at the server. Can be null for globally
    * readable or writable fields or for internal operations done without a signature.
@@ -556,7 +535,7 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
   public static ResponseCode deleteField(InternalRequestHeader header, String guid, String key,
           String writer, String signature, String message,
           Date timestamp, ClientRequestHandlerInterface handler) {
-    return update(header, guid, key, 
+    return update(header, guid, key,
             "", null, -1, // these are ignored anyway
             UpdateOperation.SINGLE_FIELD_REMOVE_FIELD, writer, signature, message,
             timestamp, handler);
@@ -793,7 +772,7 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
           Date timestamp,
           GNSApplicationInterface<String> app) {	  
     ResponseCode errorCode = ResponseCode.NO_ERROR;
-    GNSConfig.getLogger().log(Level.FINE,
+    LOGGER.log(Level.FINE,
             "signatureAndACLCheckForRead guid: {0} field: {1} reader: {2}",
             new Object[]{guid, field, reader});
     try {
@@ -801,8 +780,8 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
       // request that doesn't need to be authenticated
       // note: reader can also be null here
       if (!GNSConfig.getInternalOpSecret()
-    		  //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
-    		  .equals(reader)
+              //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
+              .equals(reader)
               && (field != null || fields != null)) {
         errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
