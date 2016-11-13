@@ -44,14 +44,16 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private final static String USERNAME_FIELD = "username";
 	
 	private final static String A_RECORD_FIELD = "A";
+	private final static String NS_RECORD_FIELD = "NS";
 	
 	private enum Actions {
 	    CREATE("create"),
-	    UPDATE("update"),
+	    UPDATE_RECORD("update_record"),
+	    UPDATE_CODE("update_code"),
 	    // remove the code
-	    REMOVE("remove"),
+	    REMOVE_CODE("remove_code"),
 	    // delete the record
-	    DELETE("delete")
+	    DELETE_RECORD("delete_record")
 	    ;
 
 	    private final String text;
@@ -77,6 +79,13 @@ public class ManagedDNSServiceProxy implements Runnable {
 	
 	private final static int default_ttl = 30;
 	private final static String DOMAIN = "activegns.org.";
+	private final static String NS1 = "ns1."+DOMAIN;
+	private final static String NS2 = "ns2."+DOMAIN;
+	private final static String NS3 = "ns3."+DOMAIN;
+	
+	private final static String NS1_ADDRESS = "52.43.241.146";
+	private final static String NS2_ADDRESS = "52.44.1.207";
+	private final static String NS3_ADDRESS = "52.203.144.175";
 	
 	private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 	
@@ -97,10 +106,9 @@ public class ManagedDNSServiceProxy implements Runnable {
 	}
 	
 	private static void deployDomain() throws Exception {
-		String domain = DOMAIN;
 		int ttl = 0;
 		
-		GuidEntry guid = GuidUtils.lookupOrCreateGuid(client, accountGuid, domain);
+		GuidEntry guid = GuidUtils.lookupOrCreateGuid(client, accountGuid, DOMAIN);
 		
 		List<String> records = new ArrayList<String>();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("conf/activeCode/records")));
@@ -112,8 +120,22 @@ public class ManagedDNSServiceProxy implements Runnable {
 		reader.close();
 		
 		System.out.println("The record list is "+records);
-		updateRecord(guid, records, ttl);
-		System.out.println("Create record for "+domain);
+		updateRecord(guid, A_RECORD_FIELD, records, ttl);
+		
+		// Update NS records
+		List<JSONArray> ns_records = new ArrayList<JSONArray>();
+		ns_records.add(new JSONArray().put(NS1).put(NS1_ADDRESS));
+		ns_records.add(new JSONArray().put(NS2).put(NS2_ADDRESS));
+		ns_records.add(new JSONArray().put(NS3).put(NS3_ADDRESS));
+		
+		//updateRecord(guid, NS_RECORD_FIELD, ns_records, 120);
+		JSONObject recordObj = new JSONObject();
+		recordObj.put(RECORD_FIELD, ns_records);
+		recordObj.put(TTL_FIELD, 120);
+		
+		client.execute(GNSCommand.fieldUpdate(guid, NS_RECORD_FIELD, recordObj));
+		
+		System.out.println("Create record for "+DOMAIN);
 	}
 	
 	private static JSONObject recordToCreate(List<String> ips, int ttl) {
@@ -132,11 +154,11 @@ public class ManagedDNSServiceProxy implements Runnable {
 		return recordObj;
 	}
 	
-	private static void updateRecord(GuidEntry entry, List<String> ips, int ttl){
-		System.out.println("Ready to update record for "+entry);
+	private static void updateRecord(GuidEntry entry, String fieldToUpdate, List<String> ips, int ttl){
+		System.out.println("Ready to update record for "+entry+" field:"+fieldToUpdate);
 		JSONObject recordObj = recordToCreate(ips, ttl);
 		try {
-			client.execute(GNSCommand.fieldUpdate(entry, A_RECORD_FIELD, recordObj));
+			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, recordObj));
 		} catch (ClientException | IOException e) {
 			e.printStackTrace();
 			// The update failed			
@@ -156,19 +178,6 @@ public class ManagedDNSServiceProxy implements Runnable {
 		return GuidUtils.lookupOrCreateGuid(client, accountGuid, domain);
 	}
 	
-	private static void updateRecordAndCode(GuidEntry entry, String record, String code){
-		assert(!record.equals("")):"record can't be enpty when update";
-		// Update record
-		List<String> ips = Arrays.asList(record.split("\\n"));
-		updateRecord(entry, ips, default_ttl);
-		
-		// Update code
-		if(!code.equals("")){
-			updateCode(entry, code);
-		}else{
-			removeCode(entry);
-		}
-	}
 	
 	private static void deleteRecord(GuidEntry entry){
 		// clear the code
@@ -229,19 +238,24 @@ public class ManagedDNSServiceProxy implements Runnable {
 						result.put(GUID_FIELD, guid);
 				}
 				break;
-				case UPDATE:{
+				case UPDATE_RECORD:{
 					String record = req.getString(RECORD_FIELD);
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
-					String code = req.getString(CODE_FIELD);
-					updateRecordAndCode(guid, record, code);
+					List<String> ips = Arrays.asList(record.split("\\n"));
+					updateRecord(guid, A_RECORD_FIELD, ips, default_ttl);		
 				}
 				break;
-				case REMOVE:{
+				case UPDATE_CODE:{
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					String code = req.getString(CODE_FIELD);
+					updateCode(guid, code);
+				}
+				case REMOVE_CODE:{
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					removeCode(guid);
 				}
 				break;
-				case DELETE:{
+				case DELETE_RECORD:{
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					deleteRecord(guid);
 				}

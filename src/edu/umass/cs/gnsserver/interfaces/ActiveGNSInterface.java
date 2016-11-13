@@ -22,7 +22,7 @@ import edu.umass.cs.gnsserver.gnsapp.GNSCommandInternal;
  *         {@link edu.umass.cs.gnscommon.CommandType.Type#OTHER} commands or for
  *         that matter other
  *         {@link edu.umass.cs.gnscommon.CommandType.Type#READ} or
- *         {@link edu.umass.cs.gnscommon.CommandType.Type#UPDATE} queries, but
+ *         {@link edu.umass.cs.gnscommon.CommandType.Type#UPDATE_RECORD} queries, but
  *         some subset of these other query types may be supported in future
  *         versions.
  * 

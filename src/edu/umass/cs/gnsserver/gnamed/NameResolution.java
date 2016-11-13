@@ -198,21 +198,38 @@ public class NameResolution {
           */
         }
         if (fieldResponseJson.has("NS")) {
-          String ns = fieldResponseJson.getString("NS");
-          NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, 120, new Name(ns));
-          response.addRecord(nsRecord, Section.AUTHORITY);
-
-          // Resolve NS Record name to an IP address and add it to ADDITIONAL section 
-          JSONObject nsResponseJson = lookupGuidField(ns, fieldName, null, handler);
-          //CommandResponse nsResponse = lookupGuidGnsServer(ns, fieldName, null, handler);
-          if (nsResponseJson != null) {
-            //if (nsResponse != null && !nsResponse.isError()) {
-            String address = nsResponseJson.getString(ns);
-            //String address = (new JSONArray(nsResponse.getReturnValue())).get(0).toString();
-            NameResolution.getLogger().log(Level.FINE, "single field {0}", address);
-            ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, 60, InetAddress.getByName(address));
-            response.addRecord(nsARecord, Section.ADDITIONAL);
+          JSONObject recordObj = fieldResponseJson.getJSONObject("NS");	
+          JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
+          int ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
+          // The records may contain multiple ip addresses
+          for(int i=0; i<records.length(); i++){
+        	  JSONArray record = records.getJSONArray(i);
+        	  String ns = record.getString(0);
+        	  String address = record.getString(1);
+        	  NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, ttl, new Name(ns));
+        	  response.addRecord(nsRecord, Section.AUTHORITY);
+        	  ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, 60, InetAddress.getByName(address));
+        	  response.addRecord(nsARecord, Section.ADDITIONAL);
           }
+
+          /*
+           * No need for looking up record again
+           * 
+          for(int i=0; i<records.length(); i++){
+        	  String ns = records.getString(i);        	  
+	          // Resolve NS Record name to an IP address and add it to ADDITIONAL section 
+	          JSONObject nsResponseJson = lookupGuidField(ns, fieldName, null, handler);
+	          
+	          if (nsResponseJson != null) {
+	            //if (nsResponse != null && !nsResponse.isError()) {
+	            String address = nsResponseJson.getString(ns);
+	            //String address = (new JSONArray(nsResponse.getReturnValue())).get(0).toString();
+	            NameResolution.getLogger().log(Level.FINE, "single field {0}", address);
+	            ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, 60, InetAddress.getByName(address));
+	            response.addRecord(nsARecord, Section.ADDITIONAL);
+	          }
+          }
+          */
         }
         if (fieldResponseJson.has("MX")) {
           String mxname = fieldResponseJson.getString("MX");
