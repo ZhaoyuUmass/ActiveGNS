@@ -70,7 +70,7 @@ public class OldHackyConstants {
   /**
    * Enable active code.
    */
-  public static boolean enableActiveCode = false;
+  public static boolean enableActiveCode = true;
   //FIXME: The owner of this should move it into GNSConfig
   /**
    * Number of active code worker.

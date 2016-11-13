@@ -3,7 +3,9 @@ package edu.umass.cs.gnsserver.gnamed;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -27,6 +29,7 @@ import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
+import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
 /**
@@ -90,15 +93,39 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 	
 	private ManagedDNSServiceProxy(){
+		
 		try {
 			client = new GNSClientCommands();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		String guid_file = null;
+		if(System.getProperty("guid_file")!=null){
+			guid_file = System.getProperty("update");
+		}
+		if (guid_file==null){
+			// create account guid with username admin 
+			try {
+				accountGuid = GuidUtils.lookupOrCreateAccountGuid(client, "admin",
+						"password", true);
+				ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("proxy_guid")));
+				accountGuid.writeObject(output);
+				output.flush();
+				output.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else{
+			try {
+				ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File(guid_file)));
+				accountGuid = new GuidEntry(input);
+				input.close();
+			} catch (IOException | EncryptionException e) {
+				e.printStackTrace();
+			}
+		}
 		
 		try {
-			accountGuid = GuidUtils.lookupOrCreateAccountGuid(client, "gaozy",
-					"password", true);
 			deployDomain();
 		} catch (Exception e) {
 			e.printStackTrace();
