@@ -23,11 +23,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.*;
 import edu.umass.cs.gnscommon.utils.Format;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
@@ -42,7 +39,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 /**
- * The command to retrieve the active code for the specified GUID and action.
+ * The command to retrieve the active code for the specified GNSProtocol.GUID.toString() and action.
  *
  */
 public class SetCode extends AbstractCommand {
@@ -70,23 +67,23 @@ public class SetCode extends AbstractCommand {
           ClientRequestHandlerInterface handler) throws InvalidKeyException,
           InvalidKeySpecException, JSONException, NoSuchAlgorithmException,
           SignatureException, ParseException {
-    String guid = json.getString(GUID);
-    String writer = json.getString(WRITER);
-    String action = json.getString(AC_ACTION);
-    String code = json.getString(AC_CODE);
-    String signature = json.getString(SIGNATURE);
-    String message = json.getString(SIGNATUREFULLMESSAGE);
-    Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
+    String guid = json.getString(GNSProtocol.GUID.toString());
+    String writer = json.getString(GNSProtocol.WRITER.toString());
+    String action = json.getString(GNSProtocol.AC_ACTION.toString());
+    String code = json.getString(GNSProtocol.AC_CODE.toString());
+    String signature = json.getString(GNSProtocol.SIGNATURE.toString());
+    String message = json.getString(GNSProtocol.SIGNATUREFULLMESSAGE.toString());
+    Date timestamp = json.has(GNSProtocol.TIMESTAMP.toString())
+            ? Format.parseDateISO8601UTC(json.getString(GNSProtocol.TIMESTAMP.toString())) : null; // can be null on older client
     ResponseCode response = ActiveCode.setCode(guid, action,
             code, writer, signature, message, timestamp, handler);
 
     if (response.isExceptionOrError()) {
-      return new CommandResponse(response, BAD_RESPONSE + " " + response.getProtocolCode());
+      return new CommandResponse(response, GNSProtocol.BAD_RESPONSE.toString()
+              + " " + response.getProtocolCode());
     } else {
       return new CommandResponse(ResponseCode.NO_ERROR, GNSProtocol.OK_RESPONSE.toString());
     }
   }
-
-  
 
 }

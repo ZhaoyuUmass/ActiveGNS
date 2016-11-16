@@ -19,14 +19,13 @@
  */
 package edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group;
 
-import static edu.umass.cs.gnscommon.GNSCommandProtocol.*;
 import edu.umass.cs.gnscommon.utils.Format;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.GroupAccess;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
-
+import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import java.security.InvalidKeyException;
@@ -35,13 +34,12 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.util.Date;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Command to return the groups that a GUID is a member of formatted as a JSON Array.
+ * Command to return the groups that a GNSProtocol.GUID.toString() is a member of formatted as a JSON Array.
  *
  * @author westy
  */
@@ -67,16 +65,15 @@ public class GetGroups extends AbstractCommand {
   @Override
   public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, ParseException {
-    String guid = json.getString(GUID);
+    String guid = json.getString(GNSProtocol.GUID.toString());
     // reader might be same as guid
-    String reader = json.optString(READER, guid);
+    String reader = json.optString(GNSProtocol.READER.toString(), guid);
     // signature and message can be empty for unsigned cases
-    String signature = json.optString(SIGNATURE, null);
-    String message = json.optString(SIGNATUREFULLMESSAGE, null);
-    Date timestamp = json.has(TIMESTAMP) ? Format.parseDateISO8601UTC(json.getString(TIMESTAMP)) : null; // can be null on older client
+    String signature = json.optString(GNSProtocol.SIGNATURE.toString(), null);
+    String message = json.optString(GNSProtocol.SIGNATUREFULLMESSAGE.toString(), null);
+    Date timestamp = json.has(GNSProtocol.TIMESTAMP.toString()) 
+            ? Format.parseDateISO8601UTC(json.getString(GNSProtocol.TIMESTAMP.toString())) : null; // can be null on older client
     return new CommandResponse(ResponseCode.NO_ERROR, new JSONArray(GroupAccess.lookupGroupsLocally(guid, reader,
             signature, message, timestamp, handler)).toString());
   }
-
-  
 }
