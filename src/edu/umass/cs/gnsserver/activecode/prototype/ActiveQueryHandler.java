@@ -53,13 +53,13 @@ public class ActiveQueryHandler {
 	 * @return an ActiveMessage being sent back to worker as a response to the query
 	 */
 	public ActiveMessage handleQuery(ActiveMessage am, InternalRequestHeader header){
-		ActiveCodeHandler.getLogger().log(Level.INFO, "{0} receives:{1} ", new Object[]{this, am} );
+		ActiveCodeHandler.getLogger().log(Level.FINE, "{0} receives:{1} ", new Object[]{this, am} );
 		ActiveMessage response;
 		if(am.type == ActiveMessage.Type.READ_QUERY)
 			response = handleReadQuery(am, header);
 		else
 			response = handleWriteQuery(am, header);
-		ActiveCodeHandler.getLogger().log(Level.INFO, "{0} returns response to worker:{1}", new Object[]{this, response} );
+		ActiveCodeHandler.getLogger().log(Level.FINE, "{0} returns response to worker:{1}", new Object[]{this, response} );
 		return response;
 	}
 	
