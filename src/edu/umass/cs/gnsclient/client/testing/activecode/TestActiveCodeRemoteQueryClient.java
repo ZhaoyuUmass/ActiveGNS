@@ -87,7 +87,7 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		System.out.println("The new code is:\n"+read_code);
 		
-		//test read after a read		
+		//test a read after a read		
 		try {
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
 			
@@ -107,7 +107,7 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("Depth query test(a read followed by a read) succeeds!");		
 		
 		
-		// test write followed by a read
+		// test write after a read
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
@@ -157,7 +157,7 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		
 		
-		// test a read followed by a write 		
+		// test a read after a write 		
 		codeFile = System.getProperty("activeWriteCode");
 		if(codeFile == null)
 			codeFile = "scripts/activeCode/remoteWriteQuery.js";		

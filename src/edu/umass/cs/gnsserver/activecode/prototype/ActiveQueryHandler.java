@@ -11,12 +11,14 @@ import java.nio.file.Paths;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
+import edu.umass.cs.gnsserver.activecode.ActiveCodeHandler;
 import edu.umass.cs.gnsserver.activecode.prototype.unblocking.ActiveNonBlockingClient.Monitor;
 import edu.umass.cs.gnsserver.interfaces.ActiveDBInterface;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
@@ -51,13 +53,13 @@ public class ActiveQueryHandler {
 	 * @return an ActiveMessage being sent back to worker as a response to the query
 	 */
 	public ActiveMessage handleQuery(ActiveMessage am, InternalRequestHeader header){
-		//System.out.println("ActiveQueryHandler handles query "+am);
+		ActiveCodeHandler.getLogger().log(Level.INFO, "{0} receives:{1} ", new Object[]{this, am} );
 		ActiveMessage response;
 		if(am.type == ActiveMessage.Type.READ_QUERY)
 			response = handleReadQuery(am, header);
 		else
 			response = handleWriteQuery(am, header);
-		//System.out.println("ActiveQueryHandler receives resposne "+response);
+		ActiveCodeHandler.getLogger().log(Level.INFO, "{0} returns response to worker:{1}", new Object[]{this, response} );
 		return response;
 	}
 	
