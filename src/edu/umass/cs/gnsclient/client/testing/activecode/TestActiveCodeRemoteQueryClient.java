@@ -87,7 +87,11 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		System.out.println("The new code is:\n"+read_code);
 		
-		//test a read after a read		
+		String response = null;
+		
+		/** 
+		 * Case I: test a read followed by a read		
+
 		try {
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
 			
@@ -97,7 +101,7 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		Thread.sleep(1000);
 		
-		String response = null;
+		
 		try {
 			response = client.fieldRead(entries[0], someField);
 		} catch (Exception e) {
@@ -105,9 +109,11 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		assertEquals(depthResult, response);		
 		System.out.println("Depth query test(a read followed by a read) succeeds!");		
+		*/
 		
+		/**
+		 * Case II: test a write followed by a read
 		
-		// test write after a read
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
@@ -115,9 +121,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		Thread.sleep(1000);
-		
-		
+		Thread.sleep(1000);		
 		
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
@@ -144,6 +148,7 @@ public class TestActiveCodeRemoteQueryClient {
 		assertEquals(depthResult, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
 		
+		
 		// reset the state		
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
@@ -155,9 +160,11 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		 */
 		
-		
-		// test a read after a write 		
+		/**
+		 * Case III: test a read followed by a write 		
+		 */
 		codeFile = System.getProperty("activeWriteCode");
 		if(codeFile == null)
 			codeFile = "scripts/activeCode/remoteWriteQuery.js";		
@@ -180,22 +187,14 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		assertEquals(someValue, response);
 		
-		count = 0;
-		while(count < 10){
-			try {
-				response = client.fieldRead(entries[1], someField);
-				if(response.equals(someValue)){
-					break;
-				}else{					
-					count++;
-					System.out.println("The value hasn't been updated without a reason "+count);
-					Thread.sleep(500);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		/*
+		try {
+			response = client.fieldRead(entries[1], someField);
+			assertEquals(someValue, response);
+		} catch (Exception e2) {
+			fail("Expect "+someValue+" but get "+response+", write after read failed.");
 		}
-		
+		*/
 		
 		// This sleep is required as a requirement for eventual consistency semantics of gigapaxos
 		Thread.sleep(1000);
@@ -210,7 +209,9 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		
 		
-		// test a write followed by a write
+		/**
+		 *  test a write followed by a write
+		
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]);
@@ -225,9 +226,10 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException | JSONException e) {
 			System.out.println("Depth query test(a write followed by a write) succeeds!");
 		}		
+		 */
 		
 		try {
-			cleanup();
+			//cleanup();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		

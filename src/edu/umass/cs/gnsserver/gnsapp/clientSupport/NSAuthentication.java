@@ -324,11 +324,12 @@ public class NSAuthentication {
               "================> Public key not found: accessor={0} guid={1} field={2} public keys={3}",
               new Object[]{accessorGuid, guid, field, publicKeys});
     }
+    
     /**
      * If ActiveCode is enabled and the header is not null, then trigger active code.
      * Header is not null means that this is a read or write operation. ActiveACL is not
      * interested in the other operations for ACL check.
-     */
+    
     if (OldHackyConstants.enableActiveCode && header != null){
     	JSONObject value = new JSONObject();
     	try {
@@ -345,15 +346,15 @@ public class NSAuthentication {
 			if (result!=null)
 				publicKey = result.getString(ActiveCode.PUBLICKEY_FIELD);
 		} catch (InternalRequestException e) {
-			/**
-			 * This is caused by the mistake of user's code, and it is safe to return the original value
-			 * of publicKey as the user is not clear with how the code works.
-			 */
+
+			 // This is caused by the mistake of user's code, and it is safe to return the original value
+			 // of publicKey as the user is not clear with how the code works.
 			return publicKey;
 		} catch (JSONException e) {
 			return null;
 		}    	
     }
+	*/
     return publicKey;
   }
 

@@ -66,6 +66,8 @@ public class ActiveCodeHandler {
 	
 	private static final Logger logger = Logger.getLogger(ActiveCodeHandler.class.getName());
 	
+	public static final Level DEBUG_LEVEL = Level.INFO;
+	
 	private static ActiveHandler handler;
 	
 	/**
@@ -157,7 +159,7 @@ public class ActiveCodeHandler {
 	 * @throws InternalRequestException 
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
-		ActiveCodeHandler.getLogger().log(Level.FINE, 
+		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
 				"receives:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
 				new Object[]{guid, field, action, value, header});
 		
@@ -200,7 +202,7 @@ public class ActiveCodeHandler {
 				newResult = runCode(header, code, guid, field, action, value, 5);
 			}
 		}
-		ActiveCodeHandler.getLogger().log(Level.FINE, 
+		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
 				"The result after executing active code is {0}",
 				new Object[]{newResult});
 		DelayProfiler.updateDelayNano("activeTotal", t);

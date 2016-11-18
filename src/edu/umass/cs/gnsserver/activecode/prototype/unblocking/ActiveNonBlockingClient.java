@@ -199,6 +199,10 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 					long id = response.getId();
 					Monitor monitor = tasks.get(id);
 					assert(monitor != null):"the corresponding monitor is null!";
+					ActiveCodeHandler.getLogger().log(ActiveCodeHandler.DEBUG_LEVEL,
+							"receive a result or query from the worker:{0}",
+							new Object[]{response});
+					
 					monitor.setResult(response, response.type == Type.RESPONSE);
 				} else {
 					if(!isRestarting.getAndSet(true)){
@@ -346,7 +350,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
   protected synchronized void sendMessage(ActiveMessage am){
 		try {
 			channel.sendMessage(am);
-			ActiveCodeHandler.getLogger().log(Level.FINE, 
+			ActiveCodeHandler.getLogger().log(ActiveCodeHandler.DEBUG_LEVEL, 
 					"sends request:{0}", new Object[]{am});
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -437,7 +441,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		
 		response = monitor.getResult();
 		
-		ActiveCodeHandler.getLogger().log(Level.FINE,
+		ActiveCodeHandler.getLogger().log(ActiveCodeHandler.DEBUG_LEVEL,
 				"receive a response from the worker:{0}",
 				new Object[]{response});
 		
