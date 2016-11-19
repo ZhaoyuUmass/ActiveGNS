@@ -79,7 +79,7 @@ public class NSAuthentication {
    * @throws FailedDBOperationException
    * @throws UnsupportedEncodingException
    */
-  public static ResponseCode signatureAndACLCheck(InternalRequestHeader header, String guid,
+  public static ResponseCode signatureAndACLCheck(String guid,
           String field, List<String> fields,
           String accessorGuid, String signature,
           String message, MetaDataTypeName access,
@@ -107,14 +107,14 @@ public class NSAuthentication {
     AclCheckResult aclResult = null;
     if (field != null) {
 	  //Remember that field can also be ENTIRE_RECORD
-      aclResult = aclCheck(header, guid, field, accessorGuid, access, gnsApp);
+      aclResult = aclCheck(guid, field, accessorGuid, access, gnsApp);
       if (aclResult.getResponseCode().isExceptionOrError()) {
         return aclResult.getResponseCode();
       }
     } else if (fields != null) {
       // Check each field individually; if any field doesn't pass the entire access fails.
       for (String aField : fields) {
-        aclResult = aclCheck(header, guid, aField, accessorGuid, access, gnsApp);
+        aclResult = aclCheck(guid, aField, accessorGuid, access, gnsApp);
         if (aclResult.getResponseCode().isExceptionOrError()) {
           return aclResult.getResponseCode();
         }
@@ -150,17 +150,17 @@ public class NSAuthentication {
   }
 
 
-  public static AclCheckResult aclCheck(InternalRequestHeader header, String targetGuid, String field,
+  public static AclCheckResult aclCheck(String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     if (Config.getGlobalBoolean(GNSConfig.GNSC.USE_OLD_ACL_MODEL)) {
-      return oldAclCheck(header, targetGuid, field, accessorGuid, access, gnsApp);
+      return oldAclCheck(targetGuid, field, accessorGuid, access, gnsApp);
     } else {
-      return newAclCheck(header, targetGuid, field, accessorGuid, access, gnsApp);
+      return newAclCheck(targetGuid, field, accessorGuid, access, gnsApp);
     }
   }
 
-  private static AclCheckResult newAclCheck(InternalRequestHeader header, String targetGuid, String field,
+  private static AclCheckResult newAclCheck(String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -183,7 +183,7 @@ public class NSAuthentication {
       // Otherwise we attempt to find the public key for the accessorGuid in the ACL of the guid being
       // accesssed.
       // Note that field can be GNSProtocol.ENTIRE_RECORD.toString() here
-      publicKey = lookupPublicKeyInACL(header, targetGuid, field, accessorGuid, access, gnsApp);
+      publicKey = lookupPublicKeyInACL(targetGuid, field, accessorGuid, access, gnsApp);
     }
     // Handle the one final case: the accessorGuid is a member of a group guid and
     // that group guid is in the ACL
@@ -214,7 +214,7 @@ public class NSAuthentication {
   }
   
   @Deprecated
-  private static AclCheckResult oldAclCheck(InternalRequestHeader header, String targetGuid, String field,
+  private static AclCheckResult oldAclCheck(String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -239,7 +239,7 @@ public class NSAuthentication {
       // Otherwise we attempt to find the public key for the accessorGuid in the ACL of the guid being
       // accesssed.
 	  //field can be GNSProtocol.ENTIRE_RECORD.toString() here
-      publicKey = lookupPublicKeyInACL(header, targetGuid, field, accessorGuid, access, gnsApp);
+      publicKey = lookupPublicKeyInACL(targetGuid, field, accessorGuid, access, gnsApp);
       if (publicKey != null) {
         // If we found the public key in the lookupPublicKey call then our access control list
         // check is done because the public key of the accessorGuid is in the given acl of targetGuid.
@@ -285,7 +285,7 @@ public class NSAuthentication {
    * @return the public key
    * @throws FailedDBOperationException
    */
-  private static String lookupPublicKeyInACL(InternalRequestHeader header, String guid, String field, String accessorGuid,
+  private static String lookupPublicKeyInACL(String guid, String field, String accessorGuid,
           MetaDataTypeName access, GNSApplicationInterface<String> gnsApp)
           throws FailedDBOperationException {
     String publicKey;
@@ -325,36 +325,6 @@ public class NSAuthentication {
               new Object[]{accessorGuid, guid, field, publicKeys});
     }
     
-    /**
-     * If ActiveCode is enabled and the header is not null, then trigger active code.
-     * Header is not null means that this is a read or write operation. ActiveACL is not
-     * interested in the other operations for ACL check.
-    
-    if (OldHackyConstants.enableActiveCode && header != null){
-    	JSONObject value = new JSONObject();
-    	try {
-			value.put(ActiveCode.PUBLICKEY_FIELD, publicKey);
-			// FIXME: this is unsafe with remote query, as the accessorGuid may not exist
-			value.put(ActiveCode.ACCESSOR_GUID, accessorGuid);
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-    	
-    	JSONObject result = null;
-    	try {
-			result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.ACL_ACTION, value, gnsApp.getDB());
-			if (result!=null)
-				publicKey = result.getString(ActiveCode.PUBLICKEY_FIELD);
-		} catch (InternalRequestException e) {
-
-			 // This is caused by the mistake of user's code, and it is safe to return the original value
-			 // of publicKey as the user is not clear with how the code works.
-			return publicKey;
-		} catch (JSONException e) {
-			return null;
-		}    	
-    }
-	*/
     return publicKey;
   }
 

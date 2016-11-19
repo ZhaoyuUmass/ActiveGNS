@@ -66,7 +66,10 @@ public class ActiveCodeHandler {
 	
 	private static final Logger logger = Logger.getLogger(ActiveCodeHandler.class.getName());
 	
-	public static final Level DEBUG_LEVEL = Level.INFO;
+	/**
+	 * Debug level
+	 */
+	public static final Level DEBUG_LEVEL = Level.FINE;
 	
 	private static ActiveHandler handler;
 	
@@ -160,7 +163,7 @@ public class ActiveCodeHandler {
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
 		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
-				"receives:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
+				"handles:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
 				new Object[]{guid, field, action, value, header});
 		
 		long t = System.nanoTime();
