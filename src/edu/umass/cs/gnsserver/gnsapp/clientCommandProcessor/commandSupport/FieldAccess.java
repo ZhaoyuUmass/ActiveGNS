@@ -783,16 +783,16 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
               //Config.getGlobalString(GNSConfig.GNSC.INTERNAL_OP_SECRET)
               .equals(reader)
               && (field != null || fields != null)) {
-        errorCode = NSAuthentication.signatureAndACLCheck(header, guid, field, fields, reader,
+        errorCode = NSAuthentication.signatureAndACLCheck(guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
       }else{
     	  if(header != null){
 	    	  if(field != null){
-	      			errorCode = NSAuthentication.aclCheck(header, guid, field, 
+	      			errorCode = NSAuthentication.aclCheck(guid, field, 
 	      				header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app).getResponseCode();
 	      	  } else if (fields != null){
 	  			for (String aField : fields) {
-	      	        AclCheckResult aclResult = NSAuthentication.aclCheck(header, guid, aField, 
+	      	        AclCheckResult aclResult = NSAuthentication.aclCheck(guid, aField, 
 	      	        		header.getOriginatingGUID(), MetaDataTypeName.READ_WHITELIST, app);
 	      	        if (aclResult.getResponseCode().isExceptionOrError()) {
 	      	          errorCode = aclResult.getResponseCode();

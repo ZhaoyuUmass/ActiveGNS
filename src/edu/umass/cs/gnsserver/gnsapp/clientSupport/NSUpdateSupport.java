@@ -92,11 +92,11 @@ public class NSUpdateSupport {
     // writer will be the INTERNAL_OP_SECRET for super secret internal system accesses
     if (!GNSConfig.getInternalOpSecret().equals(writer)) {
       if (field != null) {
-        errorCode = NSAuthentication.signatureAndACLCheck(header, guid,
+        errorCode = NSAuthentication.signatureAndACLCheck(guid,
                 field, null,
                 writer, signature, message, MetaDataTypeName.WRITE_WHITELIST, app);
       } else if (userJSON != null) {
-        errorCode = NSAuthentication.signatureAndACLCheck(header, guid,
+        errorCode = NSAuthentication.signatureAndACLCheck(guid,
                 null, userJSON.getKeys(),
                 writer, signature, message, MetaDataTypeName.WRITE_WHITELIST, app);
       } else {
@@ -108,11 +108,11 @@ public class NSUpdateSupport {
     	if(header != null){
 	    	// This ACL check will be only used for active code remote query
 	    	if(field != null){
-	    		errorCode = NSAuthentication.aclCheck(header, guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+	    		errorCode = NSAuthentication.aclCheck(guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
 	    	}else if (userJSON != null) {
 	    		List<String> fields = userJSON.getKeys();
 	    		for (String aField : fields) {
-	    	        AclCheckResult aclResult = NSAuthentication.aclCheck(header, guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
+	    	        AclCheckResult aclResult = NSAuthentication.aclCheck(guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
 	    	        if (aclResult.getResponseCode().isExceptionOrError()) {
 	    	          errorCode = aclResult.getResponseCode();
 	    	        }
