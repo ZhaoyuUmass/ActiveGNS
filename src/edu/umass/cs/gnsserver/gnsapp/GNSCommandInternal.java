@@ -163,9 +163,11 @@ public class GNSCommandInternal extends InternalCommandPacket {
   public static InternalCommandPacket fieldUpdate(String targetGUID, String field,
           JSONObject value, InternalRequestHeader header)
           throws JSONException, InternalRequestException {
+	  
+	// FIXME: field may not be very useful
     return getCommand(CommandType.ReplaceUserJSONUnsigned, header,
             GNSProtocol.GUID.toString(), targetGUID, GNSProtocol.FIELD.toString(),
-            field, GNSProtocol.USER_JSON.toString(),
+            null, GNSProtocol.USER_JSON.toString(),
             value);
   }
 }

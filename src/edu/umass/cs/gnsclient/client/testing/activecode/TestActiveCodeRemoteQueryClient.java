@@ -91,7 +91,7 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		/** 
 		 * Case I: test a read followed by a read		
-
+		 */
 		try {
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
 			
@@ -109,11 +109,11 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		assertEquals(depthResult, response);		
 		System.out.println("Depth query test(a read followed by a read) succeeds!");		
-		*/
+		
 		
 		/**
 		 * Case II: test a write followed by a read
-		
+		 */
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
@@ -160,7 +160,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		 */
+		
 		
 		/**
 		 * Case III: test a read followed by a write 		
@@ -187,14 +187,14 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		assertEquals(someValue, response);
 		
-		/*
+		
 		try {
 			response = client.fieldRead(entries[1], someField);
 			assertEquals(someValue, response);
 		} catch (Exception e2) {
 			fail("Expect "+someValue+" but get "+response+", write after read failed.");
 		}
-		*/
+		
 		
 		// This sleep is required as a requirement for eventual consistency semantics of gigapaxos
 		Thread.sleep(1000);
@@ -211,7 +211,7 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		/**
 		 *  test a write followed by a write
-		
+		 */
 		try {
 			client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]);
@@ -226,10 +226,10 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException | JSONException e) {
 			System.out.println("Depth query test(a write followed by a write) succeeds!");
 		}		
-		 */
+		 
 		
 		try {
-			//cleanup();
+			cleanup();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
