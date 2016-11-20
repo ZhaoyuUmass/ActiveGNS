@@ -1,15 +1,18 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.gnsserver.activecode.prototype.utils.Location;
 
 /**
  * This class is an implementation of Querier, Querier only contains
@@ -18,7 +21,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  * @author gaozy
  *
  */
-public class ActiveNonBlockingQuerier implements Querier {
+public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	private Channel channel;
 	private int currentTTL;
 	private String currentGuid;
@@ -74,7 +77,7 @@ public class ActiveNonBlockingQuerier implements Querier {
 	}
 	
 	@Override
-	public JSONObject lookupPublicKeyForGuid(String targetGuid) throws ActiveException {
+	public JSONObject lookupUsernameForGuid(String targetGuid) throws ActiveException {
 		throw new RuntimeException("unimplemented");
 	}
 	
@@ -189,5 +192,12 @@ public class ActiveNonBlockingQuerier implements Querier {
 		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 		
 		
+	}
+
+
+	@Override
+	public List<Location> getLocations(List<String> ips) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

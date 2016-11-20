@@ -57,13 +57,4 @@ public interface Querier {
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
 	public void writeGuid(String queriedGuid, String field, JSONObject value) throws ActiveException;
-	
-	/**
-	 * This method allows customer's active code to look up a public key of a targetGuid.
-	 * 
-	 * @param targetGuid
-	 * @return a JSONObject object that contains the targetGuid's public key with the key {@ActiveCode.PUBLICKEY_FIELD}.
-	 * @throws ActiveException throws an ActiveException if the targetGuid does not exist.
-	 */
-	public JSONObject lookupPublicKeyForGuid(String targetGuid) throws ActiveException;
 }
