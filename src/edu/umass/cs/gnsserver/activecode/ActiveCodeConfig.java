@@ -48,7 +48,10 @@ public class ActiveCodeConfig {
 	   */
 	  public static int activeWorkerHeapSize = 128;
 	  
-	  public static String activeGeoIPFilePath = "conf/activeCode/";
+	  /**
+	   * To use GeoIP API, put the binary DB file to the proper path.
+	   */
+	  public static String activeGeoIPFilePath = "conf/activeCode/GeoLite2-City.mmdb";
 	  
 	  /**
 	   * Default request timeout (ms)
