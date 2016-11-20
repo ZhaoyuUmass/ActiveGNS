@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,7 +38,7 @@ public class ActiveQueryHandler {
 	 * @param app
 	 */
 	public ActiveQueryHandler(ActiveDBInterface app){
-		this.app = app;
+		ActiveQueryHandler.app = app;
 		this.queryExecutor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		queryExecutor.prestartAllCoreThreads();		
 	}

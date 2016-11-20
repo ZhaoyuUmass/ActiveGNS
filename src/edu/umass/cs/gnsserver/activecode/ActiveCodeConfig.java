@@ -48,6 +48,8 @@ public class ActiveCodeConfig {
 	   */
 	  public static int activeWorkerHeapSize = 128;
 	  
+	  public static String activeGeoIPFilePath = "conf/activeCode/";
+	  
 	  /**
 	   * Default request timeout (ms)
 	   */
