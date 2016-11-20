@@ -786,6 +786,9 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
         errorCode = NSAuthentication.signatureAndACLCheck(guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
       }else{
+    	  LOGGER.log(Level.FINE,
+    	            "reader does not equal to internal secret reader: {0}, header: {1}",
+    	            new Object[]{reader, header});
     	  if(header != null){
 	    	  if(field != null){
 	      			errorCode = NSAuthentication.aclCheck(guid, field, 
