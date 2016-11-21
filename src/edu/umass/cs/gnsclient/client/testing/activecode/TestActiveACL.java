@@ -32,7 +32,7 @@ import edu.umass.cs.utils.Util;
  * @author gaozy
  */
 @FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
-public class ActiveACLHelloWorldExample extends DefaultTest {
+public class TestActiveACL extends DefaultTest {
 	
 	private final static int numGuid = 3;
 	
@@ -185,7 +185,7 @@ public class ActiveACLHelloWorldExample extends DefaultTest {
 	 */
 	public static void main(String[] args){
 		Util.assertAssertionsEnabled();
-		Result result = JUnitCore.runClasses(ActiveACLHelloWorldExample.class);
+		Result result = JUnitCore.runClasses(TestActiveACL.class);
 		for (Failure failure : result.getFailures()) {
 			System.out.println(failure.getMessage());
 			failure.getException().printStackTrace();
