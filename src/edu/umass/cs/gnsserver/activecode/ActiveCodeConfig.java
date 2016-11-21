@@ -87,6 +87,8 @@ public class ActiveCodeConfig {
 	  
 	  private static final String ACTIVE_WORKER_HEAP_SIZE = "ACTIVE_WORKER_HEAP_SIZE";
 	  
+	  private static final String ACTIVE_GEOIP_FILE_PATH = "ACTIVE_GEOIP_FILE_PATH";
+	  
 	  private static final String ACTIVE_REQUEST_TIMEOUT = "ACTIVE_REQUEST_TIMEOUT";
 	  
 	  private static final String ACTIVE_CRASH_ENEABLED = "ACTIVE_CRASH_ENEABLED";
@@ -136,6 +138,10 @@ public class ActiveCodeConfig {
 		    
 		    if(allValues.containsKey(ACTIVE_CRASH_ENEABLED)) {
 		    	activeCrashEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CRASH_ENEABLED));
+		    }
+		    
+		    if(allValues.containsKey(ACTIVE_GEOIP_FILE_PATH)) {
+		    	activeGeoIPFilePath = allValues.getProperty(ACTIVE_GEOIP_FILE_PATH);
 		    }
 	  }
 	 

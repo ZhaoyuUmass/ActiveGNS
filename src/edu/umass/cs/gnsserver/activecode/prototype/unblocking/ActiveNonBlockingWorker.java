@@ -1,5 +1,6 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -10,6 +11,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import org.json.JSONException;
+
+import com.maxmind.geoip2.DatabaseReader;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
@@ -35,6 +38,7 @@ public class ActiveNonBlockingWorker {
 	
 	private final Channel channel;
 	private final int id;
+	private static DatabaseReader dbReader;
 	
 	private final ThreadPoolExecutor executor;
 	private final ThreadPoolExecutor taskExecutor;	
@@ -48,7 +52,7 @@ public class ActiveNonBlockingWorker {
 	 * @param id 
 	 * @param numThread
 	 */
-	protected ActiveNonBlockingWorker(String ifile, String ofile, int id, int numThread) {
+	protected ActiveNonBlockingWorker(String ifile, String ofile, int id, int numThread, String geoip_file) {
 		this.id = id;
 		
 		executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
@@ -59,6 +63,18 @@ public class ActiveNonBlockingWorker {
 		channel = new ActiveNamedPipe(ifile, ofile);
 		runner = new ActiveNonBlockingRunner(channel);
 		
+		File database = new File(geoip_file);
+		
+		if(database.exists() && !database.isDirectory()) { 
+			try {
+				dbReader = new DatabaseReader.Builder(database).build();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}else{
+			dbReader = null;
+		}
+				
 		ActiveNonBlockingWorker.getLogger().log(Level.FINE, "{0} starts running", new Object[]{this});
 		try {
 			runWorker();
@@ -118,8 +134,9 @@ public class ActiveNonBlockingWorker {
 			String sfile = args[1];
 			int id = Integer.parseInt(args[2]);
 			int numThread = Integer.parseInt(args[3]);
+			String geoip_file = args[4];
 			
-			new ActiveNonBlockingWorker(cfile, sfile, id, numThread);
+			new ActiveNonBlockingWorker(cfile, sfile, id, numThread, geoip_file);
 		}
 	}
 }

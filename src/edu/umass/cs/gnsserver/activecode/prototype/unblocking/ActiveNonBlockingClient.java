@@ -275,6 +275,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add(ofile);
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
+	    command.add(ActiveCodeConfig.activeGeoIPFilePath);
 	    command.add(Boolean.toString(pipeEnable));
 	    command.add("ReconfigurableNode");
 	    command.add(nodeId);
@@ -314,6 +315,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	    command.add(""+port2);
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
+	    command.add(ActiveCodeConfig.activeGeoIPFilePath);
 		command.add(Boolean.toString(pipeEnable));
 		command.add("ReconfigurableNode");
 	    command.add(nodeId);
