@@ -189,6 +189,18 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			return response;
 		}
 	}
+
+	@Override
+	public Location getLocations(String ip) throws ActiveException {		
+		try {
+			InetAddress ipAddress = InetAddress.getByName(ip);
+			CityResponse response = dbReader.city(ipAddress);
+			return response.getLocation();
+			
+		} catch (IOException | GeoIp2Exception e) {
+			throw new ActiveException();
+		}		
+	}
 	
 	/**
 	 * @param args
@@ -207,15 +219,4 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		
 	}
 
-	@Override
-	public Location getLocations(String ip) throws ActiveException {		
-		try {
-			InetAddress ipAddress = InetAddress.getByName(ip);
-			CityResponse response = dbReader.city(ipAddress);
-			return response.getLocation();
-			
-		} catch (IOException | GeoIp2Exception e) {
-			throw new ActiveException();
-		}		
-	}
 }
