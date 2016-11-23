@@ -66,6 +66,7 @@ public class ActiveNonBlockingWorker {
 			try {
 				dbReader = new DatabaseReader.Builder(database).build();
 			} catch (IOException e) {
+				e.printStackTrace();
 				throw new RuntimeException(e);
 			}
 		}else{
@@ -127,7 +128,7 @@ public class ActiveNonBlockingWorker {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		boolean pipeEnable = Boolean.parseBoolean(args[4]);
+		boolean pipeEnable = Boolean.parseBoolean(args[5]);
 		if(pipeEnable){
 			String cfile = args[0];
 			String sfile = args[1];
