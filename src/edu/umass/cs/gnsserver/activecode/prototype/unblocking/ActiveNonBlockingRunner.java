@@ -22,10 +22,13 @@ import javax.script.SimpleScriptContext;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.maxmind.geoip2.DatabaseReader;
+
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  * @author gaozy
@@ -40,16 +43,27 @@ public class ActiveNonBlockingRunner {
 	private final HashMap<String, Integer> codeHashes = new HashMap<String, Integer>();
 	private final Channel channel;
 	private final ConcurrentHashMap<Long, ActiveNonBlockingQuerier> map = new ConcurrentHashMap<Long, ActiveNonBlockingQuerier>();
+	private final DatabaseReader dbReader;
+	
+	// This object is used to serialize/deserialize values passing between Java and Javascript
+	private final ScriptObjectMirror JSON;
 	
 	/**
 	 * @param channel 
 	 */
-	public ActiveNonBlockingRunner(Channel channel){
+	public ActiveNonBlockingRunner(Channel channel, DatabaseReader dbReader){
 		this.channel = channel;
+		this.dbReader = dbReader;
 		
 		// Initialize an script engine without extensions and java
 		NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
 		engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");		
+		try {
+			JSON = (ScriptObjectMirror) engine.eval("JSON");
+		} catch (ScriptException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Can not eval JSON");			
+		}
 		
 		invocable = (Invocable) engine;
 	}
@@ -97,13 +111,14 @@ public class ActiveNonBlockingRunner {
 	 * @throws NoSuchMethodException
 	 */
 	public JSONObject runCode(String guid, String field, String code, JSONObject value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
-		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, ttl, guid, id);
+		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, ttl, guid, id);
 		map.put(id, querier);
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		
-		JSONObject valuesMap = (JSONObject) invocable.invokeFunction("run", value, field, querier);
+		JSONObject valuesMap = (JSONObject) invocable.invokeFunction("run", value,
+				field, querier);
 		
 		map.remove(id);
 		return valuesMap;
@@ -151,7 +166,7 @@ public class ActiveNonBlockingRunner {
 		int numThread = 10; 		
 		final ActiveNonBlockingRunner[] runners = new ActiveNonBlockingRunner[numThread];
 		for (int i=0; i<numThread; i++){
-			runners[i] = new ActiveNonBlockingRunner(null);
+			runners[i] = new ActiveNonBlockingRunner(null, null);
 		}
 		
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
@@ -191,7 +206,7 @@ public class ActiveNonBlockingRunner {
 		/**
 		 * Test runner's protected method
 		 */
-		ActiveNonBlockingRunner runner = new ActiveNonBlockingRunner(null);
+		ActiveNonBlockingRunner runner = new ActiveNonBlockingRunner(null, null);
 		String chain_code = null;
 		try {
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));

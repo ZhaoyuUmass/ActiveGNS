@@ -1,8 +1,10 @@
 package edu.umass.cs.gnsserver.activecode.prototype.interfaces;
 
-import java.util.List;
+import org.json.JSONArray;
 
-import edu.umass.cs.gnsserver.activecode.prototype.utils.Location;
+import com.maxmind.geoip2.record.Location;
+
+import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 
 /**
  * This interface defines the methods that will be used
@@ -16,9 +18,10 @@ public interface DNSQuerier {
 	
 	/**
 	 * Resolve a list of IP addresses to geographic locs
-	 * @param ips 
-	 * @return 
+	 * @param ip
+	 * @return an {@code com.maxmind.geoip2.record.Location} object
+	 * @throws ActiveException 
 	 */
-	public List<Location> getLocations(List<String> ips);
+	public Location getLocations(String ip) throws ActiveException;
 		
 }

@@ -1,9 +1,12 @@
 package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.maxmind.geoip2.record.Location;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
@@ -11,7 +14,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
-import edu.umass.cs.gnsserver.activecode.prototype.utils.Location;
 
 /**
  * This class is an implementation of Querier, Querier only contains
@@ -155,7 +157,7 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 
 
 	@Override
-	public List<Location> getLocations(List<String> ips) {
+	public Location getLocations(String ip) throws ActiveException{
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -1,9 +1,18 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
-import java.util.List;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+import com.maxmind.geoip2.model.CityResponse;
+import com.maxmind.geoip2.record.Location;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
@@ -12,7 +21,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
-import edu.umass.cs.gnsserver.activecode.prototype.utils.Location;
 
 /**
  * This class is an implementation of Querier, Querier only contains
@@ -22,21 +30,26 @@ import edu.umass.cs.gnsserver.activecode.prototype.utils.Location;
  *
  */
 public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
-	private Channel channel;
+	private final Channel channel;
+	private final DatabaseReader dbReader;
 	private int currentTTL;
-	private String currentGuid;
-	private long currentID;
+	private final String currentGuid;
+	private final long currentID;
 	
 	private Monitor monitor;
 	
 	/**
 	 * @param channel
+	 * @param dbReader 
+	 * @param JSON 
 	 * @param ttl 
 	 * @param guid 
 	 * @param id 
 	 */
-	public ActiveNonBlockingQuerier(Channel channel, int ttl, String guid, long id){
+	@SuppressWarnings("restriction")
+	public ActiveNonBlockingQuerier(Channel channel, DatabaseReader dbReader, int ttl, String guid, long id){
 		this.channel = channel;
+		this.dbReader = dbReader;
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
 		this.currentID = id;
@@ -194,10 +207,15 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		
 	}
 
-
 	@Override
-	public List<Location> getLocations(List<String> ips) {
-		// TODO Auto-generated method stub
-		return null;
+	public Location getLocations(String ip) throws ActiveException {		
+		try {
+			InetAddress ipAddress = InetAddress.getByName(ip);
+			CityResponse response = dbReader.city(ipAddress);
+			return response.getLocation();
+			
+		} catch (IOException | GeoIp2Exception e) {
+			throw new ActiveException();
+		}		
 	}
 }

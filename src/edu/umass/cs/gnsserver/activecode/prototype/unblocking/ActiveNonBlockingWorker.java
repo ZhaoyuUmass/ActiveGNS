@@ -38,7 +38,7 @@ public class ActiveNonBlockingWorker {
 	
 	private final Channel channel;
 	private final int id;
-	private static DatabaseReader dbReader;
+	private final DatabaseReader dbReader;
 	
 	private final ThreadPoolExecutor executor;
 	private final ThreadPoolExecutor taskExecutor;	
@@ -60,9 +60,6 @@ public class ActiveNonBlockingWorker {
 		taskExecutor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		taskExecutor.prestartAllCoreThreads();
 		
-		channel = new ActiveNamedPipe(ifile, ofile);
-		runner = new ActiveNonBlockingRunner(channel);
-		
 		File database = new File(geoip_file);
 		
 		if(database.exists() && !database.isDirectory()) { 
@@ -74,6 +71,9 @@ public class ActiveNonBlockingWorker {
 		}else{
 			dbReader = null;
 		}
+		
+		channel = new ActiveNamedPipe(ifile, ofile);
+		runner = new ActiveNonBlockingRunner(channel, dbReader);
 				
 		ActiveNonBlockingWorker.getLogger().log(Level.FINE, "{0} starts running", new Object[]{this});
 		try {
@@ -110,7 +110,6 @@ public class ActiveNonBlockingWorker {
 			}
 		}
 	}
-	
 	
 	public String toString(){
 		return this.getClass().getSimpleName()+id;
