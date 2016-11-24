@@ -31,7 +31,7 @@ public class ActiveMessage implements Message{
 	private String guid;
 	private String field;
 	private String code;
-	private JSONObject value;
+	private String value;
 	private String targetGuid;
 	private String error;
 
@@ -102,7 +102,7 @@ public class ActiveMessage implements Message{
 	 * @param targetGuid 
 	 * @param error 
 	 */
-	public ActiveMessage(Type type, long id, int ttl, long budget, String guid, String field, String code, JSONObject value, String targetGuid, String error){
+	public ActiveMessage(Type type, long id, int ttl, long budget, String guid, String field, String code, String value, String targetGuid, String error){
 		this.type = type;
 		this.id = id;
 		this.ttl = ttl;
@@ -124,7 +124,7 @@ public class ActiveMessage implements Message{
 	 * @param ttl
 	 * @param budget 
 	 */
-	public ActiveMessage(String guid, String field, String code, JSONObject value, int ttl, long budget){
+	public ActiveMessage(String guid, String field, String code, String value, int ttl, long budget){
 		this(Type.REQUEST, counter.getAndIncrement(), ttl, budget, guid, field, code, value, null, null);
 	}
 	
@@ -150,7 +150,7 @@ public class ActiveMessage implements Message{
 	 * @param value
 	 * @param id 
 	 */
-	public ActiveMessage(int ttl, String guid, String field, String targetGuid, JSONObject value, long id){
+	public ActiveMessage(int ttl, String guid, String field, String targetGuid, String value, long id){
 		this(Type.WRITE_QUERY, id, ttl, 0, guid, field, null, value, targetGuid, null);
 	}
 	
@@ -160,7 +160,7 @@ public class ActiveMessage implements Message{
 	 * @param value
 	 * @param error
 	 */
-	public ActiveMessage(long id, JSONObject value, String error){
+	public ActiveMessage(long id, String value, String error){
 		this(Type.RESPONSE, id, 0, 0, null, null, null, value, null, error);
 	}
 	
@@ -202,7 +202,7 @@ public class ActiveMessage implements Message{
 	/**
 	 * @return value
 	 */
-	public JSONObject getValue() {
+	public String getValue() {
 		return value;
 	}
 	
@@ -466,7 +466,7 @@ public class ActiveMessage implements Message{
 			length = bbuf.getInt();
 			valueBytes = new byte[length];
 			bbuf.get(valueBytes);
-			value = new JSONObject(new String(valueBytes, CHARSET));
+			value = new String(valueBytes, CHARSET);
 			break;
 		case READ_QUERY:
 			ttl = bbuf.getInt();
@@ -513,7 +513,7 @@ public class ActiveMessage implements Message{
 			length = bbuf.getInt();
 			valueBytes = new byte[length];
 			bbuf.get(valueBytes);
-			value = new JSONObject(new String(valueBytes, CHARSET));
+			value = new String(valueBytes, CHARSET);
 			break;
 			
 		case RESPONSE:
@@ -522,7 +522,7 @@ public class ActiveMessage implements Message{
 			if(length>0){
 				valueBytes = new byte[length];
 				bbuf.get(valueBytes);
-				value = new JSONObject(new String(valueBytes, CHARSET));
+				value = new String(valueBytes, CHARSET);
 			}
 			
 			length = bbuf.getInt();
@@ -577,12 +577,12 @@ public class ActiveMessage implements Message{
 		long t = System.currentTimeMillis();	
 		for (int i=0; i<n; i++){
 			// budget is set to 500
-			new ActiveMessage(guid, field, noop_code, value, 0, 500);
+			new ActiveMessage(guid, field, noop_code, value.toString(), 0, 500);
 		}
 		long elapsed = System.currentTimeMillis() - t;		
 		System.out.println("It takes "+elapsed+"ms for create 1m REQUEST ActiveMessage, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
 		
-		ActiveMessage amsg = new ActiveMessage(guid, field, noop_code, value, 0, 500);
+		ActiveMessage amsg = new ActiveMessage(guid, field, noop_code, value.toString(), 0, 500);
 		ActiveMessage rmsg = null;
 		
 		t = System.currentTimeMillis();
