@@ -1,3 +1,4 @@
 function run(value, field, querier) {
-	return value.put(field, "hello world!");
+	value[field] = "hello world!";
+	return value;
 }
