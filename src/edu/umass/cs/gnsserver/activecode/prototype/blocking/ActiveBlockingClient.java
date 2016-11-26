@@ -318,15 +318,15 @@ public class ActiveBlockingClient implements Client {
 	 * @param guid
 	 * @param field
 	 * @param code
-	 * @param valuesMap
+	 * @param value
 	 * @param ttl
 	 * @return executed result sent back from worker
 	 */
 	@Override
 	public synchronized JSONObject runCode(InternalRequestHeader header, String guid, String field, 
-			String code, JSONObject valuesMap, int ttl, long budget) throws ActiveException {
+			String code, JSONObject value, int ttl, long budget) throws ActiveException {
 		
-		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
+		ActiveMessage msg = new ActiveMessage(guid, field, code, value.toString(), ttl, budget);
 		sendMessage(msg);
 		
 		ActiveMessage response = null;
@@ -377,7 +377,11 @@ public class ActiveBlockingClient implements Client {
 		}
 		counter.getAndIncrement();
 		
-		return response.getValue();
+		try {
+			return new JSONObject(response.getValue());
+		} catch (JSONException e) {
+			return value;
+		}
 	}
 	
 	public String toString(){

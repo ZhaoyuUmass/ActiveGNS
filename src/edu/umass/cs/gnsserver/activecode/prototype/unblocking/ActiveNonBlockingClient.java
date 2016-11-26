@@ -388,7 +388,7 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 	public JSONObject runCode(InternalRequestHeader header, String guid, String field, 
 			String code, JSONObject valuesMap, int ttl, long budget) throws ActiveException {
 		
-		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap, ttl, budget);
+		ActiveMessage msg = new ActiveMessage(guid, field, code, valuesMap.toString(), ttl, budget);
 		Monitor monitor = new Monitor();
 		tasks.put(msg.getId(), monitor);
 		
@@ -460,7 +460,11 @@ public class ActiveNonBlockingClient implements Runnable,Client {
 		counter.getAndIncrement();
 		tasks.remove(response.getId());
 		
-		return response.getValue();
+		try {
+			return new JSONObject(response.getValue());
+		} catch (JSONException e) {
+			throw new ActiveException("Bad JSON value returned from active code!");
+		}
 	}
 	
 	public String toString(){

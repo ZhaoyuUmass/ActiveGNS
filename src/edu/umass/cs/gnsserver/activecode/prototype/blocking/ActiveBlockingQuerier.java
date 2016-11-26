@@ -14,6 +14,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  * This class is an implementation of Querier, Querier only contains
@@ -23,41 +24,35 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
  *
  */
 public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
-	private Channel channel;
+	private final Channel channel;
+	private final ScriptObjectMirror JSON;
 	private int currentTTL;
-	private String currentGuid;
-	private long currentID;
+	private final String currentGuid;
+	private final long currentID;
 	
 	/**
 	 * @param channel
+	 * @param JSON 
 	 * @param ttl 
 	 * @param guid 
+	 * @param id 
 	 */
-	public ActiveBlockingQuerier(Channel channel, int ttl, String guid){
+	public ActiveBlockingQuerier(Channel channel, ScriptObjectMirror JSON, int ttl, String guid, long id){
 		this.channel = channel;
+		this.JSON = JSON;
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
-		
+		this.currentID = id;
 	}
 	
 	
 	/**
 	 * @param channel
 	 */
-	public ActiveBlockingQuerier(Channel channel){
-		this(channel, 0, null);
+	public ActiveBlockingQuerier(Channel channel, ScriptObjectMirror JSON){
+		this(channel, JSON, 0, null, 0);
 	}
-	
-	/**
-	 * @param guid
-	 * @param ttl
-	 * @param id 
-	 */
-	protected void resetQuerier(String guid, int ttl, long id){
-		this.currentGuid = guid;
-		this.currentTTL = ttl;
-		this.currentID = id;
-	}
+
 	
 	/**
 	 * @param queriedGuid
@@ -66,7 +61,7 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	 * @throws ActiveException
 	 */
 	@Override
-	public JSONObject readGuid(String queriedGuid, String field) throws ActiveException{
+	public ScriptObjectMirror readGuid(String queriedGuid, String field) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
@@ -81,19 +76,19 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	 * @throws ActiveException
 	 */
 	@Override
-	public void writeGuid(String queriedGuid, String field, JSONObject value) throws ActiveException{
+	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			writeValueIntoField(currentGuid, currentGuid, field, value, currentTTL);
+			writeValueIntoField(currentGuid, currentGuid, field, js2String(value), currentTTL);
 		else
-			writeValueIntoField(currentGuid, queriedGuid, field, value, currentTTL);
+			writeValueIntoField(currentGuid, queriedGuid, field, js2String(value), currentTTL);
 	}
 	
 	
-	private JSONObject readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
+	private ScriptObjectMirror readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
 			throws ActiveException {
-		JSONObject value = null;
+		ScriptObjectMirror value = null;
 		try{
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
 			channel.sendMessage(am);
@@ -106,14 +101,14 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			if (response.getError() != null){
 				throw new ActiveException();
 			}
-			value = response.getValue();
+			value = string2JS(response.getValue());
 		} catch(IOException e) {
 			throw new ActiveException();
 		}
 		return value;
 	}
 
-	private void writeValueIntoField(String querierGuid, String targetGuid, String field, JSONObject value, int ttl)
+	private void writeValueIntoField(String querierGuid, String targetGuid, String field, String value, int ttl)
 			throws ActiveException {
 		
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, targetGuid, value, currentID);
@@ -131,24 +126,6 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 				throw new ActiveException();
 			}
 	}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args){
-		ActiveBlockingQuerier querier = new ActiveBlockingQuerier(null);
-		int ttl = 1;
-		String guid = "Zhaoyu Gao";			
-		
-		int n = 1000000;		
-		long t1 = System.currentTimeMillis();		
-		for(int i=0; i<n; i++){
-			querier.resetQuerier(guid, ttl, 0);
-		}		
-		long elapsed = System.currentTimeMillis() - t1;
-		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
-	}
-
 
 	@Override
 	public JSONObject lookupUsernameForGuid(String targetGuid) throws ActiveException {
@@ -161,4 +138,33 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	
+	@SuppressWarnings("restriction")
+	protected ScriptObjectMirror string2JS(String str){
+		return (ScriptObjectMirror) JSON.callMember("parse", str);
+	}
+	
+	@SuppressWarnings("restriction")
+	protected String js2String(ScriptObjectMirror obj){
+		return (String) JSON.callMember("stringify", obj);
+	}
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args){
+		ActiveBlockingQuerier querier = new ActiveBlockingQuerier(null, null);
+		int ttl = 1;
+		String guid = "Zhaoyu Gao";			
+		
+		int n = 1000000;		
+		long t1 = System.currentTimeMillis();		
+		for(int i=0; i<n; i++){
+			
+		}		
+		long elapsed = System.currentTimeMillis() - t1;
+		System.out.println("It takes "+elapsed+"ms, and the average latency for each operation is "+(elapsed*1000.0/n)+"us");
+	}
+
 }

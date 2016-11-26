@@ -1,9 +1,8 @@
 package edu.umass.cs.gnsserver.activecode.prototype.interfaces;
 
-import org.json.JSONObject;
-
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
+
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  * This interface is used for active code to send back queries
@@ -13,6 +12,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  * @author gaozy
  *
  */
+@SuppressWarnings("restriction")
 public interface Querier {
 	
 	/**
@@ -36,7 +36,7 @@ public interface Querier {
 	 * @return the ValuesMap read from the field of the guid
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
-	public JSONObject readGuid(String queriedGuid, String field) throws ActiveException;
+	public ScriptObjectMirror readGuid(String queriedGuid, String field) throws ActiveException;
 	
 	
 	/**
@@ -56,5 +56,5 @@ public interface Querier {
 	 * @param value
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
-	public void writeGuid(String queriedGuid, String field, JSONObject value) throws ActiveException;
+	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException;
 }

@@ -22,15 +22,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Runner;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 
 /**
  * @author gaozy
  *
  */
-public class ActiveBlockingRunner {
+public class ActiveBlockingRunner implements Runner {
 	
 	final private ScriptEngine engine;
 	final private Invocable invocable;
@@ -38,19 +41,29 @@ public class ActiveBlockingRunner {
 	private final HashMap<String, ScriptContext> contexts = new HashMap<String, ScriptContext>();
 	private final HashMap<String, Integer> codeHashes = new HashMap<String, Integer>();
 	
-	private Querier querier;
+	private final Channel channel;
+	
+	private final ScriptObjectMirror JSON;
+	
 	
 	/**
 	 * @param querier
 	 */
-	public ActiveBlockingRunner(Querier querier){
-		this.querier = querier;
+	public ActiveBlockingRunner(Channel channel){
+		this.channel = channel; 
 		
 		// Initialize an script engine without extensions and java
 		NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
 		engine = factory.getScriptEngine("-strict", "--no-java", "--no-syntax-extensions");
 		
 		invocable = (Invocable) engine;
+		
+		try {
+			JSON = (ScriptObjectMirror) engine.eval("JSON");
+		} catch (ScriptException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Can not eval JSON");
+		}
 	}
 	
 	private synchronized void updateCache(String codeId, String code) throws ScriptException {
@@ -78,7 +91,7 @@ public class ActiveBlockingRunner {
 	 * http://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424
 	 * there is no need to make this method synchronized any more.
 	 * 
-	 * @param guid
+	 * @param guid the owner of the active code, it is used as the key to cache the code
 	 * @param field
 	 * @param code
 	 * @param value
@@ -88,18 +101,18 @@ public class ActiveBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public JSONObject runCode(String guid, String field, String code, JSONObject value, int ttl, long id) throws ScriptException, NoSuchMethodException {
+	public String runCode(String guid, String field, String code, String value, int ttl, long id) throws ScriptException, NoSuchMethodException {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
-		if(querier != null) ((ActiveBlockingQuerier) querier).resetQuerier(guid, ttl, id);
-		JSONObject valuesMap = null;
+		ActiveBlockingQuerier querier = new ActiveBlockingQuerier(channel, JSON, ttl, guid, id);
+		String valuesMap = null;
 		
-		valuesMap = (JSONObject) invocable.invokeFunction("run", value, field, querier);
+		valuesMap = querier.js2String((ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value), field, querier));
 		
 		return valuesMap;
 	}
 	
-	private static class SimpleTask implements Callable<JSONObject>{
+	private static class SimpleTask implements Callable<String>{
 		
 		ActiveBlockingRunner runner;
 		ActiveMessage am;
@@ -110,7 +123,7 @@ public class ActiveBlockingRunner {
 		}
 		
 		@Override
-		public JSONObject call() throws Exception {
+		public String call() throws Exception {
 			return runner.runCode(am.getGuid(), am.getField(), am.getCode(), am.getValue(), am.getTtl(), am.getId());
 		}
 		
@@ -134,7 +147,7 @@ public class ActiveBlockingRunner {
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();
 		
-		ArrayList<Future<JSONObject>> tasks = new ArrayList<Future<JSONObject>>();
+		ArrayList<Future<String>> tasks = new ArrayList<Future<String>>();
 		
 		String guid = "zhaoyu";
 		String field = "gao";
@@ -147,7 +160,7 @@ public class ActiveBlockingRunner {
 		JSONObject value = new JSONObject();
 		value.put("string", "hello world");
 		
-		ActiveMessage msg = new ActiveMessage(guid, field, noop_code, value, 0, 500);
+		ActiveMessage msg = new ActiveMessage(guid, field, noop_code, value.toString(), 0, 500);
 		int n = 1000000;
 		
 		long t1 = System.currentTimeMillis();
@@ -155,7 +168,7 @@ public class ActiveBlockingRunner {
 		for(int i=0; i<n; i++){
 			tasks.add(executor.submit(new SimpleTask(runners[0], msg)));
 		}
-		for(Future<JSONObject> task:tasks){
+		for(Future<String> task:tasks){
 			task.get();
 		}
 		
@@ -168,7 +181,7 @@ public class ActiveBlockingRunner {
 		/**
 		 * Test runner's protected method
 		 */
-		ActiveBlockingRunner runner = new ActiveBlockingRunner(new ActiveBlockingQuerier(null));
+		ActiveBlockingRunner runner = new ActiveBlockingRunner(null);
 		String chain_code = null;
 		try {
 			//chain_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/permissionTest.js")));
@@ -178,7 +191,7 @@ public class ActiveBlockingRunner {
 			e.printStackTrace();
 		}
 		try {
-			runner.runCode(guid, field, chain_code, value, 0, 0);			
+			runner.runCode(guid, field, chain_code, value.toString(), 0, 0);			
 			// fail here
 			assert(false):"The code should not be here";
 		} catch (Exception e) {

@@ -47,7 +47,7 @@ public class ActiveBlockingWorker {
 		this.id = id;
 		
 		channel = new ActiveNamedPipe(ifile, ofile);
-		runner = new ActiveBlockingRunner(new ActiveBlockingQuerier(channel));
+		runner = new ActiveBlockingRunner(channel);
 		
 		executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();	

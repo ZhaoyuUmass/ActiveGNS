@@ -279,8 +279,8 @@ public class ActiveMessage implements Message{
 	@Override
 	public byte[] toBytes() throws UnsupportedEncodingException{
 		
-		// First convert ValuesMap to String, as it is costly
-		String valuesMapString = (value == null)?null:value.toString();
+		//FIXME: one more step
+		String valuesMapString = value;
 		
 		byte[] buffer = new byte[this.getEstimatedLengthExceptWithoutValue()+( (valuesMapString==null)?0:valuesMapString.length() )];
 		ByteBuffer bbuf = ByteBuffer.wrap(buffer);

@@ -26,6 +26,7 @@ import com.maxmind.geoip2.DatabaseReader;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
+import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Runner;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -34,7 +35,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  * @author gaozy
  *
  */
-public class ActiveNonBlockingRunner {
+public class ActiveNonBlockingRunner implements Runner {
 	
 	final private ScriptEngine engine;
 	final private Invocable invocable;
@@ -46,7 +47,7 @@ public class ActiveNonBlockingRunner {
 	private final DatabaseReader dbReader;
 	
 	// This object is used to serialize/deserialize values passing between Java and Javascript
-	private final ScriptObjectMirror JSON;
+	private static ScriptObjectMirror JSON;
 	
 	/**
 	 * @param channel 
@@ -110,18 +111,18 @@ public class ActiveNonBlockingRunner {
 	 * @throws ScriptException
 	 * @throws NoSuchMethodException
 	 */
-	public JSONObject runCode(String guid, String field, String code, JSONObject value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
-		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, ttl, guid, id);
+	public String runCode(String guid, String field, String code, String value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, JSON, ttl, guid, id);
 		map.put(id, querier);
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		
-		JSONObject valuesMap = (JSONObject) invocable.invokeFunction("run", value,
-				field, querier);
+		String result = querier.js2String((ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value),
+				field, querier));
 		
 		map.remove(id);
-		return valuesMap;
+		return result;
 	}
 	
 	/**
@@ -137,7 +138,10 @@ public class ActiveNonBlockingRunner {
 		
 	}
 	
-	private static class SimpleTask implements Callable<JSONObject>{
+
+	
+	/*************** TEST *****************/
+	private static class SimpleTask implements Callable<String>{
 		
 		ActiveNonBlockingRunner runner;
 		ActiveMessage am;
@@ -148,7 +152,7 @@ public class ActiveNonBlockingRunner {
 		}
 		
 		@Override
-		public JSONObject call() throws Exception {
+		public String call() throws Exception {
 			return runner.runCode(am.getGuid(), am.getField(), am.getCode(), am.getValue(), am.getTtl(), am.getId());
 		}
 		
@@ -172,7 +176,7 @@ public class ActiveNonBlockingRunner {
 		final ThreadPoolExecutor executor = new ThreadPoolExecutor(numThread, numThread, 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 		executor.prestartAllCoreThreads();
 		
-		ArrayList<Future<JSONObject>> tasks = new ArrayList<Future<JSONObject>>();
+		ArrayList<Future<String>> tasks = new ArrayList<Future<String>>();
 		
 		String guid = "zhaoyu";
 		String field = "gao";
@@ -185,7 +189,7 @@ public class ActiveNonBlockingRunner {
 		ValuesMap value = new ValuesMap();
 		value.put("string", "hello world");
 		
-		ActiveMessage msg = new ActiveMessage(guid, field, noop_code, value, 0, 500);
+		ActiveMessage msg = new ActiveMessage(guid, field, noop_code, value.toString(), 0, 500);
 		int n = 1000000;
 		
 		long t1 = System.currentTimeMillis();
@@ -193,7 +197,7 @@ public class ActiveNonBlockingRunner {
 		for(int i=0; i<n; i++){
 			tasks.add(executor.submit(new SimpleTask(runners[0], msg)));
 		}
-		for(Future<JSONObject> task:tasks){
+		for(Future<String> task:tasks){
 			task.get();
 		}
 		
@@ -216,7 +220,7 @@ public class ActiveNonBlockingRunner {
 			e.printStackTrace();
 		}
 		try {
-			runner.runCode(guid, field, chain_code, value, 0, 0);			
+			runner.runCode(guid, field, chain_code, value.toString(), 0, 0);			
 			// fail here
 			assert(false):"The code should not be here";
 		} catch (Exception e) {

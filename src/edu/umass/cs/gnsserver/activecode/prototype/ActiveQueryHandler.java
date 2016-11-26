@@ -79,16 +79,20 @@ public class ActiveQueryHandler {
 			ActiveMessage response;
 			if(am.type == ActiveMessage.Type.READ_QUERY){
 				try {
-					response = new ActiveMessage(am.getId(), app.read(header, am.getTargetGuid(), am.getField()), null);
+					JSONObject result = app.read(header, am.getTargetGuid(), am.getField());
+					if(result != null)
+						response = new ActiveMessage(am.getId(), result.toString(), null);
+					else
+						response = new ActiveMessage(am.getId(), null, "Read failed");
 				} catch (InternalRequestException | ClientException e) {
 					response = new ActiveMessage(am.getId(), null, "Read failed");
 				} 
 						
 			}else{
 				try {
-					app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
-					response = new ActiveMessage(am.getId(), new JSONObject(), null);
-				} catch (InternalRequestException | ClientException e) {
+					app.write(header, am.getTargetGuid(), am.getField(), new JSONObject(am.getValue()) );
+					response = new ActiveMessage(am.getId(), new JSONObject().toString(), null);
+				} catch (InternalRequestException | ClientException | JSONException e) {
 					response = new ActiveMessage(am.getId(), null, "Write failed");
 				}
 				
@@ -123,7 +127,7 @@ public class ActiveQueryHandler {
 		ActiveMessage resp = null;
 		try {
 			JSONObject value = app.read(header, am.getTargetGuid(), am.getField());
-			resp = new ActiveMessage(am.getId(), value, null);
+			resp = new ActiveMessage(am.getId(), value.toString(), null);
 		} catch (InternalRequestException | ClientException e) {
 			resp = new ActiveMessage(am.getId(), null, "Read failed");
 		} 
@@ -142,9 +146,9 @@ public class ActiveQueryHandler {
 	public ActiveMessage handleWriteQuery(ActiveMessage am, InternalRequestHeader header) {
 		ActiveMessage resp;
 		try {
-			app.write(header, am.getTargetGuid(), am.getField(), am.getValue());
-			resp = new ActiveMessage(am.getId(), new JSONObject(), null);
-		} catch (ClientException | InternalRequestException e) {
+			app.write(header, am.getTargetGuid(), am.getField(), new JSONObject(am.getValue()));
+			resp = new ActiveMessage(am.getId(), new JSONObject().toString(), null);
+		} catch (ClientException | InternalRequestException | JSONException e) {
 			resp = new ActiveMessage(am.getId(), null, "Write failed");
 		} 
 				
