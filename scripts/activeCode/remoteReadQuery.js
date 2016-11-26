@@ -1,5 +1,6 @@
 function run(value, field, querier) {
 	//substitute this line with the targetGuid
-	value.put("someField", querier.readGuid(targetGuid, "depthField").get("depthField"));
+	var newVal = querier.readGuid(targetGuid, "depthField");
+	value["someField"] = newVal["depthField"];
 	return value;
 }
