@@ -17,6 +17,8 @@ import org.junit.runner.notification.Failure;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
+import edu.umass.cs.gnscommon.AclAccessType;
+import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
@@ -172,10 +174,12 @@ public class TestActiveCodeRemoteQueryClient {
 		String write_code = code.replace("//substitute this line with the targetGuid", "var targetGuid=\""+targetGuid+"\";");
 		System.out.println("The new code is:\n"+write_code);
 		
-		try {			
+		try {
+			// target guid must set acl to allow accessor to write
+			client.aclAdd(AclAccessType.WRITE_WHITELIST, entries[1], GNSProtocol.ENTIRE_RECORD.toString(), entries[0].getGuid());
 			client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);					
-			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);			
-		} catch (ClientException e) {
+			client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);		
+		} catch ( Exception e ) {
 			e.printStackTrace();
 		}
 		Thread.sleep(1000);

@@ -159,7 +159,8 @@ public class ActiveCodeHandler {
 	 * @return the processed result as an JSONObject, the original value is returned if there is an error with code execution
 	 * @throws InternalRequestException 
 	 */
-	public static JSONObject handleActiveCode(InternalRequestHeader header, String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
+	public static JSONObject handleActiveCode(InternalRequestHeader header, 
+			String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
 		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
 				"handles:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
 				new Object[]{guid, field, action, value, header});

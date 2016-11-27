@@ -166,8 +166,7 @@ public class GNSCommandInternal extends InternalCommandPacket {
 	  
 	// FIXME: field may not be very useful
     return getCommand(CommandType.ReplaceUserJSONUnsigned, header,
-            GNSProtocol.GUID.toString(), targetGUID, GNSProtocol.FIELD.toString(),
-            null, GNSProtocol.USER_JSON.toString(),
+            GNSProtocol.GUID.toString(), targetGUID, GNSProtocol.USER_JSON.toString(),
             value);
   }
 }
