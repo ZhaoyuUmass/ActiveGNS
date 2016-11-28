@@ -132,13 +132,11 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		throw new RuntimeException("unimplemented");
 	}
 
-
 	@Override
-	public Location getLocations(String ip) throws ActiveException{
+	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
 	
 	@SuppressWarnings("restriction")
 	protected ScriptObjectMirror string2JS(String str){

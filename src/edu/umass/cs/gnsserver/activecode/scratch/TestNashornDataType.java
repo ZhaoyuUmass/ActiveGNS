@@ -5,11 +5,13 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.BeforeClass;
@@ -64,6 +66,38 @@ public class TestNashornDataType extends DefaultTest {
 		json = (ScriptObjectMirror) engine.eval("JSON");
 		code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/noop.js")));
 		engine.eval(code);
+	}
+	
+	//@Test
+	public void test_00_JSArray(){
+		JSONArray arr = new JSONArray();
+		arr.put(0);
+		arr.put(1);
+		
+		String new_code = null;
+		try {
+			new_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/test.js")));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		};
+		
+		try {
+			engine.eval(new_code);
+		} catch (ScriptException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			JSONArray result = new JSONArray(
+					js2String( (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null) )
+					);
+			
+			System.out.println(result);
+		} catch (NoSuchMethodException | ScriptException | JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**

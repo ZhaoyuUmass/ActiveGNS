@@ -2,8 +2,6 @@ package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,7 +19,6 @@ import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
-
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
@@ -191,15 +188,46 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		}
 	}
 
+
+
 	@Override
-	public Location getLocations(String ip) throws ActiveException {		
+	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
+		// convert ipList to a JSONArray
+		JSONArray arr = null;
+		try {
+			arr = new JSONArray(js2String(ipList));
+		} catch (JSONException e) {
+			throw new ActiveException("Array list can not be cast to a JSONArray");
+		}
+		
+		// resolve ip one by one
+		JSONObject obj = new JSONObject();
+		for(int i=0; i<arr.length(); i++){
+			try {
+				String ip = arr.getString(i);
+				Location loc = getLocation(ip);
+				if(loc!=null){
+					JSONObject value = new JSONObject();
+					value.put("latitude", loc.getLatitude());
+					value.put("longitude", loc.getLongitude());
+					obj.put(ip, value);
+				}
+			} catch (JSONException e) {
+				continue;
+			}
+		}
+		return string2JS(obj.toString());
+
+	}
+	
+	private Location getLocation(String ip) {		
 		try {
 			InetAddress ipAddress = InetAddress.getByName(ip);
 			CityResponse response = dbReader.city(ipAddress);
 			return response.getLocation();
 			
 		} catch (IOException | GeoIp2Exception e) {
-			throw new ActiveException();
+			return null;
 		}		
 	}
 	

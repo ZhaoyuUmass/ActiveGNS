@@ -43,6 +43,7 @@ public interface Querier {
 	 * This method allows customer's active code to update a field of some other guid.
 	 * It allows querierGuid to write value into a field of the queriedGuid.
 	 * 
+	 * 
 	 * <p>Queried guid and field must be provided 
 	 * for ACL check. GNS returns true if the write operation succeeds on the GNS side, 
 	 * otherwise it returns false.

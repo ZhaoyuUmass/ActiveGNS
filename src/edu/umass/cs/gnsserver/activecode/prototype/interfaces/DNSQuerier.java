@@ -1,8 +1,6 @@
 package edu.umass.cs.gnsserver.activecode.prototype.interfaces;
 
-import org.json.JSONArray;
-
-import com.maxmind.geoip2.record.Location;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 
@@ -17,11 +15,11 @@ import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 public interface DNSQuerier {
 	
 	/**
-	 * Resolve a list of IP addresses to geographic locs
-	 * @param ip
-	 * @return an {@code com.maxmind.geoip2.record.Location} object
+	 * Resolve a list of IP addresses to geographic locations
+	 * @param ipList 
+	 * @return a JSON which contains the location information for each IP address, 
 	 * @throws ActiveException 
 	 */
-	public Location getLocations(String ip) throws ActiveException;
+	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException;
 		
 }
