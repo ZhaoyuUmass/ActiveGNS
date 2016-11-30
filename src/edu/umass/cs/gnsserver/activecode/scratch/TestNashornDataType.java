@@ -68,10 +68,12 @@ public class TestNashornDataType extends DefaultTest {
 		engine.eval(code);
 	}
 	
-	//@Test
+	/**
+	 * 
+	 */
 	public void test_00_JSArray(){
 		JSONArray arr = new JSONArray();
-		arr.put(0);
+		arr.put(4);
 		arr.put(1);
 		
 		String new_code = null;
@@ -89,7 +91,7 @@ public class TestNashornDataType extends DefaultTest {
 		}
 		
 		try {
-			JSONArray result = new JSONArray(
+			JSONObject result = new JSONObject(
 					js2String( (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null) )
 					);
 			

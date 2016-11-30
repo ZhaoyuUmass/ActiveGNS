@@ -201,7 +201,8 @@ public class ActiveCodeHandler {
 				} catch (JSONException e) {
 					return value;
 				}
-				newResult = runCode(header, code, guid, field, action, value, 5);
+				String accessorGuid = header.getOriginatingGUID();
+				newResult = runCode(header, code, guid, accessorGuid, action, value, 5);
 			}
 		}
 		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
@@ -240,12 +241,12 @@ public class ActiveCodeHandler {
 		
 		String noop_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/noop.js"))); 
 		String noop_code64 = Base64.encodeToString(noop_code.getBytes("utf-8"), true);
-		handler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
+		ActiveCodeHandler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
 		
 		int n = 1000000;
 		long t = System.currentTimeMillis();
 		for(int i=0; i<n; i++){
-			handler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
+			ActiveCodeHandler.runCode(null, noop_code64, guid1, field1, read_action, valuesMap, 100);
 		}
 		long elapsed = System.currentTimeMillis() - t;
 		System.out.println(String.format("it takes %d ms, avg_latency = %f us", elapsed, elapsed*1000.0/n));
