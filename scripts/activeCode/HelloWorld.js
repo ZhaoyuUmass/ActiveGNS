@@ -1,4 +1,4 @@
-function run(value, field, querier) {
-	value[field] = "hello world!";
+function run(value, accessor, querier) {
+	value["someField"] = "hello world!";
 	return value;
 }
