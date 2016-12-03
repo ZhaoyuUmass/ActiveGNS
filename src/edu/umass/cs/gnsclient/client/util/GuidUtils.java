@@ -54,11 +54,10 @@ public class GuidUtils {
   private static final String SECRET
           = Config.getGlobalString(GNSClientConfig.GNSCC.VERIFICATION_SECRET);
   private static final int VERIFICATION_CODE_LENGTH = 3; // Six hex characters
-  
+
   //
   // The code in here is screaming for an interface.
   //
-
   private static boolean guidExists(GNSClientCommands client, GuidEntry guid) throws IOException {
     try {
       client.lookupGuidRecord(guid.getGuid());
@@ -190,9 +189,7 @@ public class GuidUtils {
       // rethrow all but GNSProtocol.ALREADY_VERIFIED_EXCEPTION.toString()
       do {
         try {
-          client.execute(
-                  GNSCommand.accountGuidVerify(guid,
-                          createVerificationCode(name)))
+          client.execute(GNSCommand.accountGuidVerify(guid, createVerificationCode(name)))
                   .getResultString();
         } catch (ClientException e) {
           if (e.getCode() != ResponseCode.ALREADY_VERIFIED_EXCEPTION) {
@@ -346,7 +343,9 @@ public class GuidUtils {
               throw e;
             }
           } else {
-            System.out.println("  Caught and ignored \"Account already verified\" error for " + guid);
+            if (verbose) {
+              System.out.println("  Caught and ignored \"Account already verified\" error for " + guid);
+            }
             break;
           }
         }
@@ -364,8 +363,11 @@ public class GuidUtils {
   }
 
   private static String createVerificationCode(String name) {
-    return ByteUtils.toHex(Arrays.copyOf(SHA1HashFunction.getInstance().hash(name + SECRET),
+    String code = ByteUtils.toHex(Arrays.copyOf(SHA1HashFunction.getInstance().hash(name + SECRET),
             VERIFICATION_CODE_LENGTH));
+//    GNSClientConfig.getLogger().log(Level.WARNING, "*********** " + name + " " + SECRET 
+//            + " VERIFICATION CODE " + code);  
+    return code;
   }
 
   /**
@@ -412,8 +414,7 @@ public class GuidUtils {
       return guid;
     }
   }
-  
-  
+
   /**
    * Creates and verifies a subguid (created under an accountGuid).
    *
@@ -428,7 +429,7 @@ public class GuidUtils {
           throws ClientException, IOException {
     return lookupOrCreateGuid(client, accountGuid, name, false);
   }
-  
+
   /**
    * Creates and verifies a subguid (created under an accountGuid).
    *
@@ -483,7 +484,7 @@ public class GuidUtils {
   public static GuidEntry lookupGuidEntryFromDatabase(String gnsInstance, String name) {
     return KeyPairUtils.getGuidEntry(gnsInstance, name);
   }
-  
+
   /**
    * @param client
    * @param name
