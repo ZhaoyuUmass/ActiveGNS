@@ -19,7 +19,6 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
  *
  */
 public class ActiveClientSequentialTest {
-
 	
 	/**
 	 * @throws JSONException

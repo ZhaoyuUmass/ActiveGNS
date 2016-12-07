@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,8 +46,9 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Inter
 import edu.umass.cs.gnsserver.gnsapp.recordmap.BasicRecordMap;
 import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
 import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
-import edu.umass.cs.gnsserver.main.OldHackyConstants;
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 
 /**
@@ -62,21 +64,18 @@ public class ActiveCodeHandler {
 	
 	private final String nodeId;
 	
-	private static final Logger logger = Logger.getLogger(ActiveCodeHandler.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ActiveCodeHandler.class.getName());
 	
 	/**
 	 * Debug level
 	 */
-	public static final Level DEBUG_LEVEL = Level.FINE;
+	public static final Level DEBUG_LEVEL = Level.INFO;
 	
 	private static ActiveHandler handler;
 	
-	/**
-	 * enable debug output
-	 */
-	public static final boolean enableDebugging = false; 
-	
 	private static String gigapaxoConfig = PaxosConfig.GIGAPAXOS_CONFIG_FILE_KEY;
+	
+	public static boolean enableDebugging = false;
 	
 	/**
 	 * Initializes an ActiveCodeHandler
@@ -104,19 +103,32 @@ public class ActiveCodeHandler {
 	 * @param action can be 'read' or 'write'
 	 * @return whether or not there is active code
 	 */
-	protected static boolean hasCode(ValuesMap valuesMap, String action) {
-
-            try {
-				if(valuesMap.get(ActiveCode.getCodeField(action)) != null){
-					return true;
-				}
-			} catch (JSONException e) {
-				return false;
+	private static boolean hasCode(ValuesMap valuesMap, String action) {
+        try {
+			if(valuesMap.get(ActiveCode.getCodeField(action)) != null){
+				return true;
 			}
+		} catch (JSONException e) {
+			return false;
+		}
 		
 		return false;
 	}
 	
+	/**
+	 * Check if the value contains an internal field
+	 */
+	private static boolean containInternalField(JSONObject value) {
+		boolean contained = false;
+		Iterator<?> iter = value.keys();
+		while(iter.hasNext()){
+			String field = (String) iter.next();
+			if(InternalField.isInternalField(field)){
+				return true;
+			}
+		}
+		return contained;
+	}
 	
 	/**
 	 * @param header 
@@ -161,18 +173,26 @@ public class ActiveCodeHandler {
 	 */
 	public static JSONObject handleActiveCode(InternalRequestHeader header, 
 			String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException{
-		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
-				"handles:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
-				new Object[]{guid, field, action, value, header});
-		
-		long t = System.nanoTime();
-		if(!OldHackyConstants.enableActiveCode){
+				
+		if(Config.getGlobalBoolean(GNSConfig.GNSC.DISABLE_ACTIVE_CODE)) {
 			return value;
 		}
+		
+		long t = System.nanoTime();
+		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
+				"OOOOOOOOOOOOO handles:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
+				new Object[]{guid, field, action, value, header});
 		/**
 		 * Only execute active code for user field 
+		 * FIXME:
+		 * <p> Read can be a single-field read or multi-field read.
+		 * If it's a single-field read, then the field can not be a internal field.
+		 * If it's a multi-feild read, then there may be some field is internal.
+		 * <p> Write has no field value, but if there should not be an internal
+		 * field in the JSONObject value. 
 		 */		
-		if(field!=null && InternalField.isInternalField(field) ){
+		if(action.equals(ActiveCode.READ_ACTION) && field!=null && InternalField.isInternalField(field) ||
+				(action.equals(ActiveCode.WRITE_ACTION) && value != null && containInternalField(value)) ){
 			return value;
 		}
 		JSONObject newResult = value;
@@ -201,22 +221,22 @@ public class ActiveCodeHandler {
 				} catch (JSONException e) {
 					return value;
 				}
-				// String accessorGuid = header.getOriginatingGUID();
-				newResult = runCode(header, code, guid, field, action, value, 5);
+				String accessorGuid = header==null?guid:header.getOriginatingGUID();
+				newResult = runCode(header, code, guid, accessorGuid, action, value, 5);
 			}
 		}
 		ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, 
-				"The result after executing active code is {0}",
+				"OOOOOOOOOOOOO The result after executing active code is {0}",
 				new Object[]{newResult});
 		DelayProfiler.updateDelayNano("activeTotal", t);
 		return newResult;
 	}
 	
 	/**
-	 * @return logger
+	 * @return LOGGER
 	 */
 	public static Logger getLogger(){
-		return logger;
+		return LOGGER;
 	}
 	
 	/***************************** TEST CODE *********************/

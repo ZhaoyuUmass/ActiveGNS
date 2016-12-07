@@ -49,10 +49,6 @@ public class ActiveCode {
    * ON_WRITE - the string key for the field that stores the write information.
    */
   public static final String ON_WRITE = InternalField.makeInternalFieldString("on_write");
-  /**
-   * ON_ACL - the string key for the ACL that needs to be check before others access the field to read or write
-   */
-  public static final String ON_ACL = InternalField.makeInternalFieldString("on_acl");
   
   /**
    * Deploy code on the read operation that needs to trigger the code
@@ -62,20 +58,8 @@ public class ActiveCode {
    * Deploy code on the write operation that needs to trigger the code 
    */
   public static final String WRITE_ACTION = "write";
-  /**
-   * Deploy code on the ACL check that needs to trigger the code
-   */
-  public static final String ACL_ACTION = "acl";
-  
-  /**
-   * The field used to put public key into a {@code JSONObject}, only used for ACL action
-   */
-  public static final String PUBLICKEY_FIELD = "publicKey";
-  
-  /**
-   * The field used to put accessorGuid into a {@code JSONObject}, only used for ACL action
-   */
-  public static final String ACCESSOR_GUID = "accessorGuid";
+
+
   
   /**
    * Returns the internal field corresponding to the given action.
@@ -89,8 +73,6 @@ public class ActiveCode {
         return ON_READ;
       case WRITE_ACTION:
         return ON_WRITE;
-      case ACL_ACTION:
-    	return ON_ACL;
       default:
         return null;
     }

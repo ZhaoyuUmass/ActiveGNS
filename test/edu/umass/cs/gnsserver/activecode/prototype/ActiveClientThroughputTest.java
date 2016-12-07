@@ -30,6 +30,7 @@ import edu.umass.cs.gnsserver.utils.ValuesMap;
 public class ActiveClientThroughputTest {
 	
 	static class SimpleTask implements Callable<JSONObject>{
+		
 		ActiveNonBlockingClient client;
 		String guid;
 		String field;

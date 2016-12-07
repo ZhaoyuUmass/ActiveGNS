@@ -27,7 +27,9 @@ import edu.umass.cs.gnscommon.ResponseCode;
  * 
  * @author westy
  */
-public class AclCheckResult {
+
+public final class AclCheckResult {
+
   private final String publicKey;
   private final ResponseCode responseCode;
 

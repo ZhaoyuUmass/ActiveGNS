@@ -84,7 +84,7 @@ public class NSUpdateSupport {
           throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
           SignatureException, JSONException, IOException, FailedDBOperationException,
           RecordNotFoundException, FieldNotFoundException, InternalRequestException {
-	// This is for MOB-893
+    // This is for MOB-893
     ClientSupportConfig.getLogger().log(Level.INFO,
             "Field update: '{'guid : {0}, field: {1}, value: {2}, operation: {3}'}'",
             new Object[]{guid, field, field != null ? updateValue : userJSON, operation});
@@ -119,7 +119,6 @@ public class NSUpdateSupport {
 	    	    }
 	    	}
     	}
-
     }
     // Check for stale commands.
     if (timestamp != null) {
@@ -170,13 +169,13 @@ public class NSUpdateSupport {
 
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
-          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
+          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException,InternalRequestException  {
     ValuesMap newValue = userJSON;
     if (activeCodeHandler != null ) {    	
-        JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
-        newValue = result!=null?new ValuesMap(result):null;
+      JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
+      newValue = result!=null?new ValuesMap(result):null;
     }
-    
+    // END ACTIVE CODE HANDLING
     if (field != null) {
       ClientSupportConfig.getLogger().log(Level.FINE,
               "field={0}, operation={1}, value={2}, name_record={3}",

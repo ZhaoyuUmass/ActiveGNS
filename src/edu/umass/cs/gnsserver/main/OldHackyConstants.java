@@ -66,16 +66,7 @@ public class OldHackyConstants {
       return offset;
     }
   }
-  //FIXME: The owner of this should move it into GNSConfig
-  /**
-   * Enable active code.
-   */
-  public static boolean enableActiveCode = true;
-  //FIXME: The owner of this should move it into GNSConfig
-  /**
-   * Number of active code worker.
-   */
-  public static int activeCodeWorkerCount = 1;
+  
   //FIXME: Remove this.
   /**
    * The default starting port.

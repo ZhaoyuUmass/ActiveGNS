@@ -174,7 +174,7 @@ public class FieldAccess {
           ArrayList<String> fields,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
+    ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new CommandResponse(errorCode, GNSProtocol.BAD_RESPONSE.toString() + " " + errorCode.getProtocolCode());
@@ -765,12 +765,12 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
           GNSApplicationInterface<String> app) {
 	  return signatureAndACLCheckForRead(null, guid, field, fields, reader, signature, message, timestamp, app);
   }
-	  
+
   public static ResponseCode signatureAndACLCheckForRead(InternalRequestHeader header, String guid,
           String field, List<String> fields,
           String reader, String signature, String message,
           Date timestamp,
-          GNSApplicationInterface<String> app) {	  
+          GNSApplicationInterface<String> app) {
     ResponseCode errorCode = ResponseCode.NO_ERROR;
     LOGGER.log(Level.FINE,
             "signatureAndACLCheckForRead guid: {0} field: {1} reader: {2}",
@@ -785,10 +785,10 @@ ResponseCode errorCode = signatureAndACLCheckForRead(header, guid, null, fields,
               && (field != null || fields != null)) {
         errorCode = NSAuthentication.signatureAndACLCheck(guid, field, fields, reader,
                 signature, message, MetaDataTypeName.READ_WHITELIST, app);
-      }else{
+      } else {
     	  LOGGER.log(Level.FINE,
-    	            "reader does not equal to internal secret reader: {0}, header: {1}",
-    	            new Object[]{reader, header});
+  	            "reader does not equal to internal secret reader: {0}, header: {1}",
+  	            new Object[]{reader, header});
     	  if(header != null){
 	    	  if(field != null){
 	      			errorCode = NSAuthentication.aclCheck(guid, field, 
