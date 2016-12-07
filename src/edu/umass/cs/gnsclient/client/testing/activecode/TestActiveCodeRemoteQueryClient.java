@@ -157,7 +157,7 @@ public class TestActiveCodeRemoteQueryClient {
 			client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
 			Thread.sleep(1000);
 			client.fieldUpdate(entries[0], someField, someValue);
-		} catch (ClientException | JSONException e) {
+		} catch (ClientException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -227,7 +227,7 @@ public class TestActiveCodeRemoteQueryClient {
 		try {
 			client.fieldUpdate(entries[0], someField, someValue);
 			fail("A write followed with a write operation should not succeed.");
-		} catch (ClientException | JSONException e) {
+		} catch (ClientException e) {
 			System.out.println("Depth query test(a write followed by a write) succeeds!");
 		}		
 		 
