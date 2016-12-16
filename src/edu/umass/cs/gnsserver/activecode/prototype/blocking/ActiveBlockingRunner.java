@@ -46,7 +46,7 @@ public class ActiveBlockingRunner implements Runner {
 	private final ScriptObjectMirror JSON;
 		
 	/**
-	 * @param querier
+	 * @param channel
 	 */
 	public ActiveBlockingRunner(Channel channel){
 		this.channel = channel; 
@@ -104,9 +104,7 @@ public class ActiveBlockingRunner implements Runner {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		ActiveBlockingQuerier querier = new ActiveBlockingQuerier(channel, JSON, ttl, guid, id);
-		String valuesMap = null;
-		
-		valuesMap = querier.js2String((ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value), field, querier));
+		String valuesMap = querier.js2String((ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value), field, querier));
 		
 		return valuesMap;
 	}

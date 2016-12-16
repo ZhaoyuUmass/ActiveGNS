@@ -44,13 +44,16 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private final static String ACTION_FIELD = "action";
 	private final static String GUID_FIELD = "guid";
 	private final static String CODE_FIELD = "code";
+	private final static String VALUE_FIELD = "value";
 	private final static String USERNAME_FIELD = "username";
+	private final static String FIELD_NAME = "field";
 	
 	private final static String A_RECORD_FIELD = "A";
 	private final static String NS_RECORD_FIELD = "NS";
 	
 	private enum Actions {
 	    CREATE("create"),
+	    UPDATE_FIELD("update_field"),
 	    UPDATE_RECORD("update_record"),
 	    UPDATE_CODE("update_code"),
 	    // remove the code
@@ -101,7 +104,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 		}
 		String guid_file = null;
 		if(System.getProperty("guid_file")!=null){
-			guid_file = System.getProperty("update");
+			guid_file = System.getProperty("guid_file");
 		}
 		if (guid_file==null){
 			// create account guid with username admin 
@@ -192,6 +195,14 @@ public class ManagedDNSServiceProxy implements Runnable {
 		}	
 	}
 	
+	private static void updateRecord(GuidEntry entry, String fieldToUpdate, Object obj){		
+		try {		
+			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, obj));
+		} catch (ClientException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	private static void updateCode(GuidEntry entry, String code){
 		try {
 			client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
@@ -263,6 +274,13 @@ public class ManagedDNSServiceProxy implements Runnable {
 						GuidEntry entry = createGuidEntryForDomain(subdomain);
 						String guid = serializeGuid(entry);
 						result.put(GUID_FIELD, guid);
+				}
+				break;
+				case UPDATE_FIELD:{ 
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					Object obj = req.get(VALUE_FIELD); 
+					String field = req.getString(FIELD_NAME);
+					updateRecord(guid, field, obj);
 				}
 				break;
 				case UPDATE_RECORD:{
