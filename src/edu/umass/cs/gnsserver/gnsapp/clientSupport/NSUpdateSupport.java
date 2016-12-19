@@ -85,9 +85,11 @@ public class NSUpdateSupport {
           SignatureException, JSONException, IOException, FailedDBOperationException,
           RecordNotFoundException, FieldNotFoundException, InternalRequestException {
     // This is for MOB-893
-    ClientSupportConfig.getLogger().log(Level.INFO,
-            "Field update: '{'guid : {0}, field: {1}, value: {2}, operation: {3}'}'",
-            new Object[]{guid, field, field != null ? updateValue : userJSON, operation});
+    if (field == null || !InternalField.isInternalField(field)) {
+      ClientSupportConfig.getLogger().log(Level.INFO,
+              "Field update: '{'guid : {0}, field: {1}, value: {2}, operation: {3}'}'",
+              new Object[]{guid, field, field != null ? updateValue : userJSON, operation});
+    }
     ResponseCode errorCode = ResponseCode.NO_ERROR;
     // writer will be the INTERNAL_OP_SECRET for super secret internal system accesses
     if (!GNSConfig.getInternalOpSecret().equals(writer)) {
@@ -104,21 +106,19 @@ public class NSUpdateSupport {
                 "Name {0} key={1} : ACCESS_ERROR", new Object[]{guid, field});
         return ResponseCode.ACCESS_ERROR;
       }
-    } else {
-    	if(header != null){
-	    	// This ACL check will be only used for active code remote query
-	    	if(field != null){
-	    		errorCode = NSAuthentication.aclCheck(guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
-	    	}else if (userJSON != null) {
-	    		List<String> fields = userJSON.getKeys();
-	    		for (String aField : fields) {
-	    	        AclCheckResult aclResult = NSAuthentication.aclCheck(guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
-	    	        if (aclResult.getResponseCode().isExceptionOrError()) {
-	    	          errorCode = aclResult.getResponseCode();
-	    	        }
-	    	    }
-	    	}
-    	}
+    } else if (header != null) {
+      // This ACL check will be only used for active code remote query
+      if (field != null) {
+        errorCode = NSAuthentication.aclCheck(guid, field, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app).getResponseCode();
+      } else if (userJSON != null) {
+        List<String> fields = userJSON.getKeys();
+        for (String aField : fields) {
+          AclCheckResult aclResult = NSAuthentication.aclCheck(guid, aField, header.getOriginatingGUID(), MetaDataTypeName.WRITE_WHITELIST, app);
+          if (aclResult.getResponseCode().isExceptionOrError()) {
+            errorCode = aclResult.getResponseCode();
+          }
+        }
+      }
     }
     // Check for stale commands.
     if (timestamp != null) {
@@ -138,8 +138,7 @@ public class NSUpdateSupport {
               app.getDB(), app.getActiveCodeHandler());
       return ResponseCode.NO_ERROR;
     } else // Handle special case of a create index
-    {
-      if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
+     if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "Creating index for {0} {1}", new Object[]{field, updateValue});
         app.getDB().createIndex(field, (String) updateValue.get(0));
@@ -149,7 +148,6 @@ public class NSUpdateSupport {
         ClientSupportConfig.getLogger().log(Level.SEVERE, "Invalid index value:{0}", updateValue);
         return ResponseCode.UPDATE_ERROR;
       }
-    }
   }
 
   private static NameRecord getNameRecord(String guid, String field, UpdateOperation operation, BasicRecordMap db) throws RecordNotFoundException, FailedDBOperationException {
@@ -157,23 +155,21 @@ public class NSUpdateSupport {
       // some operations don't require a read first
       return new NameRecord(db, guid);
     } else //try {
-    {
-      if (field == null) {
+     if (field == null) {
         return NameRecord.getNameRecord(db, guid);
       } else {
         return NameRecord.getNameRecordMultiUserFields(db, guid,
                 ColumnFieldType.LIST_STRING, field);
       }
-    }
   }
 
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
-          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException,InternalRequestException  {
+          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
-    if (activeCodeHandler != null ) {    	
+    if (activeCodeHandler != null) {
       JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
-      newValue = result!=null?new ValuesMap(result):null;
+      newValue = result != null ? new ValuesMap(result) : null;
     }
     // END ACTIVE CODE HANDLING
     if (field != null) {

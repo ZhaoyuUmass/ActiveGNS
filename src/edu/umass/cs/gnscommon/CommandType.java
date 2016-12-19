@@ -43,99 +43,6 @@ public enum CommandType {
   /**
    *
    */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
-  /**
-   *
-   */
   Append(110, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.data.Append.class,
           CommandResultType.NULL, true, false,
           "Appends the value onto the field for the given GUID. "
@@ -966,7 +873,7 @@ public enum CommandType {
    *
    */
   RegisterAccountSecured(431, CommandCategory.CREATE_DELETE,
-          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.account.RegisterAccountSecured.class,
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.RegisterAccountSecured.class,
           CommandResultType.NULL, false, false,
           "Creates an account guid associated with the human readable name and the supplied public key. "
           + "Must be signed with the public key. Returns a guid. "
@@ -977,7 +884,7 @@ public enum CommandType {
             GNSProtocol.PASSWORD.toString(),
             GNSProtocol.SIGNATURE.toString(),
             GNSProtocol.SIGNATUREFULLMESSAGE.toString()},
-          CommandFlag.MUTUAL_AUTH
+          CommandFlag.MUTUAL_AUTH // This is important - without this the command isn't secure.
   ),
   /**
    *
@@ -1046,10 +953,21 @@ public enum CommandType {
   /**
    *
    */
-  RemoveAccountWithPassword(445, CommandCategory.CREATE_DELETE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.account.RemoveAccountWithPassword.class,
+  RemoveAccountWithPassword(445, CommandCategory.CREATE_DELETE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.RemoveAccountWithPassword.class,
           CommandResultType.NULL, false, false,
           "Removes the account guid associated with the human readable name authorized by the account password.",
           new String[]{GNSProtocol.NAME.toString(), GNSProtocol.PASSWORD.toString()}),
+  /**
+   *
+   */
+  RemoveAccountSecured(446, CommandCategory.CREATE_DELETE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.RemoveAccountSecured.class,
+          CommandResultType.NULL, false, false,
+          "Removes the account guid associated with the human readable name."
+          + "Sent on the mutual auth channel. "
+          + "Can only be sent from a client that has the correct ssl keys.",
+          new String[]{GNSProtocol.NAME.toString()},
+          CommandFlag.MUTUAL_AUTH // This is important - without this the command isn't secure.
+  ),
   /**
    *
    */
@@ -1108,7 +1026,25 @@ public enum CommandType {
   /**
    *
    */
-  AclAddSelf(511, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclAddSelf.class,
+  AclAddSecured(520, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.AclAddSecured.class,
+          CommandResultType.NULL, true, false,
+          "Updates the access control list of the given GUID's field to include the accesser guid. Accessor guid can "
+          + "be guid or group guid or +ALL+ which means anyone. "
+          + "Field can be also be +ALL+ which means all fields can be read by the accessor. "
+          + "Sent on the mutual auth channel. "
+          + "Can only be sent from a client that has the correct ssl keys.",
+          new String[]{GNSProtocol.GUID.toString(),
+            GNSProtocol.FIELD.toString(),
+            GNSProtocol.ACCESSER.toString(),
+            GNSProtocol.ACL_TYPE.toString()},
+          CommandFlag.MUTUAL_AUTH // This is important - without this the command isn't secure.
+  ),
+  /**
+   *
+   */
+  AclAddSelf(511, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclAddSelf.class,
           CommandResultType.NULL, true, false,
           "Updates the access control list of the given GUID's field to include the accesser guid. "
           + "Accessor should a guid or group guid or +ALL+ which means anyone. "
@@ -1122,7 +1058,8 @@ public enum CommandType {
   /**
    *
    */
-  AclRemove(512, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRemove.class,
+  AclRemove(512, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRemove.class,
           CommandResultType.NULL, true, false,
           "Updates the access control list of the given GUID's field to remove the accesser guid. "
           + "Accessor should be the guid or group guid to be removed.",
@@ -1136,7 +1073,24 @@ public enum CommandType {
   /**
    *
    */
-  AclRemoveSelf(513, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRemoveSelf.class,
+  AclRemoveSecured(522, CommandCategory.UPDATE,
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.AclRemoveSecured.class,
+          CommandResultType.NULL, true, false,
+          "Updates the access control list of the given GUID's field to remove the accesser guid. "
+          + "Accessor should be the guid or group guid to be removed. "
+          + "Sent on the mutual auth channel. "
+          + "Can only be sent from a client that has the correct ssl keys.",
+          new String[]{GNSProtocol.GUID.toString(),
+            GNSProtocol.FIELD.toString(),
+            GNSProtocol.ACCESSER.toString(),
+            GNSProtocol.ACL_TYPE.toString()},
+          CommandFlag.MUTUAL_AUTH // This is important - without this the command isn't secure.
+  ),
+  /**
+   *
+   */
+  AclRemoveSelf(513, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRemoveSelf.class,
           CommandResultType.NULL, true, false,
           "Updates the access control list of the given GUID's field to remove the accesser guid. "
           + "Accessor should be the guid or group guid to be removed.",
@@ -1149,7 +1103,8 @@ public enum CommandType {
   /**
    *
    */
-  AclRetrieve(514, CommandCategory.READ, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRetrieve.class,
+  AclRetrieve(514, CommandCategory.READ, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRetrieve.class,
           CommandResultType.LIST, true, false,
           "Returns the access control list for a guids's field.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1161,7 +1116,22 @@ public enum CommandType {
   /**
    *
    */
-  AclRetrieveSelf(515, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRetrieveSelf.class,
+  AclRetrieveSecured(524, CommandCategory.READ,
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured.AclRetrieveSecured.class,
+          CommandResultType.LIST, true, false,
+          "Returns the access control list for a guids's field. "
+          + "Sent on the mutual auth channel. "
+          + "Can only be sent from a client that has the correct ssl keys.",
+          new String[]{GNSProtocol.GUID.toString(),
+            GNSProtocol.FIELD.toString(),
+            GNSProtocol.ACL_TYPE.toString()},
+          CommandFlag.MUTUAL_AUTH // This is important - without this the command isn't secure.
+  ),
+  /**
+   *
+   */
+  AclRetrieveSelf(515, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.acl.AclRetrieveSelf.class,
           CommandResultType.LIST, true, false,
           "Returns the access control list for a guids's field.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1215,7 +1185,8 @@ public enum CommandType {
   /**
    *
    */
-  AddMembersToGroup(610, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddMembersToGroup.class,
+  AddMembersToGroup(610, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddMembersToGroup.class,
           CommandResultType.NULL, false, false,
           "Adds the member guids to the group specified by guid. "
           + "Writer guid needs to have write access and sign the command.",
@@ -1227,7 +1198,8 @@ public enum CommandType {
   /**
    *
    */
-  AddMembersToGroupSelf(611, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddMembersToGroupSelf.class,
+  AddMembersToGroupSelf(611, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddMembersToGroupSelf.class,
           CommandResultType.NULL, false, false,
           "Adds the member guids to the group specified by guid. "
           + "Writer guid needs to have write access and sign the command.",
@@ -1238,7 +1210,8 @@ public enum CommandType {
   /**
    *
    */
-  AddToGroup(612, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddToGroup.class,
+  AddToGroup(612, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddToGroup.class,
           CommandResultType.NULL, false, false,
           "Adds the member guid to the group specified by guid. "
           + "Writer guid needs to have write access and sign the command.",
@@ -1250,7 +1223,8 @@ public enum CommandType {
   /**
    *
    */
-  AddToGroupSelf(613, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddToGroupSelf.class,
+  AddToGroupSelf(613, CommandCategory.UPDATE, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.AddToGroupSelf.class,
           CommandResultType.NULL, false, false,
           "Adds the member guid to the group specified by guid.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1300,7 +1274,7 @@ public enum CommandType {
   /**
    *
    */
-  RemoveFromGroup(620, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveFromGroup.class,
+  RemoveFromGroup(620, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveFromGroup.class,
           CommandResultType.NULL, false, false,
           "Removes the member guid from the group specified by guid. "
           + "Writer guid needs to have write access and sign the command.",
@@ -1312,7 +1286,7 @@ public enum CommandType {
   /**
    *
    */
-  RemoveFromGroupSelf(621, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveFromGroupSelf.class,
+  RemoveFromGroupSelf(621, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveFromGroupSelf.class,
           CommandResultType.NULL, false, false,
           "Removes the member guid from the group specified by guid.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1322,7 +1296,7 @@ public enum CommandType {
   /**
    *
    */
-  RemoveMembersFromGroup(622, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveMembersFromGroup.class,
+  RemoveMembersFromGroup(622, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveMembersFromGroup.class,
           CommandResultType.NULL, false, false,
           "Removes the member guids from the group specified by guid. "
           + "Writer guid needs to have write access and sign the command.",
@@ -1334,7 +1308,7 @@ public enum CommandType {
   /**
    *
    */
-  RemoveMembersFromGroupSelf(623, CommandCategory.OTHER, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveMembersFromGroupSelf.class,
+  RemoveMembersFromGroupSelf(623, CommandCategory.UPDATE, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.group.RemoveMembersFromGroupSelf.class,
           CommandResultType.NULL, false, false,
           "Removes the member guids from the group specified by guid.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1405,7 +1379,8 @@ public enum CommandType {
   /**
    *
    */
-  GetCode(812, CommandCategory.READ, edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.activecode.GetCode.class,
+  GetCode(812, CommandCategory.READ, 
+          edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.activecode.GetCode.class,
           CommandResultType.STRING, true, false,
           "Returns the active code for the specified action, ensuring the reader has permission.",
           new String[]{GNSProtocol.GUID.toString(),
@@ -1457,7 +1432,7 @@ public enum CommandType {
   private CommandType[] invokedCommands;
 
   /**
-   * The command category.
+   * The command category, that is what kind of command it is.
    */
   private enum CommandCategory {
     /**
@@ -1482,6 +1457,9 @@ public enum CommandType {
     OTHER
   }
 
+  /**
+   * Flags that describe additional command properties.
+   */
   private enum CommandFlag {
     /**
      *
@@ -1784,6 +1762,8 @@ public enum CommandType {
     AddGuid.setChain(LookupGuid, ReplaceUserJSONUnsigned, ReadUnsigned); // what else?
     RemoveGuid.setChain(ReadUnsigned);
     RemoveAccount.setChain(ReadUnsigned);
+    RemoveAccountWithPassword.setChain(ReadUnsigned);
+    RemoveAccountSecured.setChain(ReadUnsigned);
     SelectGroupSetupQuery.setChain(ReadUnsigned);
     VerifyAccount.setChain(ReplaceUserJSONUnsigned);
 
@@ -1831,9 +1811,9 @@ public enum CommandType {
     RemoveFromGroupSelf.setChain(ReadUnsigned);
     RemoveMembersFromGroupSelf.setChain(ReadUnsigned);
     //
-    SetCode.setChain(RemoveUnsigned);
-    ClearCode.setChain(RemoveUnsigned);
-    GetCode.setChain(RemoveUnsigned);
+    SetCode.setChain();
+    ClearCode.setChain();
+    GetCode.setChain();
     // admin
     Help.setChain();
     HelpTcp.setChain();
@@ -1868,6 +1848,55 @@ public enum CommandType {
       result.append(commandType.toString());
       result.append("\"\n");
     }
+    return result.toString();
+  }
+
+  /**
+   *
+   * enum CommandType: Int {
+   * case tab = "\t"
+   * case lineFeed = "\n"
+   * case carriageReturn = "\r"
+   * }
+   *
+   */
+  private static String generateSwiftEnum() {
+    StringBuilder result = new StringBuilder();
+    result.append("enum CommandType: Int {\n");
+    for (CommandType commandType : CommandType.values()) {
+      result.append("  case ");
+      result.append(commandType.toString());
+      result.append(" = ");
+      result.append(commandType.getInt());
+      result.append("\n");
+    }
+    result.append("}");
+    return result.toString();
+  }
+
+  private static String generateSwiftStructStaticConstants() {
+    StringBuilder result = new StringBuilder();
+    result.append("extension CommandType {\n");
+    for (CommandType commandType : CommandType.values()) {
+      result.append("  static let ");
+      result.append(commandType.toString());
+      result.append(" = CommandType(\"");
+      result.append(commandType.toString());
+      result.append("\"");
+      result.append(", ");
+      result.append(commandType.getInt());
+      result.append(")");
+      result.append("\n");
+    }
+    result.append("  static let allValues = [");
+    String prefix = "";
+    for (CommandType commandType : CommandType.values()) {
+      result.append(prefix);
+      result.append(commandType.toString());
+      prefix = ", ";
+    }
+    result.append("]\n");
+    result.append("}");
     return result.toString();
   }
 
@@ -2009,7 +2038,9 @@ public enum CommandType {
    * @param args
    */
   public static void main(String args[]) {
-    CommandType.enforceChecks();
+    //CommandType.enforceChecks();
+    //System.out.println(generateSwiftEnum());
+    System.out.println(generateSwiftStructStaticConstants());
     //System.out.println(generateEmptySetChains());
     //System.out.println(generateSwiftConstants());
     //System.out.println(generateCommandTypeCode());
