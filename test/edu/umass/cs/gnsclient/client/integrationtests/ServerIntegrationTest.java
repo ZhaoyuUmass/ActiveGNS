@@ -16,6 +16,7 @@
 package edu.umass.cs.gnsclient.client.integrationtests;
 
 import edu.umass.cs.gigapaxos.PaxosConfig;
+import edu.umass.cs.reconfiguration.ReconfigurationConfig;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.AclAccessType;
@@ -35,8 +36,10 @@ import edu.umass.cs.gnscommon.exceptions.client.FieldNotFoundException;
 import edu.umass.cs.gnsclient.jsonassert.JSONAssert;
 import edu.umass.cs.gnsclient.jsonassert.JSONCompareMode;
 import edu.umass.cs.gnscommon.utils.Base64;
+
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +47,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
+
 import static org.hamcrest.Matchers.*;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -53,6 +59,7 @@ import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
+
 import edu.umass.cs.gnscommon.utils.ThreadUtils;
 import edu.umass.cs.gnsserver.database.MongoRecords;
 import edu.umass.cs.gnsserver.main.GNSConfig;
@@ -269,39 +276,19 @@ public class ServerIntegrationTest extends DefaultTest {
     String gpConfFile = System.getProperty(DefaultProps.GIGAPAXOS_CONFIG.key);
     String logFile = System.getProperty(DefaultProps.LOGGING_PROPERTIES.key);
 
-    ArrayList<String> output = RunServer.command("cat " + logFile + " | grep \"java.util.logging.FileHandler.pattern\" | sed 's/java.util.logging.FileHandler.pattern = //g'", ".", false);
-    String logFiles = output.get(0) + "*";
+    Properties logProps = new Properties();
+    logProps.load(new FileInputStream(logFile));
+    String logFiles = logProps.getProperty("java.util.logging.FileHandler.pattern").replaceAll("%.*", "").trim() + "*";
 
-    System.out.println("Waiting for servers to be ready...");
-    output = RunServer.command("cat " + gpConfFile + " | grep \"reconfigurator\\.\" | wc -l ", ".", false);
+    int numServers = PaxosConfig.getActives().size() + ReconfigurationConfig.getReconfigurators().size();
+
+    ArrayList<String> output = RunServer.command("cat " + logFiles + " | grep -a \"server ready\" | wc -l ", ".", false);
     String temp = output.get(0);
-    temp = temp.replaceAll("\\s", "");
-    int numRC = Integer.parseInt(temp);
-    output = RunServer.command("cat " + gpConfFile + " | grep \"active\\.\" | wc -l ", ".", false);
-    temp = output.get(0);
-    temp = temp.replaceAll("\\s", "");
-    int numAR = Integer.parseInt(temp);
-    int numServers = numRC + numAR;
-
-    output = RunServer.command("ls " + logFiles + " 2> /dev/null | wc -l ", ".", false);
-    temp = output.get(0);
-    temp = temp.replaceAll("\\s", "");
-    int numLogFiles = Integer.parseInt(temp);
-    while (numLogFiles == 0) {
-      Thread.sleep(5000);
-      output = RunServer.command("ls " + logFiles + " 2> /dev/null | wc -l ", ".", false);
-      temp = output.get(0);
-      temp = temp.replaceAll("\\s", "");
-      numLogFiles = Integer.parseInt(temp);
-    }
-
-    output = RunServer.command("cat " + logFiles + " | grep -a \"server ready\" | wc -l ", ".", false);
-    temp = output.get(0);
     temp = temp.replaceAll("\\s", "");
     int numServersUp = Integer.parseInt(temp);
     System.out.println(Integer.toString(numServersUp) + " out of " + Integer.toString(numServers) + " servers are ready.");
     while (numServersUp < numServers) {
-      Thread.sleep(5000);
+      Thread.sleep(2000);
       output = RunServer.command("cat " + logFiles + " | grep -a \"server ready\" | wc -l ", ".", false);
       temp = output.get(0);
       temp = temp.replaceAll("\\s", "");
@@ -430,7 +417,7 @@ public class ServerIntegrationTest extends DefaultTest {
   /* Brendan: setting this to nonzero so it can be used for SELECT tests since
    * SELECTS don't consistently read UPDATES.
    */
-  private static final int COORDINATION_WAIT = 10000;
+  private static final long COORDINATION_WAIT = 10000;
 
   /**
    * arun: Coordinated operations generally need some settling time before
@@ -447,15 +434,18 @@ public class ServerIntegrationTest extends DefaultTest {
    * its cache, re-query, and pick randomly upon an active replica error; and
    * pick the replica closest by distance and load otherwise.
    */
-  private static void waitSettle() {
-    try {
-      if (COORDINATION_WAIT > 0) {
-        Thread.sleep(COORDINATION_WAIT);
-      }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
+	private static void waitSettle(long wait) {
+		try {
+			if (wait > 0)
+				Thread.sleep(wait);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void waitSettle() {
+		waitSettle(COORDINATION_WAIT);
+	}
 
   /* TODO:
    * Brendan: I've begun checking tests to make sure that logically
@@ -2422,6 +2412,9 @@ public class ServerIntegrationTest extends DefaultTest {
   // fail("Exception when we were not expecting it: " , e);
   // }
   // }
+  
+  // for use in SELECT test below.
+  private static final long SELECT_WAIT = 500;
   /**
    * Tests that selectNear and selectWithin work.
    */
@@ -2441,7 +2434,7 @@ public class ServerIntegrationTest extends DefaultTest {
                 + RandomString.randomString(12));
         client.setLocation(testEntry, 0.0, 0.0);
 
-        waitSettle(); //See comment under the method header.
+        waitSettle(SELECT_WAIT); //See comment under the method header.
 
         // arun: added this but unclear why we should need this at all
         JSONArray location = client.getLocation(testEntry.getGuid(),
@@ -2504,7 +2497,7 @@ public class ServerIntegrationTest extends DefaultTest {
     }
 
     try {
-      waitSettle(); //See comment under the method header for test_320_GeoSpatialSelect
+      waitSettle(SELECT_WAIT); //See comment under the method header for test_320_GeoSpatialSelect
       String query = "~" + fieldName + " : ($gt: 0)";
       JSONArray result = client.selectQuery(query);
       for (int i = 0; i < result.length(); i++) {

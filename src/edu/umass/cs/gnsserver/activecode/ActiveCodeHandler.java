@@ -133,17 +133,17 @@ public class ActiveCodeHandler {
    * @param header
    * @param code
    * @param guid
-   * @param field
+   * @param accessor
    * @param action
    * @param value
    * @param activeCodeTTL current default is 10
    * @return executed result
    * @throws InternalRequestException
    */
-  private static JSONObject runCode(InternalRequestHeader header, String code, String guid, String field, 
+  private static JSONObject runCode(InternalRequestHeader header, String code, String guid, String accessor, 
           String action, JSONObject value, int activeCodeTTL) throws InternalRequestException {
     try {
-      return handler.runCode(header, guid, field, code, value, activeCodeTTL);
+      return handler.runCode(header, guid, accessor, code, value, activeCodeTTL);
     } catch (ActiveException e) {
       ActiveCodeHandler.getLogger().log(Level.INFO, "ActiveGNS request execution failed", e);
       /**
@@ -172,7 +172,8 @@ public class ActiveCodeHandler {
    * @throws InternalRequestException
    */
   public static JSONObject handleActiveCode(InternalRequestHeader header,
-          String guid, String field, String action, JSONObject value, BasicRecordMap db) throws InternalRequestException {
+          String guid, String field, String action, JSONObject value, BasicRecordMap db) 
+          throws InternalRequestException {
 
     if (Config.getGlobalBoolean(GNSConfig.GNSC.DISABLE_ACTIVE_CODE)) {
       return value;
@@ -199,6 +200,8 @@ public class ActiveCodeHandler {
     }
     JSONObject newResult = value;
     if (field == null || !InternalField.isInternalField(field)) {
+      //FIXME: Seems like this field lookup all could be replaced by something 
+      // like NSFieldAccess.lookupJSONFieldLocalNoAuth
       NameRecord activeCodeNameRecord = null;
       try {
         activeCodeNameRecord = NameRecord.getNameRecordMultiUserFields(db, guid,

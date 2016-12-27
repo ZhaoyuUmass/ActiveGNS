@@ -54,7 +54,7 @@ public interface Querier {
 	 * 
 	 * @param queriedGuid
 	 * @param field
-	 * @param value
+	 * @param value a Javascript JSON collection
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
 	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException;

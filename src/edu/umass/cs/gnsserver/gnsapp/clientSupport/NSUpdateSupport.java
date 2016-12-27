@@ -84,12 +84,6 @@ public class NSUpdateSupport {
           throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException,
           SignatureException, JSONException, IOException, FailedDBOperationException,
           RecordNotFoundException, FieldNotFoundException, InternalRequestException {
-    // This is for MOB-893
-    if (field == null || !InternalField.isInternalField(field)) {
-      ClientSupportConfig.getLogger().log(Level.INFO,
-              "Field update: '{'guid : {0}, field: {1}, value: {2}, operation: {3}'}'",
-              new Object[]{guid, field, field != null ? updateValue : userJSON, operation});
-    }
     ResponseCode errorCode = ResponseCode.NO_ERROR;
     // writer will be the INTERNAL_OP_SECRET for super secret internal system accesses
     if (!GNSConfig.getInternalOpSecret().equals(writer)) {
@@ -138,7 +132,8 @@ public class NSUpdateSupport {
               app.getDB(), app.getActiveCodeHandler());
       return ResponseCode.NO_ERROR;
     } else // Handle special case of a create index
-     if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
+    {
+      if (!updateValue.isEmpty() && updateValue.get(0) instanceof String) {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "Creating index for {0} {1}", new Object[]{field, updateValue});
         app.getDB().createIndex(field, (String) updateValue.get(0));
@@ -148,6 +143,7 @@ public class NSUpdateSupport {
         ClientSupportConfig.getLogger().log(Level.SEVERE, "Invalid index value:{0}", updateValue);
         return ResponseCode.UPDATE_ERROR;
       }
+    }
   }
 
   private static NameRecord getNameRecord(String guid, String field, UpdateOperation operation, BasicRecordMap db) throws RecordNotFoundException, FailedDBOperationException {
@@ -155,17 +151,20 @@ public class NSUpdateSupport {
       // some operations don't require a read first
       return new NameRecord(db, guid);
     } else //try {
-     if (field == null) {
+    {
+      if (field == null) {
         return NameRecord.getNameRecord(db, guid);
       } else {
         return NameRecord.getNameRecordMultiUserFields(db, guid,
                 ColumnFieldType.LIST_STRING, field);
       }
+    }
   }
 
   private static void updateNameRecord(InternalRequestHeader header, NameRecord nameRecord, String guid, String field,
           UpdateOperation operation, ResultValue updateValue, ResultValue oldValue, int argument,
-          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
+          ValuesMap userJSON, BasicRecordMap db, ActiveCodeHandler activeCodeHandler) 
+          throws FailedDBOperationException, FieldNotFoundException, InternalRequestException {
     ValuesMap newValue = userJSON;
     if (activeCodeHandler != null) {
       JSONObject result = ActiveCodeHandler.handleActiveCode(header, guid, field, ActiveCode.WRITE_ACTION, userJSON, db);
@@ -180,6 +179,43 @@ public class NSUpdateSupport {
     }
     // Apply updateEntireValuesMap to record in the database
     nameRecord.updateNameRecord(field, updateValue, oldValue, argument, newValue, operation);
-    
+    // This is for MOB-893 - logging updates
+    writeUpdateLog(guid, field, updateValue, newValue, operation);
   }
+
+  // This is for MOB-893 - logging updates
+  private static void writeUpdateLog(String guid, String field,
+          ResultValue updateValue, ValuesMap userJSON,
+          UpdateOperation operation) {
+    try {
+      if (field == null) {
+
+        for (String singleField : userJSON.getKeys()) {
+          if (!InternalField.isInternalField(singleField)) {
+            writeFieldLogEntry(guid, singleField, userJSON.get(singleField), operation);
+          }
+        }
+      } else if (!InternalField.isInternalField(field)) {
+        writeFieldLogEntry(guid, field, updateValue, operation);
+      }
+    } catch (JSONException e) {
+      ClientSupportConfig.getLogger().log(Level.WARNING, "Unable to log update: {0}", e);
+    }
+  }
+
+  // This is for MOB-893 - logging updates
+  private static void writeFieldLogEntry(String guid, String field, Object value,
+          UpdateOperation operation) throws JSONException {
+    // write it out as json
+    JSONObject json = new JSONObject();
+    json.put("guid", guid);
+    json.put("field", field);
+    json.put("value", value);
+    json.put("operation", operation.name());
+    ClientSupportConfig.getLogger().log(Level.INFO, "Field update: {0}", json.toString());
+//    ClientSupportConfig.getLogger().log(Level.INFO,
+//            "Field update: '{'guid : {0}, field: {1}, value: {2}, operation: {3}'}'",
+//            new Object[]{guid, field, value, operation});
+  }
+
 }
