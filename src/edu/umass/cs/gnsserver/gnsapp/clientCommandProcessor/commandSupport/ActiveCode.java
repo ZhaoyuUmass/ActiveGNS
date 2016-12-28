@@ -55,11 +55,7 @@ public class ActiveCode {
    */
   public static final String READ_ACTION = "read";
   /**
-<<<<<<< HEAD
-   * Deploy code on the write operation that needs to trigger the code 
-=======
    * Deploy code on the write operation that needs to trigger the code
->>>>>>> upstream/master
    */
   public static final String WRITE_ACTION = "write";
 

@@ -18,6 +18,8 @@ public interface DNSQuerier {
 	 * Resolve a list of IP addresses to geographic locations
 	 * @param ipList 
 	 * @return a JSON which contains the location information for each IP address, 
+	 * 		   we recommend the returned is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
+	 * 
 	 * @throws ActiveException 
 	 */
 	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException;
