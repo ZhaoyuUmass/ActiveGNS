@@ -19,17 +19,7 @@
  */
 package edu.umass.cs.gnsserver.gnamed;
 
-import edu.umass.cs.gnsserver.database.ColumnFieldType;
-import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
-import edu.umass.cs.gnscommon.exceptions.server.FieldNotFoundException;
-import edu.umass.cs.gnscommon.exceptions.server.RecordNotFoundException;
 import static edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.AccountAccess.HRN_GUID;
-import edu.umass.cs.gnsserver.gnsapp.GNSApp;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
-import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSFieldAccess;
-import edu.umass.cs.gnsserver.gnsapp.recordmap.NameRecord;
-import edu.umass.cs.gnsserver.utils.ValuesMap;
-import edu.umass.cs.utils.DelayProfiler;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,6 +30,9 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
 import org.xbill.DNS.Cache;
@@ -47,7 +40,9 @@ import org.xbill.DNS.Credibility;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.Flags;
 import org.xbill.DNS.Header;
+import org.xbill.DNS.MXRecord;
 import org.xbill.DNS.Message;
+import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Opcode;
 import org.xbill.DNS.RRset;
@@ -56,13 +51,16 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.SimpleResolver;
-import org.xbill.DNS.Type;
-import org.xbill.DNS.MXRecord;
-import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.TextParseException;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.xbill.DNS.Type;
+
+import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
+import edu.umass.cs.gnsserver.database.ColumnFieldType;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
+import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSFieldAccess;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
+import edu.umass.cs.gnsserver.utils.ValuesMap;
+import edu.umass.cs.utils.DelayProfiler;
 
 /**
  *
@@ -171,7 +169,7 @@ public class NameResolution {
 
     while (!nameResolved) {
       long resolveStart = System.currentTimeMillis();
-      JSONObject fieldResponseJson = lookupGuidField(nameToResolve, null, fields, handler);
+      JSONObject fieldResponseJson = lookupGuidField(query.getHeader().getID(), nameToResolve, null, fields, handler);
       if (fieldResponseJson == null) {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
         return errorMessage(query, Rcode.NXDOMAIN);
@@ -237,7 +235,7 @@ public class NameResolution {
           response.addRecord(mxRecord, Section.AUTHORITY);
 
           // Resolve MX Record name to an IP address and add it to ADDITIONAL section 
-          JSONObject mxResponseJson = lookupGuidField(mxname, fieldName, null, handler);
+          JSONObject mxResponseJson = lookupGuidField(query.getHeader().getID(), mxname, fieldName, null, handler);
           //CommandResponse mxResponse = lookupGuidGnsServer(mxname, fieldName, null, handler);
           if (mxResponseJson != null) {
             //if (mxResponse != null && !mxResponse.isError()) {
@@ -279,14 +277,14 @@ public class NameResolution {
    * Lookup the field or fields in the guid.
    * Returns a JSONObject containing the fields and values
    * or null if the domainName doesn't exist.
-   *
+   * @param id 
    * @param domain - the HRN of the guid
    * @param field - the field to lookup (mutually exclusive with fieldNames)
    * @param fields - the fields to lookup (mutually exclusive with fieldNames)
    * @param handler
    * @return a JSONObject containing the fields and values or null
    */
-  public static JSONObject lookupGuidField(String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
+  public static JSONObject lookupGuidField(int id, String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
     /**
      * Querying multiple types together is allowed in DNS protocol, but practically not supported.
      * Therefore, no need for us to implement support for multi-type query.
@@ -296,8 +294,9 @@ public class NameResolution {
      * 1. Lookup guid for the domain name
      */
     String guid = null;
+    final ValuesMap result;
     try{
-	    ValuesMap result = NSFieldAccess.lookupJSONFieldLocalNoAuth(null, domain,
+	    result = NSFieldAccess.lookupJSONFieldLocalNoAuth(null, domain,
 	            HRN_GUID, handler.getApp(), false);
 	    if (result != null) {
 	        guid = result.getString(HRN_GUID);
@@ -305,6 +304,7 @@ public class NameResolution {
     } catch (FailedDBOperationException | JSONException e) {
     	NameResolution.getLogger().log(Level.FINE,
                 "No guid for {0}: {1}", new Object[]{domain, e});
+    	return null;
     }
     
     /**
@@ -312,9 +312,37 @@ public class NameResolution {
      */
     JSONObject value = null;
     if(guid != null){
-    	//FIXME: the internal request header should not be null
+    	//zhaoyu: Generate a DNS header for local read 
+    	InternalRequestHeader header = new InternalRequestHeader(){
+
+			@Override
+			public long getOriginatingRequestID() {
+				return id;
+			}
+
+			@Override
+			public String getOriginatingGUID() {
+				try {
+					return result.getString(HRN_GUID);
+				} catch (JSONException e) {
+					return null;
+				}
+			}
+
+			@Override
+			public int getTTL() {
+				return InternalRequestHeader.DEFAULT_TTL;
+			}
+
+			@Override
+			public boolean hasBeenCoordinatedOnce() {
+				// DNS request does not need coordination
+				return false;
+			}
+    		
+    	};
     	try {
-			value = NSFieldAccess.lookupFieldsLocalNoAuth(null, guid, fields, ColumnFieldType.USER_JSON, handler);
+			value = NSFieldAccess.lookupFieldsLocalNoAuth(header, guid, fields, ColumnFieldType.USER_JSON, handler);
 		} catch (FailedDBOperationException e) {
 			NameResolution.getLogger().log(Level.FINE,
 	                "Fetching record failed for {0}: {1}", new Object[]{domain, e});
@@ -393,7 +421,6 @@ public class NameResolution {
       return errorMessage(query, Rcode.NOTIMP);
     }
     // extract the domain (guid) and field from the query
-    final String fieldName = Type.string(query.getQuestion().getType());
     final Name requestedName = query.getQuestion().getName();
     final byte[] rawName = requestedName.toWire();
     final String lookupName = querytoStringForGNS(rawName);
