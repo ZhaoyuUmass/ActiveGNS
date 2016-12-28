@@ -31,7 +31,7 @@ function run(value, accessor, querier) {
 
     if(client == undefined){
         // if client ip does not exist, fetch a ip from the test field
-        client = querier.readGuid(null, "test_ip")[test_ip];
+        client = querier.readGuid(null, "test_ip")["test_ip"];
     }
     var coords = querier.getLocations(records.push(client)); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
 
@@ -51,6 +51,8 @@ function run(value, accessor, querier) {
     // figure out the weight for all candidates
     var total = w.reduce(sum);
     w.forEach(function(element, index){w[index]= element/total});
+
+    // get the index of the returned replica
     var r = Math.random(),
         i = -1;
     while (r>=0){
