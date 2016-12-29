@@ -20,6 +20,7 @@ function sum(x, y){
 }
 
 function run(value, accessor, querier) {
+    
     var records = value["A"]["record"],
         client = value["client_ip"],
         weight = querier.readGuid(null, "weight")["weight"],
@@ -32,32 +33,30 @@ function run(value, accessor, querier) {
     if(client == undefined){
         // if client ip does not exist, fetch a ip from the test field
         client = querier.readGuid(null, "testIp")["testIp"];
-        print("IP is "+client);
     }
+    
+    // query the location info through geoip for all ip addresses
     locs.push(client);
     var coords = querier.getLocations(locs); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
-	print("coords:"+JSON.stringify(coords));
 	
 	// do not calculate the distance for client
     for(i=0; i<records.length; i++){
         dist.push(Math.round(distance(coords[records[i]]["latitude"], coords[records[i]]["longitude"],
             coords[client]["latitude"], coords[client]["longitude"])));
     }
-	print("dist:"+dist.toString());
 	
     // figure out all candidates
     var minimal_distance = Math.min.apply(Math, dist),
         i = -1;
-    print("minimal_distance:"+minimal_distance);
+        
     while ((i = dist.indexOf(minimal_distance, i+1)) != -1){
         indexes.push(i);
         w.push(weight[i]);
     }
-	print("w:"+w.toString());
 	
     // figure out the weight for all candidates
     var total = w.reduce(sum);
-    w.forEach(function(element, index){w[index]= element/total});
+    w.forEach(function(element, index){w[index] = element/total});
 
     // get the index of the returned replica
     var r = Math.random(),
@@ -66,12 +65,10 @@ function run(value, accessor, querier) {
         i++;
         r = r - w[i];
     }
-    print("i:"+i+", indexes[i]:"+indexes[i]+",records[indexes[i]]:"+records[indexes[i]]);
+      
+    // strip the replicas that have not been chosen
+    records.splice(indexes[i]+1, records.length);
+    records.splice(0, indexes[i]);
     
-    var arr = new Array(records[indexes[i]]);
-    print(arr.length+",ttl:"+value["A"]["ttl"]);
-    var json = {"A":{"record":arr, "ttl":value["A"]["ttl"]}};    
-    
-    print("json:"+JSON.stringify(json));
-    return json;
+    return value;
 }
