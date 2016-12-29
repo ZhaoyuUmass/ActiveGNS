@@ -34,7 +34,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	private int currentTTL;
 	private final String currentGuid;
 	private final long currentID;
-	
 	private Monitor monitor;
 	
 	/**
@@ -52,8 +51,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
 		this.currentID = id;
-		
-		monitor = new Monitor();
 	}
 	
 	
@@ -95,6 +92,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	private String readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
 			throws ActiveException {
+		monitor = new Monitor();
 		String value = null;
 		try{
 			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
@@ -123,11 +121,14 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		} catch(IOException e) {
 			throw new ActiveException();
 		}
+		
+		System.out.println("!!!!!!!!!!!!!! Returned value is "+value);
 		return value;
 	}
 
 	private void writeValueIntoField(String querierGuid, String queriedGuid, String field, String value, int ttl)
-			throws ActiveException {		
+			throws ActiveException {
+		monitor = new Monitor();
 		ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);			
 		try {
 			channel.sendMessage(am);
@@ -155,14 +156,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		}
 	}
 	
-  /**
-   *
-   * @param response
-   * @param isDone
-   */
-  protected void release(ActiveMessage response, boolean isDone){
-		monitor.setResult(response, isDone);
-	}
 	
 	private static class Monitor {
 		boolean isDone;
@@ -176,7 +169,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			return isDone;
 		}
 		
-		synchronized void setResult(ActiveMessage response, boolean isDone){
+		protected synchronized void setResult(ActiveMessage response, boolean isDone){
 			assert(response.type == Type.RESPONSE):"This is not a response!";
 			this.isDone = isDone;
 			this.response = response;				
@@ -188,7 +181,13 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		}
 	}
 
-
+	/**
+     * @param response
+	 * @param isDone
+	 */
+	protected void release(ActiveMessage response, boolean isDone){
+		monitor.setResult(response, isDone);
+	}
 
 	@Override
 	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
