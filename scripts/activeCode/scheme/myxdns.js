@@ -21,7 +21,7 @@ function sum(x, y){
 
 function run(value, accessor, querier) {
     var records = value["A"]["record"],
-        client = value["A"]["client_ip"],
+        client = value["client_ip"],
         weight = querier.readGuid(null, "weight")["weight"],
         w = [],
         indexes = [],
@@ -33,22 +33,27 @@ function run(value, accessor, querier) {
         client = querier.readGuid(null, "testIp")["testIp"];
         print("IP is "+client);
     }
-    var coords = querier.getLocations(records.push(client)); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
-	print(JSON.stringify(coords));
+    records.push(client);
+    var coords = querier.getLocations(records); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
+	print("coords:"+JSON.stringify(coords));
 	
-    for(i=0; i<records.length; i++){
+	// do not calculate the distance for client
+    for(i=0; i<records.length-1; i++){
         dist.push(Math.round(distance(coords[records[i]]["latitude"], coords[records[i]]["longitude"],
             coords[client]["latitude"], coords[client]["longitude"])));
     }
-
+	print("dist:"+dist.toString());
+	
     // figure out all candidates
-    var minimal_distance = Math.min(dist),
+    var minimal_distance = Math.min.apply(Math, dist),
         i = -1;
+    print("minimal_distance:"+minimal_distance);
     while ((i = dist.indexOf(minimal_distance, i+1)) != -1){
         indexes.push(i);
         w.push(weight[i]);
     }
-
+	print("w:"+w.toString());
+	
     // figure out the weight for all candidates
     var total = w.reduce(sum);
     w.forEach(function(element, index){w[index]= element/total});
@@ -60,6 +65,11 @@ function run(value, accessor, querier) {
         i++;
         r = r - w[i];
     }
-    value["A"]["record"] = [records[indexes[i]]];
+    print("i:"+i+", indexes[i]:"+indexes[i]+",records[indexes[i]]:"+records[indexes[i]]);
+    var addr = records[indexes[i]];
+    records = new Array(addr);
+    print(records.toString());
+    value["A"]["record"] = records;
+    
     return value;
 }

@@ -190,13 +190,13 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 
 	@Override
 	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
-		
 		// convert ipList to a JSONArray
 		JSONArray arr = null;
 		try {
-			arr = new JSONArray(ipList.callMember("toString"));
+			arr = new JSONArray("["+ipList.callMember("toString")+"]");
 		} catch (JSONException e) {
-			throw new ActiveException("Array list can not be cast to a JSONArray");
+			e.printStackTrace();
+			throw new ActiveException(e.getMessage());
 		}
 		
 		// resolve ip one by one
@@ -216,9 +216,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			}
 		}
 		
-		System.out.println("The result with all returned locations:"+obj);
 		return string2JS(obj.toString());
-
 	}
 	
 	private Location getLocation(String ip) {		
