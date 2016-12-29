@@ -20,8 +20,8 @@ function sum(x, y){
 }
 
 function run(value, accessor, querier) {
-
-    var records = value["A"]["record"], // an array of IP addresses for all replicas
+    print(value);
+    var records = value["A"]["record"],
         client = value["A"]["client_ip"],
         weight = querier.readGuid(null, "weight")["weight"],
         w = [],

@@ -137,8 +137,7 @@ public class MyXDNS {
 		
 		// 4. update code
 		client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
-		//GNSCommand.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
-		 
 		
+		System.exit(0);
 	}
 }

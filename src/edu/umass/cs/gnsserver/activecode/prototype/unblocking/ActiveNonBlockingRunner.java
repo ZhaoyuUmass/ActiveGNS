@@ -50,6 +50,7 @@ public class ActiveNonBlockingRunner implements Runner {
 	
 	/**
 	 * @param channel 
+	 * @param dbReader 
 	 */
 	public ActiveNonBlockingRunner(Channel channel, DatabaseReader dbReader){
 		this.channel = channel;
@@ -117,7 +118,7 @@ public class ActiveNonBlockingRunner implements Runner {
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
-		
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!"+value);
 		String result = querier.js2String((ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value),
 				accessor, querier));
 		

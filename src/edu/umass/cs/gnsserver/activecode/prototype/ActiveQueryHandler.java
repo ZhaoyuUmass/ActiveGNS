@@ -46,7 +46,6 @@ public class ActiveQueryHandler {
 	/**
 	 * This method handles the incoming requests from ActiveQuerier,
 	 * the query could be a read or write request.
-	 * 
 	 * @param am the query to handle
 	 * @param header 
 	 * @return an ActiveMessage being sent back to worker as a response to the query
@@ -77,6 +76,7 @@ public class ActiveQueryHandler {
 		public void run() {
 			ActiveCodeHandler.getLogger().log(ActiveCodeHandler.DEBUG_LEVEL, "################ {0} receives:{1} ", new Object[]{this, am} );
 			ActiveMessage response;
+			
 			if(am.type == ActiveMessage.Type.READ_QUERY){
 				try {
 					JSONObject result = app.read(header, am.getTargetGuid(), am.getAccessor());
@@ -94,9 +94,9 @@ public class ActiveQueryHandler {
 					response = new ActiveMessage(am.getId(), new JSONObject().toString(), null);
 				} catch (InternalRequestException | ClientException | JSONException e) {
 					response = new ActiveMessage(am.getId(), null, "Write failed");
-				}
-				
+				}				
 			}
+			
 			ActiveCodeHandler.getLogger().log(ActiveCodeHandler.DEBUG_LEVEL, "################ {0} returns response to worker:{1}", new Object[]{this, response} );
 			
 			monitor.setResult(response, false);
@@ -106,50 +106,51 @@ public class ActiveQueryHandler {
 	
 	/**
 	 * Submit this task to a thread pool
+	 * @param currentGuid 
 	 * @param am
 	 * @param header
 	 * @param monitor
 	 */
 	public void handleQueryAsync(ActiveMessage am, InternalRequestHeader header, Monitor monitor){
-		queryExecutor.execute(new ActiveQuerierTask(am, header, monitor));
+		queryExecutor.execute(new ActiveQuerierTask( am, header, monitor));
 				
 	}
 	
 	/**
 	 * This method handles read query from the worker. 
-	 * 
 	 * @param am 
 	 * @param header 
 	 * @return the response ActiveMessage
 	 */
 	public ActiveMessage handleReadQuery(ActiveMessage am, InternalRequestHeader header) {		
 		ActiveMessage resp = null;
+		
 		try {
 			JSONObject value = app.read(header, am.getTargetGuid(), am.getAccessor());
 			resp = new ActiveMessage(am.getId(), value.toString(), null);
 		} catch (InternalRequestException | ClientException e) {
 			resp = new ActiveMessage(am.getId(), null, "Read failed");
 		} 
-		
+				
 		return resp;
 	}
 
 	
 	/**
 	 * This method handles write query from the worker. 
-	 * 
 	 * @param am 
 	 * @param header 
 	 * @return the response ActiveMessage
 	 */
 	public ActiveMessage handleWriteQuery(ActiveMessage am, InternalRequestHeader header) {
-		ActiveMessage resp;
+		ActiveMessage resp = null;
+		
 		try {
 			app.write(header, am.getTargetGuid(), am.getAccessor(), new JSONObject(am.getValue()));
 			resp = new ActiveMessage(am.getId(), new JSONObject().toString(), null);
 		} catch (ClientException | InternalRequestException | JSONException e) {
 			resp = new ActiveMessage(am.getId(), null, "Write failed");
-		} 
+		} 		
 				
 		return resp;
 	}

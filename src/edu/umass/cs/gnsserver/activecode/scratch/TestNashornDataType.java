@@ -76,6 +76,7 @@ public class TestNashornDataType extends DefaultTest {
 		arr.put(4);
 		arr.put(1);
 		
+		
 		String new_code = null;
 		try {
 			new_code = new String(Files.readAllBytes(Paths.get("./scripts/activeCode/test.js")));
@@ -105,7 +106,7 @@ public class TestNashornDataType extends DefaultTest {
 	/**
 	 * 
 	 */
-	@Test
+	//@Test
 	public void test_01_Java2JS(){
 		JSONObject obj = new JSONObject();
 		try {
@@ -136,7 +137,7 @@ public class TestNashornDataType extends DefaultTest {
 	 * <p> This order has already been implemented, but it is hard for people to understand and use as Java objects, 
 	 * i.e., JSONObject and JSONArray, are nested with Javascript collections, i.e., JSON and Array
 	 */
-	@Test
+	//@Test
 	public void test_02_String2Java(){
 		JSONObject obj = new JSONObject();
 		try {
@@ -165,7 +166,7 @@ public class TestNashornDataType extends DefaultTest {
 	 * <p> This order is supposed to be easily understood by JS programmer who writes JS active code.
 	 * All parameters are used as native JS collections instead of Java objects.
 	 */
-	@Test
+	//@Test
 	public void test_03_String2JS(){
 		
 		JSONObject obj = new JSONObject();

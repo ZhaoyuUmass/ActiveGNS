@@ -175,8 +175,18 @@ public class ActiveCodeHandler {
           String guid, String field, String action, JSONObject value, BasicRecordMap db) 
           throws InternalRequestException {
 
-    if (Config.getGlobalBoolean(GNSConfig.GNSC.DISABLE_ACTIVE_CODE)) {
+    if (Config.getGlobalBoolean(GNSConfig.GNSC.DISABLE_ACTIVE_CODE) ) {
       return value;
+    } 
+    
+    if(header != null){
+    	// this is a depth query, and we do not call the code again, as it will form a infinite loop if not.
+    	if(guid.equals(header.getOriginatingGUID()) && header.getTTL() < InternalRequestHeader.DEFAULT_TTL){    
+    		return value;
+    	}
+    }else{
+    	// without a header, the code can misbehave without any regulation, therefore we return the value immediately if no header presents
+    	return value;
     }
 
     long t = System.nanoTime();
