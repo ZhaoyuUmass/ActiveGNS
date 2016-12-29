@@ -31,9 +31,11 @@ function run(value, accessor, querier) {
     if(client == undefined){
         // if client ip does not exist, fetch a ip from the test field
         client = querier.readGuid(null, "testIp")["testIp"];
+        print("IP is "+client);
     }
     var coords = querier.getLocations(records.push(client)); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
-
+	print(JSON.stringify(coords));
+	
     for(i=0; i<records.length; i++){
         dist.push(Math.round(distance(coords[records[i]]["latitude"], coords[records[i]]["longitude"],
             coords[client]["latitude"], coords[client]["longitude"])));

@@ -122,7 +122,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			throw new ActiveException();
 		}
 		
-		System.out.println("!!!!!!!!!!!!!! Returned value is "+value);
 		return value;
 	}
 
@@ -215,6 +214,8 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 				continue;
 			}
 		}
+		
+		System.out.println("The result with all returned locations:"+obj);
 		return string2JS(obj.toString());
 
 	}
@@ -232,7 +233,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	@SuppressWarnings("restriction")
 	protected ScriptObjectMirror string2JS(String str){
-		System.out.println("!!!!!!!!!! Before converting to js:"+str);
 		return (ScriptObjectMirror) JSON.callMember("parse", str);
 	}
 	
