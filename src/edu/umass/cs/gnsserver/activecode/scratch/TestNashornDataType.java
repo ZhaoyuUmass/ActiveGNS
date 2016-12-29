@@ -69,13 +69,19 @@ public class TestNashornDataType extends DefaultTest {
 	}
 	
 	/**
+	 * @throws JSONException 
 	 * 
 	 */
 	@Test
-	public void test_00_JSArray(){
+	public void test_00_JSArray() throws JSONException{
 		JSONArray arr = new JSONArray();
 		arr.put(4);
 		arr.put(1);		
+		JSONObject obj = new JSONObject();
+		JSONObject aobj = new JSONObject();
+		aobj.put("", arr);
+		aobj.put("ttl", 30);
+		obj.put("A", aobj);
 		
 		String new_code = null;
 		try {
@@ -97,9 +103,10 @@ public class TestNashornDataType extends DefaultTest {
 					js2String( (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null) )
 					);
 			*/
-			ScriptObjectMirror result = (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null);
-			String[] iarr = (String[])ScriptUtils.convert(result, String[].class);
-			System.out.println(iarr);
+			ScriptObjectMirror result = (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(obj.toString()), someField, null);
+			//String[] iarr = (String[])ScriptUtils.convert(result, String[].class);
+			String str = js2String(result);
+			System.out.println("converted:"+str);
 		} catch (NoSuchMethodException | ScriptException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

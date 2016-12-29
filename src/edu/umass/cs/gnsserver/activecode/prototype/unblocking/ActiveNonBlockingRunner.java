@@ -113,16 +113,16 @@ public class ActiveNonBlockingRunner implements Runner {
 	 */
         @Override
 	public String runCode(String guid, String accessor, String code, String value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
-		ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, JSON, ttl, guid, id);
+		
+        ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, JSON, ttl, guid, id);
 		map.put(id, querier);
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		
-		Object tmp = invocable.invokeFunction("run", querier.string2JS(value),
-				accessor, querier);
-		
-		String result = querier.js2String(tmp);
+		String result = (String) JSON.callMember("stringify", (ScriptObjectMirror) 
+				invocable.invokeFunction("run", JSON.callMember("parse", value),
+				accessor, querier));
 		
 		map.remove(id);
 		return result;

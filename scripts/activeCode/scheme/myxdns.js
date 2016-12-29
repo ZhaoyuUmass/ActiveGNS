@@ -23,6 +23,7 @@ function run(value, accessor, querier) {
     var records = value["A"]["record"],
         client = value["client_ip"],
         weight = querier.readGuid(null, "weight")["weight"],
+        locs = records.slice(),
         w = [],
         indexes = [],
         dist = [],
@@ -33,12 +34,12 @@ function run(value, accessor, querier) {
         client = querier.readGuid(null, "testIp")["testIp"];
         print("IP is "+client);
     }
-    records.push(client);
-    var coords = querier.getLocations(records); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
+    locs.push(client);
+    var coords = querier.getLocations(locs); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
 	print("coords:"+JSON.stringify(coords));
 	
 	// do not calculate the distance for client
-    for(i=0; i<records.length-1; i++){
+    for(i=0; i<records.length; i++){
         dist.push(Math.round(distance(coords[records[i]]["latitude"], coords[records[i]]["longitude"],
             coords[client]["latitude"], coords[client]["longitude"])));
     }
@@ -66,7 +67,10 @@ function run(value, accessor, querier) {
         r = r - w[i];
     }
     print("i:"+i+", indexes[i]:"+indexes[i]+",records[indexes[i]]:"+records[indexes[i]]);
-    var json = {"A":{"record":[records[indexes[i]]], "ttl":value["A"]["ttl"]}};    
+    
+    var arr = new Array(records[indexes[i]]);
+    print(arr.length+",ttl:"+value["A"]["ttl"]);
+    var json = {"A":{"record":arr, "ttl":value["A"]["ttl"]}};    
     
     print("json:"+JSON.stringify(json));
     return json;

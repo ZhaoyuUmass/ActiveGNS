@@ -236,7 +236,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	}
 	
 	@SuppressWarnings("restriction")
-	protected String js2String(Object obj){
+	protected String js2String(ScriptObjectMirror obj){
 		return (String) JSON.callMember("stringify", obj);
 	}
 	
