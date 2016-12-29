@@ -5,7 +5,6 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
@@ -26,6 +25,7 @@ import edu.umass.cs.gnsclient.client.util.Util;
 import edu.umass.cs.utils.DefaultTest;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.api.scripting.ScriptUtils;
 
 /**
  * @author gaozy
@@ -71,6 +71,7 @@ public class TestNashornDataType extends DefaultTest {
 	/**
 	 * 
 	 */
+	@Test
 	public void test_00_JSArray(){
 		JSONArray arr = new JSONArray();
 		arr.put(4);
@@ -91,12 +92,15 @@ public class TestNashornDataType extends DefaultTest {
 		}
 		
 		try {
+			/*
 			JSONObject result = new JSONObject(
 					js2String( (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null) )
 					);
-			
-			System.out.println(result);
-		} catch (NoSuchMethodException | ScriptException | JSONException e) {
+			*/
+			ScriptObjectMirror result = (ScriptObjectMirror) invocable.invokeFunction("run", string2JS(arr.toString()), someField, null);
+			String[] iarr = (String[])ScriptUtils.convert(result, String[].class);
+			System.out.println(iarr);
+		} catch (NoSuchMethodException | ScriptException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

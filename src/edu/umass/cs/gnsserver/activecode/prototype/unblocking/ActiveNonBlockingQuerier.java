@@ -190,10 +190,11 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 
 	@Override
 	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
+		
 		// convert ipList to a JSONArray
 		JSONArray arr = null;
 		try {
-			arr = new JSONArray(js2String(ipList));
+			arr = new JSONArray(ipList.callMember("toString"));
 		} catch (JSONException e) {
 			throw new ActiveException("Array list can not be cast to a JSONArray");
 		}
