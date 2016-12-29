@@ -119,9 +119,9 @@ public class ActiveNonBlockingRunner implements Runner {
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
 		
-		ScriptObjectMirror tmp = (ScriptObjectMirror) invocable.invokeFunction("run", querier.string2JS(value),
+		Object tmp = invocable.invokeFunction("run", querier.string2JS(value),
 				accessor, querier);
-		System.out.println(querier.js2String(tmp));
+		
 		String result = querier.js2String(tmp);
 		
 		map.remove(id);

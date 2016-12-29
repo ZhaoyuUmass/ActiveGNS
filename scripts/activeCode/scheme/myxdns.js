@@ -66,10 +66,8 @@ function run(value, accessor, querier) {
         r = r - w[i];
     }
     print("i:"+i+", indexes[i]:"+indexes[i]+",records[indexes[i]]:"+records[indexes[i]]);
-    var addr = records[indexes[i]];
-    records = new Array(addr);
-    print(records.toString());
-    value["A"]["record"] = records;
+    var json = {"A":{"record":[records[indexes[i]]], "ttl":value["A"]["ttl"]}};    
     
-    return value;
+    print("json:"+JSON.stringify(json));
+    return json;
 }
