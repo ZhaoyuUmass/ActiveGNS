@@ -133,7 +133,7 @@ public class MyXDNS {
 		client.execute(GNSCommand.fieldUpdate(entry, "weight", arr));
 		
 		// 3. update test ip
-		client.execute(GNSCommand.fieldUpdate(entry, "test_ip", client_ip));
+		client.execute(GNSCommand.fieldUpdate(entry, "testIp", client_ip));
 		
 		// 4. update code
 		client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);

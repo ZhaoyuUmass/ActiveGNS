@@ -20,7 +20,6 @@ function sum(x, y){
 }
 
 function run(value, accessor, querier) {
-    print(value);
     var records = value["A"]["record"],
         client = value["A"]["client_ip"],
         weight = querier.readGuid(null, "weight")["weight"],
@@ -31,7 +30,7 @@ function run(value, accessor, querier) {
 
     if(client == undefined){
         // if client ip does not exist, fetch a ip from the test field
-        client = querier.readGuid(null, "test_ip")["test_ip"];
+        client = querier.readGuid(null, "testIp")["testIp"];
     }
     var coords = querier.getLocations(records.push(client)); // the returned value is formatted as {ip1: {"latitude":lat1, "longitude":lng1},...}
 

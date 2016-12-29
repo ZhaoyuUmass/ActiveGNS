@@ -74,8 +74,7 @@ public class TestNashornDataType extends DefaultTest {
 	public void test_00_JSArray(){
 		JSONArray arr = new JSONArray();
 		arr.put(4);
-		arr.put(1);
-		
+		arr.put(1);		
 		
 		String new_code = null;
 		try {

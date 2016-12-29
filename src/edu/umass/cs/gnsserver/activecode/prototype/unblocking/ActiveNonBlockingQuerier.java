@@ -232,6 +232,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	@SuppressWarnings("restriction")
 	protected ScriptObjectMirror string2JS(String str){
+		System.out.println("!!!!!!!!!! Before converting to js:"+str);
 		return (ScriptObjectMirror) JSON.callMember("parse", str);
 	}
 	
