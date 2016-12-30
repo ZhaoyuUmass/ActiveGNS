@@ -44,7 +44,7 @@ public interface Querier {
 	 * It allows querierGuid to write value into a field of the queriedGuid.
 	 * 
 	 * 
-	 * <p>Queried guid and field must be provided 
+	 * <p>Queried guid must be provided 
 	 * for ACL check. GNS returns true if the write operation succeeds on the GNS side, 
 	 * otherwise it returns false.
 	 * 
@@ -53,9 +53,8 @@ public interface Querier {
 	 * user's code.
 	 * 
 	 * @param queriedGuid
-	 * @param field
 	 * @param value a Javascript JSON collection
 	 * @throws ActiveException throws an exception if any parameter is null or response indicates the query fails
 	 */
-	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException;
+	public void writeGuid(String queriedGuid, ScriptObjectMirror value) throws ActiveException;
 }

@@ -48,6 +48,7 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	/**
 	 * @param channel
+	 * @param JSON 
 	 */
 	public ActiveBlockingQuerier(Channel channel, ScriptObjectMirror JSON){
 		this(channel, JSON, 0, null, 0);
@@ -71,18 +72,17 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	/**
 	 * @param queriedGuid
-	 * @param field
 	 * @param value
 	 * @throws ActiveException
 	 */
 	@Override
-	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException{
+	public void writeGuid(String queriedGuid, ScriptObjectMirror value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			writeValueIntoField(currentGuid, currentGuid, field, js2String(value), currentTTL);
+			writeValueIntoField(currentGuid, currentGuid, js2String(value), currentTTL);
 		else
-			writeValueIntoField(currentGuid, queriedGuid, field, js2String(value), currentTTL);
+			writeValueIntoField(currentGuid, queriedGuid, js2String(value), currentTTL);
 	}
 	
 	
@@ -108,10 +108,10 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		return value;
 	}
 
-	private void writeValueIntoField(String querierGuid, String targetGuid, String field, String value, int ttl)
+	private void writeValueIntoField(String querierGuid, String targetGuid, String value, int ttl)
 			throws ActiveException {
 		
-			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, targetGuid, value, currentID);
+			ActiveMessage am = new ActiveMessage(ttl, querierGuid, null, targetGuid, value, currentID);
 			try {
 				channel.sendMessage(am);
 				ActiveMessage response = (ActiveMessage) channel.receiveMessage();

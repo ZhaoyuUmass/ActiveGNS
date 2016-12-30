@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
-import com.maxmind.geoip2.record.Location;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
@@ -71,18 +70,17 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	/**
 	 * @param queriedGuid
-	 * @param field
 	 * @param value
 	 * @throws ActiveException
 	 */
 	@Override
-	public void writeGuid(String queriedGuid, String field, ScriptObjectMirror value) throws ActiveException{
+	public void writeGuid(String queriedGuid, ScriptObjectMirror value) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
-			writeValueIntoField(currentGuid, currentGuid, field, js2String(value), currentTTL);
+			writeValueIntoField(currentGuid, currentGuid, js2String(value), currentTTL);
 		else
-			writeValueIntoField(currentGuid, queriedGuid, field, js2String(value), currentTTL);
+			writeValueIntoField(currentGuid, queriedGuid, js2String(value), currentTTL);
 	}
 	
 	@Override
@@ -125,10 +123,10 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		return value;
 	}
 
-	private void writeValueIntoField(String querierGuid, String queriedGuid, String field, String value, int ttl)
+	private void writeValueIntoField(String querierGuid, String queriedGuid, String value, int ttl)
 			throws ActiveException {
 		monitor = new Monitor();
-		ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, value, currentID);			
+		ActiveMessage am = new ActiveMessage(ttl, querierGuid, null, queriedGuid, value, currentID);			
 		try {
 			channel.sendMessage(am);
 			synchronized(monitor){
@@ -204,11 +202,13 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		for(int i=0; i<arr.length(); i++){
 			try {
 				String ip = arr.getString(i);
-				Location loc = getLocation(ip);
+				CityResponse loc = getLocation(ip);
 				if(loc!=null){
 					JSONObject value = new JSONObject();
-					value.put("latitude", loc.getLatitude());
-					value.put("longitude", loc.getLongitude());
+					value.put("latitude", loc.getLocation().getLatitude());
+					value.put("longitude", loc.getLocation().getLongitude());
+					// continent of the location
+					value.put("continent", loc.getContinent().getCode());
 					obj.put(ip, value);
 				}
 			} catch (JSONException e) {
@@ -219,11 +219,11 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		return string2JS(obj.toString());
 	}
 	
-	private Location getLocation(String ip) {		
+	private CityResponse getLocation(String ip) {		
 		try {
 			InetAddress ipAddress = InetAddress.getByName(ip);
-			CityResponse response = dbReader.city(ipAddress);
-			return response.getLocation();
+			CityResponse response = dbReader.city(ipAddress);			
+			return response;
 			
 		} catch (IOException | GeoIp2Exception e) {
 			return null;
