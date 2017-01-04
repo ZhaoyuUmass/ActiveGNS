@@ -1,0 +1,13 @@
+# This file contains info for donar's update policy
+# The parameters in each line are:
+# replica_ip weight epsilon lambda p
+# The meaning of these parameters:
+# replica_ip: the IPv4 address of the replica
+# weight: the weight defined by user for redirecting a proportion of requests to each replica's, this parameter must add up to 1 across all replicas(lines)
+# epsilon: allowed deviation for the proportion of requests redirected to a replica
+# lambda: "price", a penalty factor for solving optimization
+# p: the true proportion of requests directed to replica by other mapping nodes, they should add up to 1
+1.1.1.1 0.25 0.01 0.04 0.24
+2.2.2.2 0.25 0.01 0.01 0.28
+3.3.3.3 0.25 0.01 0 0.21
+4.4.4.4 0.25 0.01 0 0.29
