@@ -31,6 +31,7 @@ import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSAccessSupport;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -41,6 +42,7 @@ import java.security.spec.InvalidKeySpecException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import edu.umass.cs.gnscommon.GNSProtocol;
 
 /**
@@ -68,7 +70,7 @@ public class RemoveGuid extends AbstractCommand {
   }
 
   @Override
-  public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
+  public CommandResponse execute(InternalRequestHeader header, JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
     String guidToRemove = json.getString(GNSProtocol.GUID.toString());
     String accountGuid = json.optString(GNSProtocol.ACCOUNT_GUID.toString(), null);
@@ -76,11 +78,11 @@ public class RemoveGuid extends AbstractCommand {
     String message = json.getString(GNSProtocol.SIGNATUREFULLMESSAGE.toString());
     GuidInfo accountGuidInfo = null;
     GuidInfo guidInfoToRemove;
-    if ((guidInfoToRemove = AccountAccess.lookupGuidInfoAnywhere(guidToRemove, handler)) == null) {
+    if ((guidInfoToRemove = AccountAccess.lookupGuidInfoAnywhere(header, guidToRemove, handler)) == null) {
       return new CommandResponse(ResponseCode.BAD_GUID_ERROR, GNSProtocol.BAD_RESPONSE.toString() + " " + GNSProtocol.BAD_GUID.toString() + " " + guidToRemove);
     }
     if (accountGuid != null) {
-      if ((accountGuidInfo = AccountAccess.lookupGuidInfoAnywhere(accountGuid, handler)) == null) {
+      if ((accountGuidInfo = AccountAccess.lookupGuidInfoAnywhere(header, accountGuid, handler)) == null) {
         return new CommandResponse(ResponseCode.BAD_GUID_ERROR, GNSProtocol.BAD_RESPONSE.toString() + " " + GNSProtocol.BAD_GUID.toString() + " " + accountGuid);
       }
     }
@@ -89,12 +91,12 @@ public class RemoveGuid extends AbstractCommand {
               : guidInfoToRemove.getPublicKey(), signature, message)) {
         AccountInfo accountInfo = null;
         if (accountGuid != null) {
-          accountInfo = AccountAccess.lookupAccountInfoFromGuidAnywhere(accountGuid, handler);
+          accountInfo = AccountAccess.lookupAccountInfoFromGuidAnywhere(header, accountGuid, handler);
           if (accountInfo == null) {
             return new CommandResponse(ResponseCode.BAD_ACCOUNT_ERROR, GNSProtocol.BAD_RESPONSE.toString() + " " + GNSProtocol.BAD_ACCOUNT.toString() + " " + accountGuid);
           }
         }
-        return AccountAccess.removeGuid(guidInfoToRemove, accountInfo, handler);
+        return AccountAccess.removeGuid(header, guidInfoToRemove, accountInfo, handler);
       } else {
         return new CommandResponse(ResponseCode.SIGNATURE_ERROR, GNSProtocol.BAD_RESPONSE.toString() + " " + GNSProtocol.BAD_SIGNATURE.toString());
       }

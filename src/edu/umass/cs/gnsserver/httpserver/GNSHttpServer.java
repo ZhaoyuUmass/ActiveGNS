@@ -32,6 +32,7 @@ import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnsserver.main.GNSConfig;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -41,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
+
 import edu.umass.cs.gnscommon.ResponseCode;
 import static edu.umass.cs.gnsserver.httpserver.Defs.QUERYPREFIX;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
@@ -48,6 +50,7 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Comma
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnscommon.utils.Base64;
 import edu.umass.cs.gnscommon.utils.CanonicalJSON;
@@ -58,13 +61,17 @@ import edu.umass.cs.gnsserver.utils.Util;
 import edu.umass.cs.nio.JSONPacket;
 import edu.umass.cs.reconfiguration.ReconfigurationConfig;
 import edu.umass.cs.utils.Config;
+
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import edu.umass.cs.gnscommon.GNSProtocol;
+
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -103,7 +110,11 @@ public class GNSHttpServer {
     this.requestHandler = requestHandler;
     if (!Config.getGlobalBoolean(GNSC.DISABLE_MULTI_SERVER_HTTP)) {
       try {
-        this.client = new GNSClient();
+        this.client = new GNSClient() {
+        	public String getLabel() {
+        		return GNSHttpServer.class.getSimpleName();
+        	}
+        };
       } catch (IOException e) {
         LOGGER.log(Level.SEVERE, "Unable to start GNS client:" + e);
       }
@@ -125,6 +136,7 @@ public class GNSHttpServer {
         port = startingPort + cnt;
         break;
       }
+      edu.umass.cs.utils.Util.suicide(GNSConfig.getLogger(), "Unable to start GNS HTTP server; exiting");
     } while (cnt++ < 100);
   }
 
@@ -227,8 +239,9 @@ public class GNSHttpServer {
    * Process queries for the http service. Converts the URI of e the HTTP query into
    * the JSON Object format that is used by the CommandModeule class, then finds
    * executes the matching command.
+ * @throws InternalRequestException 
    */
-  private CommandResponse processQuery(String host, String commandName, String queryString) {
+  private CommandResponse processQuery(String host, String commandName, String queryString) throws InternalRequestException {
     // Convert the URI into a JSONObject, stuffing in some extra relevant fields like
     // the signature, and the message signed.
     try {
@@ -360,7 +373,8 @@ public class GNSHttpServer {
           JSONObject jsonFormattedArguments) throws ClientException, IOException, JSONException {
     LOGGER.log(Level.FINE, "jsonFormattedCommand =" + jsonFormattedArguments.toString());
 
-    CommandPacket outgoingPacket = GNSCommand.createGNSCommandFromJSONObject(jsonFormattedArguments);
+    CommandPacket outgoingPacket = new CommandPacket((long)(Math.random()*Long.MAX_VALUE), jsonFormattedArguments, false);
+    //GNSCommand.createGNSCommandFromJSONObject(jsonFormattedArguments);
 
     LOGGER.log(Level.FINE, "outgoingPacket =" + outgoingPacket.toString());
 

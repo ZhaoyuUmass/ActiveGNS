@@ -21,6 +21,7 @@ package edu.umass.cs.gnsserver.gnsapp.clientSupport;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.main.GNSConfig;
@@ -43,9 +44,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import edu.umass.cs.gnsserver.main.GNSConfig;
 import edu.umass.cs.utils.Config;
 import edu.umass.cs.gnscommon.GNSProtocol;
 
@@ -79,7 +78,7 @@ public class NSAuthentication {
    * @throws FailedDBOperationException
    * @throws UnsupportedEncodingException
    */
-  public static ResponseCode signatureAndACLCheck(String guid,
+  public static ResponseCode signatureAndACLCheck(InternalRequestHeader header, String guid,
           String field, List<String> fields,
           String accessorGuid, String signature,
           String message, MetaDataTypeName access,
@@ -108,15 +107,15 @@ public class NSAuthentication {
     // side effect which we need for the signing check below.
     AclCheckResult aclResult = null;
     if (field != null) {
-	  //Remember that field can also be ENTIRE_RECORD
-      aclResult = aclCheck(guid, field, accessorGuid, access, gnsApp);
+      // Remember that field can also be GNSProtocol.ENTIRE_RECORD.toString()
+      aclResult = aclCheck(header, guid, field, accessorGuid, access, gnsApp);
       if (aclResult.getResponseCode().isExceptionOrError()) {
         return aclResult.getResponseCode();
       }
     } else if (fields != null) {
       // Check each field individually; if any field doesn't pass the entire access fails.
       for (String aField : fields) {
-        aclResult = aclCheck(guid, aField, accessorGuid, access, gnsApp);
+        aclResult = aclCheck(header, guid, aField, accessorGuid, access, gnsApp);
         if (aclResult.getResponseCode().isExceptionOrError()) {
           return aclResult.getResponseCode();
         }
@@ -138,17 +137,17 @@ public class NSAuthentication {
     }
   }
 
-  public static AclCheckResult aclCheck(String targetGuid, String field,
+  public static AclCheckResult aclCheck(InternalRequestHeader header, String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     if (Config.getGlobalBoolean(GNSConfig.GNSC.USE_OLD_ACL_MODEL)) {
-      return oldAclCheck(targetGuid, field, accessorGuid, access, gnsApp);
+      return oldAclCheck(header, targetGuid, field, accessorGuid, access, gnsApp);
     } else {
-      return newAclCheck(targetGuid, field, accessorGuid, access, gnsApp);
+      return newAclCheck(header, targetGuid, field, accessorGuid, access, gnsApp);
     }
   }
 
-  private static AclCheckResult newAclCheck(String targetGuid, String field,
+  private static AclCheckResult newAclCheck(InternalRequestHeader header, String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -171,7 +170,7 @@ public class NSAuthentication {
       // Otherwise we attempt to find the public key for the accessorGuid in the ACL of the guid being
       // accesssed.
       // Note that field can be GNSProtocol.ENTIRE_RECORD.toString() here
-      publicKey = lookupPublicKeyInACL(targetGuid, field, accessorGuid, access, gnsApp);
+      publicKey = lookupPublicKeyInACL(header, targetGuid, field, accessorGuid, access, gnsApp);
     }
     // Handle the one final case: the accessorGuid is a member of a group guid and
     // that group guid is in the ACL
@@ -179,14 +178,14 @@ public class NSAuthentication {
       // First thing to do is to lookup the accessorGuid... possibly remotely.
       GuidInfo accessorGuidInfo;
       //TODO: Add a cache here
-      if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
+      if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(header, accessorGuid, gnsApp)) != null) {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "================> Catchall lookup returned: {0}",
                 accessorGuidInfo);
         // Check all the ACLs in the tree for this field to see if there is a group guid that
         // in there somewhere that has accessorGuid as a member
         Set<String> groups;
-        if (!(groups = NSGroupAccess.lookupGroups(accessorGuid, gnsApp.getRequestHandler())).isEmpty()) {
+        if (!(groups = NSGroupAccess.lookupGroups(header, accessorGuid, gnsApp.getRequestHandler())).isEmpty()) {
           if (NSAccessSupport.hierarchicalAccessGroupCheck(access, targetGuid, field, groups, gnsApp)) {
             publicKey = accessorGuidInfo.getPublicKey();
           }
@@ -202,7 +201,7 @@ public class NSAuthentication {
   }
 
   @Deprecated
-  private static AclCheckResult oldAclCheck(String targetGuid, String field,
+  private static AclCheckResult oldAclCheck(InternalRequestHeader header, String targetGuid, String field,
           String accessorGuid, MetaDataTypeName access,
           GNSApplicationInterface<String> gnsApp) throws FailedDBOperationException {
     ClientSupportConfig.getLogger().log(Level.FINE,
@@ -226,8 +225,8 @@ public class NSAuthentication {
     } else {
       // Otherwise we attempt to find the public key for the accessorGuid in the ACL of the guid being
       // accesssed.
-	  //field can be GNSProtocol.ENTIRE_RECORD.toString() here
-      publicKey = lookupPublicKeyInACL(targetGuid, field, accessorGuid, access, gnsApp);
+      // field can be GNSProtocol.ENTIRE_RECORD.toString() here
+      publicKey = lookupPublicKeyInACL(header, targetGuid, field, accessorGuid, access, gnsApp);
       if (publicKey != null) {
         // If we found the public key in the lookupPublicKey call then our access control list
         // check is done because the public key of the accessorGuid is in the given acl of targetGuid.
@@ -237,7 +236,7 @@ public class NSAuthentication {
         // and the group guid is in the acl in which case we need to explicitly lookup the 
         // publickey in possibly another server. 
         GuidInfo accessorGuidInfo;
-        if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
+        if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(header, accessorGuid, gnsApp)) != null) {
           ClientSupportConfig.getLogger().log(Level.FINE, "================> Catchall lookup returned: {0}",
                   accessorGuidInfo);
           publicKey = accessorGuidInfo.getPublicKey();
@@ -253,7 +252,7 @@ public class NSAuthentication {
       // Note that this a full-blown acl check that checks all the cases, but currenly it
       // is only used for checking the case where the accessorGuid is in a group guid
       // that is in the acl.
-      aclCheckPassed = NSAccessSupport.verifyAccess(access, targetGuid, field, accessorGuid, gnsApp);
+      aclCheckPassed = NSAccessSupport.verifyAccess(header, access, targetGuid, field, accessorGuid, gnsApp);
     }
     return new AclCheckResult(publicKey, ResponseCode.NO_ERROR);
   }
@@ -273,7 +272,7 @@ public class NSAuthentication {
    * @return the public key
    * @throws FailedDBOperationException
    */
-  private static String lookupPublicKeyInACL(String guid, String field, String accessorGuid,
+  private static String lookupPublicKeyInACL(InternalRequestHeader header, String guid, String field, String accessorGuid,
           MetaDataTypeName access, GNSApplicationInterface<String> gnsApp)
           throws FailedDBOperationException {
     String publicKey;
@@ -300,7 +299,7 @@ public class NSAuthentication {
     // explicitly because it's not going to have an entry in the ACL
     if (publicKey == null && publicKeys.contains(GNSProtocol.EVERYONE.toString())) {
       GuidInfo accessorGuidInfo;
-      if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(accessorGuid, gnsApp)) != null) {
+      if ((accessorGuidInfo = NSAccountAccess.lookupGuidInfoAnywhere(header, accessorGuid, gnsApp)) != null) {
         ClientSupportConfig.getLogger().log(Level.FINE,
                 "================> {0} lookup for EVERYONE returned {1}",
                 new Object[]{access.toString(), accessorGuidInfo});

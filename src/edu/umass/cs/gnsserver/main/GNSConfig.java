@@ -315,7 +315,7 @@ public class GNSConfig {
      * Turn off active code handling. Default is false.
      * Temporary - The use of this will go away at some point.
      */
-    DISABLE_ACTIVE_CODE(false);
+    DISABLE_ACTIVE_CODE(true);
 
     final Object defaultValue;
     final boolean unsafeTestingOnly;
@@ -481,8 +481,8 @@ public class GNSConfig {
 
   private static final String getPrivateKeyAsString() {
     try {
-      return Util.truncate(String.format("%040x", new BigInteger(1, getPrivateKey()
-              .getEncoded())), 32).toString();
+      return String.format("%040x", new BigInteger(1, getPrivateKey()
+              .getEncoded())).substring(0, 32);
     } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
       e.printStackTrace();
     }

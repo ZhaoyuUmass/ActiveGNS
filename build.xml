@@ -46,7 +46,7 @@
 
   <!-- pretty much everything depends on this -->
   <target name="compile" depends="init, buildnumber" description="compile java files">
-    <javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="true" debuglevel="lines,vars,source"
+    <javac srcdir="${src.dir}:${test.dir}" destdir="${build.classes.dir}" debug="true" debuglevel="lines,vars,source"
            includeantruntime="false">
       <compilerarg value="-Xlint:unchecked"/>
       <compilerarg value="-Xlint:rawtypes"/>
@@ -483,6 +483,7 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
     <property name="gigapaxosConfig" value="conf/gnsserver.3local.unittest.properties"/>
     <property name="java.util.logging.config.file" value="conf/logging.gns.unittest.properties"/>
     <property name="waitTillAllServersReady" value="5000"/>
+    <property name="singleJVM" value="false"/>
     <junit printsummary="yes" fork="yes" haltonfailure="on" showoutput="yes">
       <test name="edu.umass.cs.gnsclient.client.integrationtests.ServerIntegrationTest"/>
       <formatter type="plain" usefile="false"/>
@@ -494,6 +495,7 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
       <jvmarg value="-DgigapaxosConfig=${gigapaxosConfig}"/>
       <jvmarg value="-Djava.util.logging.config.file=${java.util.logging.config.file}"/>
       <jvmarg value="-DwaitTillAllServersReady=${waitTillAllServersReady}"/>
+      <jvmarg value="-DsingleJVM=${singleJVM}"/>
       <jvmarg value="-Dserver.command=bin/gpServer.sh"/>
       <classpath>
         <pathelement location="${build.test.classes.dir}"/>
@@ -508,8 +510,11 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
     <property name="gigapaxosConfig" value="conf/gnsserver.3local.createtest.properties"/>
     <property name="java.util.logging.config.file" value="conf/logging.gns.createtest.properties"/>
     <property name="waitTillAllServersReady" value="5000"/>
+    <property name="reps" value="1"/>
     <junit printsummary="yes" fork="yes" haltonfailure="on" showoutput="yes">
-      <test name="edu.umass.cs.gnsclient.client.integrationtests.ServerIntegrationTest_test010OnlyTest"/>
+      <test
+name="edu.umass.cs.gnsclient.client.integrationtests.ServerIntegrationTest"
+methods="test_010_CreateEntity"/>
       <formatter type="plain" usefile="false"/>
       <jvmarg value="-ea"/>
       <jvmarg value="-Djavax.net.ssl.trustStorePassword=qwerty"/>
@@ -519,6 +524,7 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
       <jvmarg value="-DgigapaxosConfig=${gigapaxosConfig}"/>
       <jvmarg value="-Djava.util.logging.config.file=${java.util.logging.config.file}"/>
       <jvmarg value="-DwaitTillAllServersReady=${waitTillAllServersReady}"/>
+      <jvmarg value="-Dreps=${reps}"/>
       <jvmarg value="-Dserver.command=bin/gpServer.sh"/>
       <classpath>
         <pathelement location="${build.test.classes.dir}"/>

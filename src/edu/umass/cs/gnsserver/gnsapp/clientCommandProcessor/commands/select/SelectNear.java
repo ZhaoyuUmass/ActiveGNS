@@ -25,7 +25,10 @@ import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.Field
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.GNSProtocol;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.AbstractCommand;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,11 +57,11 @@ public class SelectNear extends AbstractCommand {
   }
   
   @Override
-  public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws JSONException {
+  public CommandResponse execute(InternalRequestHeader header, JSONObject json, ClientRequestHandlerInterface handler) throws JSONException, InternalRequestException {
     String field = json.getString(GNSProtocol.FIELD.toString());
     String value = json.getString(GNSProtocol.NEAR.toString());
     String maxDistance = json.getString(GNSProtocol.MAX_DISTANCE.toString());
-    return FieldAccess.selectNear(field, value, maxDistance, handler);
+    return FieldAccess.selectNear(header, field, value, maxDistance, handler);
   }
 
   

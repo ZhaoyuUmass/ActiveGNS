@@ -30,6 +30,7 @@ import edu.umass.cs.gnscommon.CommandType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSAccessSupport;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -67,18 +68,18 @@ public class RetrieveAliases extends AbstractCommand {
   }
 
   @Override
-  public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
+  public CommandResponse execute(InternalRequestHeader header, JSONObject json, ClientRequestHandlerInterface handler) throws InvalidKeyException, InvalidKeySpecException,
           JSONException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
     String guid = json.getString(GNSProtocol.GUID.toString());
     String signature = json.getString(GNSProtocol.SIGNATURE.toString());
     String message = json.getString(GNSProtocol.SIGNATUREFULLMESSAGE.toString());
     GuidInfo guidInfo;
-    if ((guidInfo = AccountAccess.lookupGuidInfoLocally(guid, handler)) == null) {
+    if ((guidInfo = AccountAccess.lookupGuidInfoLocally(header, guid, handler)) == null) {
       return new CommandResponse(ResponseCode.BAD_GUID_ERROR, GNSProtocol.BAD_RESPONSE.toString() 
               + " " + GNSProtocol.BAD_GUID.toString() + " " + guid);
     }
     if (NSAccessSupport.verifySignature(guidInfo.getPublicKey(), signature, message)) {
-      AccountInfo accountInfo = AccountAccess.lookupAccountInfoFromGuidLocally(guid, handler);
+      AccountInfo accountInfo = AccountAccess.lookupAccountInfoFromGuidLocally(header, guid, handler);
       if (accountInfo == null) {
         return new CommandResponse(ResponseCode.BAD_ACCOUNT_ERROR, GNSProtocol.BAD_RESPONSE.toString() 
                 + " " + GNSProtocol.BAD_ACCOUNT.toString() + " " + guid);

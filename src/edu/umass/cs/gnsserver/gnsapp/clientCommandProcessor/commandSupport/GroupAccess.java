@@ -19,20 +19,25 @@
  */
 package edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport;
 
+import edu.umass.cs.gnscommon.CommandType;
+import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.ResponseCode;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException;
+import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
 import edu.umass.cs.gnsserver.utils.ResultValue;
+import edu.umass.cs.gnsserver.gnsapp.GNSCommandInternal;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientSupport.NSFieldAccess;
+import edu.umass.cs.gnsserver.interfaces.InternalRequestHeader;
 import edu.umass.cs.gnsserver.main.GNSConfig;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.logging.Level;
-
 import java.util.logging.Logger;
+
 import org.json.JSONException;
 
 //import edu.umass.cs.gnsserver.packet.QueryResultValue;
@@ -82,21 +87,26 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
+ * @throws InternalRequestException 
    */
-  public static ResponseCode addToGroup(String guid, String memberGuid, String writer,
+  public static ResponseCode addToGroup(InternalRequestHeader header, String guid, String memberGuid, String writer,
           String signature, String message, Date timestamp,
-          ClientRequestHandlerInterface handler) throws IOException, JSONException, ClientException {
+          ClientRequestHandlerInterface handler) throws IOException, JSONException, ClientException, InternalRequestException {
     ResponseCode code;
-//    if (USE_OLD_UPDATE) {
-//      handler.getRemoteQuery().fieldAppendToArray(guid, GROUP, new ResultValue(Arrays.asList(memberGuid)));
-//      code = ResponseCode.NO_ERROR;
-//    } else {
-      code = FieldAccess.update(null, guid, GROUP, new ResultValue(Arrays.asList(memberGuid)), null, -1,
+      code = FieldAccess.update(header, guid, GROUP, new ResultValue(Arrays.asList(memberGuid)), null, -1,
               UpdateOperation.SINGLE_FIELD_APPEND_OR_CREATE, writer, signature, message,
               timestamp, handler);
     //}
     if (code.isOKResult()) {
       handler.getRemoteQuery().fieldAppendToArray(memberGuid, GROUPS, new ResultValue(Arrays.asList(guid)));
+      /* arun: The code below will fail by design because we can not follow a coordinated request with another
+       * coordinated request. We need to refactor the implementation of addToGuid so that the update and append
+       * are issued by an outer uncoordinated task.
+       */
+//    	handler.getInternalClient().execute(
+//				GNSCommandInternal.fieldAppendToArray(memberGuid,
+//						GROUPS, new ResultValue(Arrays.asList(guid)),
+//						header));
     }
     return code;
   }
@@ -120,23 +130,29 @@ public class GroupAccess {
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
    * @throws java.io.IOException
    * @throws org.json.JSONException
+ * @throws InternalRequestException 
    */
-  public static ResponseCode addToGroup(String guid, ResultValue members, String writer,
+  public static ResponseCode addToGroup(InternalRequestHeader header, String guid, ResultValue members, String writer,
           String signature, String message, Date timestamp,
-          ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
+          ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException, InternalRequestException {
 
     ResponseCode code;
 //    if (USE_OLD_UPDATE) {
 //      handler.getRemoteQuery().fieldAppendToArray(guid, GROUP, members);
 //      code = ResponseCode.NO_ERROR;
 //    } else {
-      code = FieldAccess.update(null, guid, GROUP, members, null, -1,
+      code = FieldAccess.update(header, guid, GROUP, members, null, -1,
               UpdateOperation.SINGLE_FIELD_APPEND_OR_CREATE, writer, signature, message,
               timestamp, handler);
     //}
     if (code.isOKResult()) {
       for (String memberGuid : members.toStringSet()) {
-        handler.getRemoteQuery().fieldAppendToArray(memberGuid, GROUPS, new ResultValue(Arrays.asList(guid)));
+//        handler.getRemoteQuery().fieldAppendToArray(memberGuid, GROUPS, new ResultValue(Arrays.asList(guid)));
+				handler.getInternalClient().execute(
+						GNSCommandInternal.fieldUpdate(CommandType.AppendListUnsigned, 
+								memberGuid,
+								GROUPS, new ResultValue(Arrays.asList(guid)),
+								header));
       }
     }
     return code;
@@ -157,7 +173,7 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    */
-  public static ResponseCode removeFromGroup(String guid, String memberGuid, String writer,
+  public static ResponseCode removeFromGroup(InternalRequestHeader header, String guid, String memberGuid, String writer,
           String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
     ResponseCode code;
@@ -165,7 +181,7 @@ public class GroupAccess {
 //      handler.getRemoteQuery().fieldRemove(guid, GroupAccess.GROUP, memberGuid);
 //      code = ResponseCode.NO_ERROR;
 //    } else {
-      code = FieldAccess.update(null, guid, GROUP, memberGuid, null, -1,
+      code = FieldAccess.update(header, guid, GROUP, memberGuid, null, -1,
               UpdateOperation.SINGLE_FIELD_REMOVE, writer, signature, message,
               timestamp, handler);
     //}
@@ -188,22 +204,24 @@ public class GroupAccess {
    * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
    * @throws java.io.IOException
    * @throws org.json.JSONException
+ * @throws InternalRequestException 
    */
-  public static ResponseCode removeFromGroup(String guid, ResultValue members, String writer,
+  public static ResponseCode removeFromGroup(InternalRequestHeader header, String guid, ResultValue members, String writer,
           String signature, String message, Date timestamp,
-          ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException {
+          ClientRequestHandlerInterface handler) throws ClientException, IOException, JSONException, InternalRequestException {
     ResponseCode code;
 //    if (USE_OLD_UPDATE) {
 //      handler.getRemoteQuery().fieldRemoveMultiple(guid, GroupAccess.GROUP, members);
 //      code = ResponseCode.NO_ERROR;
 //    } else {
-      code = FieldAccess.update(null, guid, GROUP, members, null, -1,
+      code = FieldAccess.update(header, guid, GROUP, members, null, -1,
               UpdateOperation.SINGLE_FIELD_REMOVE, writer, signature, message,
               timestamp, handler);
     //}
     if (code.isOKResult()) {
       for (String memberGuid : members.toStringSet()) {
         handler.getRemoteQuery().fieldRemove(memberGuid, GroupAccess.GROUPS, guid);
+    	  handler.getInternalClient().execute(GNSCommandInternal.fieldRemove(memberGuid, GroupAccess.GROUPS, guid, header));
       }
     }
     return code;
@@ -211,6 +229,7 @@ public class GroupAccess {
 
   /**
    * Returns the members of the group GUID.
+ * @param header 
    *
    * @param guid
    * @param reader
@@ -220,10 +239,10 @@ public class GroupAccess {
    * @param handler
    * @return a response code
    */
-  public static ResultValue lookup(String guid,
+  public static ResultValue lookup(InternalRequestHeader header, String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(header, guid,
             GROUP, null,
             reader, signature, message, timestamp,
             handler.getApp());
@@ -246,15 +265,15 @@ public class GroupAccess {
    * @return a response code
    * @throws edu.umass.cs.gnscommon.exceptions.server.FailedDBOperationException
    */
-  public static ResultValue lookupGroupsAnywhere(String guid,
+  public static ResultValue lookupGroupsAnywhere(InternalRequestHeader header, String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler, boolean remoteLookup) throws FailedDBOperationException {
-    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(header, guid, GROUPS, null,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new ResultValue();
     }
-    return NSFieldAccess.lookupListFieldAnywhere(guid, GROUPS, true, handler);
+    return NSFieldAccess.lookupListFieldAnywhere(header, guid, GROUPS, true, handler);
   }
 
   /**
@@ -267,10 +286,10 @@ public class GroupAccess {
    * @param handler
    * @return the groups as a ResultValue
    */
-  public static ResultValue lookupGroupsLocally(String guid,
+  public static ResultValue lookupGroupsLocally(InternalRequestHeader header, String guid,
           String reader, String signature, String message, Date timestamp,
           ClientRequestHandlerInterface handler) {
-    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(guid, GROUPS, null,
+    ResponseCode errorCode = FieldAccess.signatureAndACLCheckForRead(header, guid, GROUPS, null,
             reader, signature, message, timestamp, handler.getApp());
     if (errorCode.isExceptionOrError()) {
       return new ResultValue();
@@ -280,6 +299,7 @@ public class GroupAccess {
 
   /**
    * Removes all group links when we're deleting a guid.
+ * @param header 
    *
    * @param guid
    * @param handler
@@ -287,19 +307,21 @@ public class GroupAccess {
    * @throws java.io.IOException
    * @throws org.json.JSONException
    */
-  public static void cleanupGroupsForDelete(String guid, ClientRequestHandlerInterface handler)
+  public static void cleanupGroupsForDelete(InternalRequestHeader header, String guid, ClientRequestHandlerInterface handler)
           throws ClientException, IOException, JSONException {
 
     LOGGER.log(Level.FINE, "DELETE CLEANUP: {0}", guid);
     try {
       // We're ignoring signatures and authentication
-      for (String groupGuid : GroupAccess.lookupGroupsAnywhere(guid,
-              GNSConfig.getInternalOpSecret(),
+      for (String groupGuid : GroupAccess.lookupGroupsAnywhere(header, guid,
+    		  GNSProtocol.INTERNAL_QUERIER.toString(),
+              //GNSConfig.getInternalOpSecret(),
               null, null,
               null, handler, true).toStringSet()) {
         LOGGER.log(Level.FINE, "GROUP CLEANUP: {0}", groupGuid);
-        removeFromGroup(groupGuid, guid,
-                GNSConfig.getInternalOpSecret(),
+        removeFromGroup(header, groupGuid, guid,
+        		GNSProtocol.INTERNAL_QUERIER.toString(),
+        		//GNSConfig.getInternalOpSecret(),
                 null, null, null,
                 handler);
       }
