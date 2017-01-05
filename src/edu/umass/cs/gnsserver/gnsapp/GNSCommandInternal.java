@@ -208,9 +208,7 @@ public class GNSCommandInternal extends InternalCommandPacket {
 			InternalRequestException {
 		return getCommand(type, header, GNSProtocol.GUID.toString(),
 				targetGUID, GNSProtocol.USER_JSON.toString(),
-				//new JSONObject().put(field, value));
-				//Zhaoyu: not sure why this must be put 
-				value);
+				new JSONObject().put(field, value));
 	}
 
 	/**
