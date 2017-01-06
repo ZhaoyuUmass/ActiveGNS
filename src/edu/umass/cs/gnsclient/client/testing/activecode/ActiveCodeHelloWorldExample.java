@@ -6,7 +6,9 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
+import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
@@ -53,7 +55,7 @@ public class ActiveCodeHelloWorldExample {
 		}
 				
 		// create a client
-		final GNSClientCommands client = new GNSClientCommands();
+		final GNSClient client = new GNSClient();
 		
 		final String ACCOUNT_GUID_PREFIX = "GNS_ACCOUNT_";
 		final String ACCOUNT_GUID = ACCOUNT_GUID_PREFIX + name;
@@ -69,15 +71,15 @@ public class ActiveCodeHelloWorldExample {
 		String depth_result = "Depth query succeeds";
 		
 		// set up a field
-		client.fieldUpdate(entry, field, value);
-		client.fieldUpdate(entry, depth_field, depth_result);
-		
+		client.execute(GNSCommand.fieldUpdate(entry, field, value));
+		client.execute(GNSCommand.fieldUpdate(entry,depth_field, depth_result));
+
 		// clear code for both read and write action
-		client.activeCodeClear(entry.getGuid(), ActiveCode.READ_ACTION, entry);
-		client.activeCodeClear(entry.getGuid(), ActiveCode.WRITE_ACTION, entry);
+		client.execute(GNSCommand.activeCodeClear(entry.getGuid(), ActiveCode.READ_ACTION, entry));
+		client.execute(GNSCommand.activeCodeClear(entry.getGuid(), ActiveCode.WRITE_ACTION, entry));
 		
 		// get the value of the field
-		String response = client.fieldRead(entry, field);
+		String response = client.execute(GNSCommand.fieldRead(entry, field)).getResultString(); 
 		
 		System.out.println("Before the code is deployed, the value of field("+field+") is "+response);
 		
@@ -86,14 +88,17 @@ public class ActiveCodeHelloWorldExample {
 		
 		// set up the code for on read operation
 		if(isRead){
-			if(update)
-				client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
+			if(update){
+				//client.execute(GNSCommand.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry));
+			}
 		} else {
-			if(update)
-				client.activeCodeSet(entry.getGuid(), ActiveCode.WRITE_ACTION, code, entry);
+			if(update){
+				//client.execute(GNSCommand.activeCodeSet(entry.getGuid(), ActiveCode.WRITE_ACTION, code, entry));
+			}
 		}
+		
 		// get the value of the field again
-		response = client.fieldRead(entry, field);
+		response = client.execute(GNSCommand.fieldRead(entry, field)).getResultString(); 
 		System.out.println("After the code is deployed, the value of field("+field+") is "+response);
 		
 		ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(new File("guid")));

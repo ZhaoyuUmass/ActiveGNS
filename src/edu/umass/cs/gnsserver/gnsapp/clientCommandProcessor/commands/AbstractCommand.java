@@ -20,7 +20,6 @@
 package edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands;
 
 import edu.umass.cs.gnscommon.exceptions.server.InternalRequestException;
-import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gigapaxos.interfaces.Summarizable;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
@@ -37,9 +36,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import edu.umass.cs.gnscommon.GNSProtocol;
+import edu.umass.cs.gnscommon.packets.CommandPacket;
 
 /**
  * This class helps to implement a unified set of client support commands that translate
@@ -121,26 +120,15 @@ public abstract class AbstractCommand implements CommandInterface, Comparable<Ab
     return getCommandType().getCommandDescription();
   }
 
-  // FIXME: This is a workaround to the missing execute method described in MOB-918
-  // I'm not sure what effect a null InternalRequestHeader will have going out.
-  // This is currently only used by the HTTP server
-  @Override
-  public CommandResponse execute(JSONObject json, ClientRequestHandlerInterface handler)
-          throws InvalidKeyException, InvalidKeySpecException,
-          JSONException, NoSuchAlgorithmException, SignatureException,
-          UnsupportedEncodingException, ParseException, InternalRequestException {
-    return execute(null, json, handler);
-  }
-
   /**
    *
-   * This method by default simply calls {@link #execute(JSONObject, ClientRequestHandlerInterface)}
-   * but Read and Update queries need to be adapted to drag {@link CommandPacket} for longer to use
-   * {@link InternalRequestHeader} information inside them.
+   * Executes the command.
+   * Arguments are passed in the CommandPacket.
+   * This is used by Read and Update queries to drag {@link edu.umass.cs.gnscommon.packets.CommandPacket} 
+   * for longer to use {@link InternalRequestHeader} information inside them.
    *
    * @param internalHeader
-   * @param command
-   *
+   * @param commandPacket
    * @param handler
    * @return Result of executing {@code commandPacket}
    * @throws InvalidKeyException
@@ -150,9 +138,11 @@ public abstract class AbstractCommand implements CommandInterface, Comparable<Ab
    * @throws SignatureException
    * @throws UnsupportedEncodingException
    * @throws ParseException
+   * @throws edu.umass.cs.gnscommon.exceptions.server.InternalRequestException
    */
   @Override
-  abstract public CommandResponse execute(InternalRequestHeader internalHeader, JSONObject command,
+  abstract public CommandResponse execute(InternalRequestHeader internalHeader, 
+          CommandPacket commandPacket,
           ClientRequestHandlerInterface handler) throws InvalidKeyException,
           InvalidKeySpecException, JSONException, NoSuchAlgorithmException,
           SignatureException, UnsupportedEncodingException, ParseException, InternalRequestException;
