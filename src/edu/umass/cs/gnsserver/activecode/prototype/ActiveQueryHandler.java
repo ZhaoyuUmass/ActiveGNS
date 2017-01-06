@@ -144,7 +144,9 @@ public class ActiveQueryHandler {
 	 */
 	public ActiveMessage handleWriteQuery(ActiveMessage am, InternalRequestHeader header) {
 		ActiveMessage resp = null;
-		
+		if(header.hasBeenCoordinatedOnce()){
+			return new ActiveMessage(am.getId(), null, "Write failed");
+		}
 		try {
 			app.write(header, am.getTargetGuid(), am.getAccessor(), new JSONObject(am.getValue()));
 			resp = new ActiveMessage(am.getId(), new JSONObject().toString(), null);

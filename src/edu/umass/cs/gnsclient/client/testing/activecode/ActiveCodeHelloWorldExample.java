@@ -2,6 +2,7 @@ package edu.umass.cs.gnsclient.client.testing.activecode;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,6 +11,7 @@ import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
+import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
 /**
@@ -26,9 +28,10 @@ public class ActiveCodeHelloWorldExample {
 	
 	/**
 	 * @param args
-	 * @throws Exception
+	 * @throws IOException 
+	 * @throws ClientException 
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws IOException, ClientException {
 		
 		boolean update = true;
 		if(System.getProperty("update")!=null){
@@ -60,9 +63,15 @@ public class ActiveCodeHelloWorldExample {
 		final String ACCOUNT_GUID_PREFIX = "GNS_ACCOUNT_";
 		final String ACCOUNT_GUID = ACCOUNT_GUID_PREFIX + name;
 		final String PASSWORD = "";
+		edu.umass.cs.gnsclient.client.util.GuidEntry entry = null;
+		// create an account	
+		try {
+			entry = GuidUtils.lookupOrCreateAccountGuid(client, ACCOUNT_GUID, PASSWORD);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		// create an account
-		final edu.umass.cs.gnsclient.client.util.GuidEntry entry = GuidUtils.lookupOrCreateAccountGuid(client, ACCOUNT_GUID, PASSWORD);
 		
 		String field = "someField";
 		String value = "original value";
