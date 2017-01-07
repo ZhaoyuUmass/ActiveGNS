@@ -1812,13 +1812,9 @@ public class GNSClientCommandsV2 extends GNSClient {
    * @throws java.io.IOException
    * if a communication error occurs
    */
-  // FIXME: The GNSCommand method expects bytes which it Base64 encodes.
-  public void activeCodeSet(String guid, String action, byte[] code,
+  public void activeCodeSet(String guid, String action, String code,
           GuidEntry writerGuid) throws ClientException, IOException {
     execute(GNSCommand.activeCodeSet(guid, action, code, writerGuid));
-//    getResponse(CommandType.SetCode, writerGuid, GNSProtocol.GUID.toString(), guid,
-//            GNSProtocol.AC_ACTION.toString(), action, GNSProtocol.AC_CODE.toString(), code,
-//            GNSProtocol.WRITER.toString(), writerGuid.getGuid());
   }
 
   /**

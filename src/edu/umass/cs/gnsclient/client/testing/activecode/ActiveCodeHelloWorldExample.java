@@ -98,7 +98,7 @@ public class ActiveCodeHelloWorldExample {
 		// set up the code for on read operation
 		if(isRead){
 			if(update){
-				//client.execute(GNSCommand.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry));
+				client.execute(GNSCommand.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry));
 			}
 		} else {
 			if(update){
