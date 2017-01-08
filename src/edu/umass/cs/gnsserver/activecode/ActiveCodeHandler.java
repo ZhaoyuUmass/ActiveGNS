@@ -204,8 +204,11 @@ public class ActiveCodeHandler {
      * Write has no field value, but if there should not be an internal
      * field in the JSONObject value.
      */
-    if (action.equals(ActiveCode.READ_ACTION) && field != null && InternalField.isInternalField(field)
-            || (action.equals(ActiveCode.WRITE_ACTION) && value != null && containInternalField(value))) {
+    if (
+    		(action.equals(ActiveCode.READ_ACTION) && field != null && InternalField.isInternalField(field))
+            || (action.equals(ActiveCode.WRITE_ACTION) && 
+            		((value != null && containInternalField(value)) || (field !=null && InternalField.isInternalField(field))
+            				))) {
       return value;
     }
     JSONObject newResult = value;
