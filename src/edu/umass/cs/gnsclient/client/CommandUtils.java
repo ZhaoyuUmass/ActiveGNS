@@ -424,8 +424,6 @@ public class CommandUtils {
 
     ResponseCode code = responsePacket.getErrorCode();
     String returnValue = responsePacket.getReturnValue();
-    GNSConfig.getLogger().log(Level.FINE, "New check response: {0} {1}",
-            new Object[]{code, responsePacket.getSummary()});
     // If the code isn't an error or exception we're just returning the
     // return value. Also handle the special case where the command
     // wants to return a null value.
@@ -468,8 +466,10 @@ public class CommandUtils {
         throw new InvalidGuidException(code, errorSummary);
       case NONEXISTENT_NAME_EXCEPTION:
         throw new InvalidGuidException(code, errorSummary);
+
       case TIMEOUT:
-        throw new ClientException(code, errorSummary);
+      case RECONFIGURATION_EXCEPTION:
+          throw new ClientException(code, errorSummary);    	  
 
       default:
         throw new ClientException(code,
@@ -482,7 +482,7 @@ public class CommandUtils {
    * @return Random long.
    */
   public static String getRandomRequestNonce() {
-    return (random.nextLong() + "").toString();
+    return (random.nextLong() + "");
   }
 
   /**
@@ -490,6 +490,7 @@ public class CommandUtils {
    * number of key and value pairs. Includes a NONCE and TIMESTAMP field.
    * 
    * @param commandType
+   * @param includeTimestamp
    * @param keysAndValues
    * @return a JSONObject
    * @throws ClientException

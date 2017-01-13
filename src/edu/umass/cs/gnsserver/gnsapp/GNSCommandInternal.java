@@ -202,28 +202,6 @@ public class GNSCommandInternal extends InternalCommandPacket {
     return getCommand(type, header, keysAndValues);
   }
 
-  // Wrong implementation. Arbitrary command types have 
-  // different arguments sets. This assumes GUID and USER_JSON.
-//  /**
-//   * Generalized update with configurable {@code CommandType} argument.
-//   *
-//   * @param type
-//   * @param targetGUID
-//   * @param field
-//   * @param value
-//   * @param header
-//   * @return InternalCommandPacket
-//   * @throws JSONException
-//   * @throws InternalRequestException
-//   */
-//  public static InternalCommandPacket fieldUpdate(CommandType type,
-//          String targetGUID, String field, Object value,
-//          InternalRequestHeader header) throws JSONException,
-//          InternalRequestException {
-//    return getCommand(type, header, GNSProtocol.GUID.toString(),
-//            targetGUID, GNSProtocol.USER_JSON.toString(),
-//            new JSONObject().put(field, value));
-//  }
   /**
    * @param guid
    * @param field
@@ -242,7 +220,16 @@ public class GNSCommandInternal extends InternalCommandPacket {
             GNSProtocol.VALUE.toString(), value);
   }
   
-  public static InternalCommandPacket fieldRemoveList(String guid, String field, ResultValue value, 
+  /**
+ * @param guid
+ * @param field
+ * @param value
+ * @param header
+ * @return InternalCommandPacket
+ * @throws InternalRequestException
+ * @throws JSONException
+ */
+public static InternalCommandPacket fieldRemoveList(String guid, String field, ResultValue value, 
           InternalRequestHeader header) throws InternalRequestException, JSONException {
     return getCommand(CommandType.RemoveListUnsigned, header,
             GNSProtocol.GUID.toString(), guid,
