@@ -79,6 +79,7 @@ public class ActiveCodeHelloWorldExample {
 			output.flush();
 			output.close();
 		} catch (Exception e) {
+			e.printStackTrace();
 			// The guid is already created, try to read from a local file
 			try {
 				ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File("guid")));

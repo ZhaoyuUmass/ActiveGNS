@@ -199,7 +199,7 @@ public class ActiveCodeHandler {
      * <p>
      * Read can be a single-field read or multi-field read.
      * If it's a single-field read, then the field can not be a internal field.
-     * If it's a multi-feild read, then there may be some field is internal.
+     * If it's a multi-field read, then there may be some field is internal.
      * <p>
      * Write has no field value, but if there should not be an internal
      * field in the JSONObject value.
