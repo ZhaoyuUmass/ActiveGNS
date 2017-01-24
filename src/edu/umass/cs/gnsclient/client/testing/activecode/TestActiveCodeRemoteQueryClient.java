@@ -129,12 +129,12 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		try {
 			//client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]);
-			System.out.println("start setting up active code for the 1st guid");
+			System.out.println("start setting up active code for the 1st guid on read op");
 			client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]));
 			
 			//client.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]);
-			System.out.println("start setting up active code for the 2nd guid");
-			client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, read_code, entries[1]));
+			System.out.println("start setting up active code for the 2nd guid on read op");
+			client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]));
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
@@ -145,9 +145,10 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		assertEquals(depthResult, response);		
 		System.out.println("Depth query test(a read followed by a read) succeeds!");
-		
+		System.out.println("Cleaning up code for this test ...");
 		//client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
 		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
 	}
 		
 	/**
@@ -156,15 +157,16 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws ClientException 
 	 * @throws InterruptedException 
 	 */
-	//@Test
+	@Test
 	public void test_02_RemoteQueryReadAfterWrite() throws IOException, ClientException, InterruptedException {
 		int count = 0;
-		String response = null;
-		
+		String response = null;		
 		
 		//client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]);
+		System.out.println("start setting up active code for the 1st guid on write op");
 		client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, read_code, entries[0]));
-
+		System.out.println("start setting up active code for the 2nd guid on read op");
+		client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]));
 		Thread.sleep(1000);		
 		
 		try {
@@ -192,6 +194,12 @@ public class TestActiveCodeRemoteQueryClient {
 		}
 		assertEquals(depthResult, response);
 		System.out.println("Depth query test(a write followed by a read) succeeds!");
+		
+		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
+		System.out.println("Cleaning up code for this test ...");
+		client.execute(GNSCommand.fieldUpdate(entries[0], someField, someValue));
+		System.out.println("reset someField to someValue...");
 	}
 	
 	/**
@@ -201,37 +209,29 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws InterruptedException 
 	 * @throws JSONException 
 	 */
-	//@Test
-	public void test_04_RemoteQueryWriteAfterReadWithoutACL() throws IOException, ClientException, InterruptedException, JSONException	{
-		// reset the state		
-		try {
-			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
-			client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]));
-			//client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
-			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
-			Thread.sleep(1000);
-			//client.fieldUpdate(entries[0], someField, someValue);
-			client.execute(GNSCommand.fieldUpdate(entries[0], someField, someValue));
-		} catch (ClientException e) {
-			e.printStackTrace();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}		
-		
-		
-
+	@Test
+	public void test_03_RemoteQueryWriteAfterReadWithoutACL() throws IOException, ClientException, InterruptedException, JSONException	{	
+		System.out.println("Write after read without ACL");
 		// target guid must set acl to allow accessor to write
 		//client.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]);
+		System.out.println("start setting up active code for the 1st guid on read op");
 		client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]));
 		//client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);
+		System.out.println("start setting up active code for the 2nd guid on write op");
 		client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]));
+		client.execute(GNSCommand.fieldRead(entries[0], someField));
 		
 		try{
-			client.execute(GNSCommand.fieldRead(entries[0], someField)).getResultJSONObject().getString(someField);
+			// someField should not exist in this test
+			client.execute(GNSCommand.fieldRead(entries[1], someField)).getResultJSONObject().getString(someField);
 			fail("Depth query test(a write followed by a read with ACL setup) fails!");
 		}catch(Exception e){
 			System.out.println("Depth query test(a write followed by a read without ACL setup) succeeds!");
 		}
+		
+		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));
+		System.out.println("Cleaning up code for this test ...");		
 	}
 		
 	/**
@@ -242,10 +242,17 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws JSONException 
 	 * 
 	 */
-	//@Test
-	public void test_05_RemoteQueryWriteAfterReadWithACL() throws ClientException, IOException, InterruptedException, JSONException {	
+	@Test
+	public void test_04_RemoteQueryWriteAfterReadWithACL() throws ClientException, IOException, InterruptedException, JSONException {	
+		System.out.println("Write after read with ACL");
+		System.out.println("start setting up active code for the 1st guid on read op");
+		client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, write_code, entries[0]));
+		//client.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]);
+		System.out.println("start setting up active code for the 2nd guid on write op");
+		client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]));
 		
 		//client.aclAdd(AclAccessType.WRITE_WHITELIST, entries[1], GNSProtocol.ENTIRE_RECORD.toString(), entries[0].getGuid());
+		System.out.println("Setup 2nd guid's write ACL for 1st guid");
 		client.execute(GNSCommand.aclAdd(AclAccessType.WRITE_WHITELIST, entries[1], GNSProtocol.ENTIRE_RECORD.toString(), entries[0].getGuid()));
 		Thread.sleep(1000);
 		
@@ -256,26 +263,38 @@ public class TestActiveCodeRemoteQueryClient {
 		
 		assertEquals(someValue, response);
 		
-		
+		/*
+		int count = 0;
 		try {
-			//response = client.fieldRead(entries[1], someField);
-			response = client.execute(GNSCommand.fieldRead(entries[1], someField)).getResultJSONObject().getString(someField);			
-			assertEquals(someValue, response);
-		} catch (Exception e2) {
-			fail("Expect "+someValue+" but get "+response+", write after read failed.");
-		}
-		
-		
-		// This sleep is required as a requirement for eventual consistency semantics of gigapaxos
-		Thread.sleep(1000);
-		try {
-			//response = client.fieldRead(entries[1], someField);
-			response = client.execute(GNSCommand.fieldRead(entries[1], someField)).getResultJSONObject().getString(someField);
-		} catch (Exception e1) {
-			e1.printStackTrace();
+			//client.fieldUpdate(entries[0], someField, someValue);
+			client.execute(GNSCommand.fieldUpdate(entries[0], someField, someValue));
+			count = 0;
+			while(count < 10){
+				try {
+					//response = client.fieldRead(entries[0], someField);
+					response = client.execute(GNSCommand.fieldRead(entries[1], someField)).getResultJSONObject().getString(someField);
+					if(response.equals(someValue)){
+						break;
+					}else{					
+						count++;
+						System.out.println("The value hasn't been updated without a reason "+count);
+						Thread.sleep(500);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		assertEquals(someValue, response);
+		*/
 		System.out.println("Depth query test(a write followed by a read with ACL setup) succeeds!");
+		
+		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));
+		System.out.println("Cleaning up code for this test ...");		
 	}
 		
 		
@@ -283,18 +302,16 @@ public class TestActiveCodeRemoteQueryClient {
 	 * Case V: test a write followed by a write
 	 * @throws IOException 
 	 * @throws InterruptedException 
+	 * @throws ClientException 
 	 */
 	//@Test
-	public void test_05_RemoteQueryWriteAfterWrite() throws IOException, InterruptedException	{	
-		try {			
-			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
-			//client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]);
-			client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]));
-		} catch (ClientException e) {
-			e.printStackTrace();
-		}
-		Thread.sleep(1000);
+	public void test_05_RemoteQueryWriteAfterWrite() throws IOException, InterruptedException, ClientException	{	
+		
+		System.out.println("start setting up active code for the 1st guid on write op");
+		client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]));
+		//client.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]);
+		System.out.println("start setting up active code for the 2nd guid on write op");
+		client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.WRITE_ACTION, write_code, entries[0]));
 		
 		try {
 			//client.fieldUpdate(entries[0], someField, someValue);
@@ -302,7 +319,11 @@ public class TestActiveCodeRemoteQueryClient {
 			fail("A write followed with a write operation should not succeed.");
 		} catch (ClientException e) {
 			System.out.println("Depth query test(a write followed by a write) succeeds!");
-		}				
+		}	
+		
+		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));
+		System.out.println("Cleaning up code for this test ...");		
 	}
 	
 	/**
@@ -310,19 +331,16 @@ public class TestActiveCodeRemoteQueryClient {
 	 */
 	@AfterClass
 	public static void cleanup() throws Exception{
-		try {
-			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]);
-			//client.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]);
-			//client.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]);
-			//client.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]);
+		/*
+		try {			
 			client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
 			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
 			client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.WRITE_ACTION, entries[0]));
-			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));
-			
+			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));			
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}		
+		*/
 		client.close();
 	}
 	

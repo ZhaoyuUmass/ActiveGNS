@@ -85,6 +85,7 @@ public class ActiveQueryHandler {
 					else
 						response = new ActiveMessage(am.getId(), null, "Read failed");
 				} catch (InternalRequestException | ClientException e) {
+					e.printStackTrace();
 					response = new ActiveMessage(am.getId(), null, "Read failed");
 				} 
 						
@@ -93,6 +94,7 @@ public class ActiveQueryHandler {
 					app.write(header, am.getTargetGuid(), am.getAccessor(), new JSONObject(am.getValue()) );
 					response = new ActiveMessage(am.getId(), new JSONObject().toString(), null);
 				} catch (InternalRequestException | ClientException | JSONException e) {
+					e.printStackTrace();
 					response = new ActiveMessage(am.getId(), null, "Write failed");
 				}				
 			}
@@ -106,7 +108,6 @@ public class ActiveQueryHandler {
 	
 	/**
 	 * Submit this task to a thread pool
-	 * @param currentGuid 
 	 * @param am
 	 * @param header
 	 * @param monitor
