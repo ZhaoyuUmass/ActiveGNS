@@ -52,16 +52,13 @@ import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DelayProfiler;
 
 /**
- * This class is the entry of activecode, it provides
- * the interface for GNS to run active code. It's creates
- * a threadpool to connect the real isolated active worker
- * to run active code. It also handles the misbehaviours.
+ * This class is the entry of active code, it provides
+ * the interface for GNS to run active code. 
  *
  * @author Zhaoyu Gao, Westy
  */
 public class ActiveCodeHandler {
 
-  private final String nodeId;
 
   private static final Logger LOGGER = Logger.getLogger(ActiveCodeHandler.class.getName());
 
@@ -80,7 +77,7 @@ public class ActiveCodeHandler {
    * @param nodeId
    */
   public ActiveCodeHandler(String nodeId) {
-    this.nodeId = nodeId;
+    
     String configFile = System.getProperty(gigapaxoConfig);
     if (configFile != null && new File(configFile).exists()) {
       try {
@@ -93,26 +90,6 @@ public class ActiveCodeHandler {
     handler = new ActiveHandler(nodeId, new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.acitveCodeBlockingEnabled);
   }
 
-  /**
-   * Checks to see if this guid has active code for the specified action.
-   * This function is only used for test, not used in system any more.
-   *
-   * @param valuesMap
-   * @param action can be 'read' or 'write'
-   * @return whether or not there is active code
-   */
-  private static boolean hasCode(ValuesMap valuesMap, String action) {
-
-    try {
-      if (valuesMap.get(ActiveCode.getCodeField(action)) != null) {
-        return true;
-      }
-    } catch (JSONException | IllegalArgumentException e) {
-      return false;
-    }
-
-    return false;
-  }
 
   /**
    * Check if the value contains an internal field
@@ -269,7 +246,7 @@ public class ActiveCodeHandler {
    * @throws InternalRequestException
    */
   public static void main(String[] args) throws InterruptedException, ExecutionException, IOException, JSONException, InternalRequestException {
-    ActiveCodeHandler handler = new ActiveCodeHandler("Test");
+    new ActiveCodeHandler("Test");
 
     // initialize the parameters used in the test 
     JSONObject obj = new JSONObject();
