@@ -176,6 +176,23 @@ public class GNSClientCommands extends GNSClient {
 
   /**
    * Reads the entire record from the GNS server for the given guid as a JSONObject.
+   * Sent on the mutual auth channel. Can only be sent from a client that
+   * has the correct ssl keys.
+   *
+   * @param targetGuid
+   * @return a JSONObject
+   * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
+   * if a protocol error occurs or the list cannot be parsed
+   * @throws java.io.IOException
+   * if a communication error occurs
+   */
+  public JSONObject readSecure(String targetGuid)
+          throws ClientException, IOException {
+    return execute(GNSCommand.readSecure(targetGuid)).getResultJSONObject();
+  }
+
+  /**
+   * Reads the entire record from the GNS server for the given guid as a JSONObject.
    * Signs the query using the private key of the guid.
    *
    * @param guid
@@ -1018,6 +1035,77 @@ public class GNSClientCommands extends GNSClient {
   public JSONArray aclGet(AclAccessType accessType, GuidEntry targetGuid,
           String field, String readerGuid) throws ClientException, IOException {
     return execute(GNSCommand.aclGet(accessType, targetGuid, field, readerGuid)).getResultJSONArray();
+  }
+
+  /**
+   * Adds to an access control list of the given field. The accesser can be a
+   * guid of a user or a group guid or null which means anyone can access the
+   * field. The field can be also be +ALL+ which means all fields can be read
+   * by the reader.
+   * Sent on the mutual auth channel. Can only be sent from a client that
+   * has the correct ssl keys.
+   *
+   * @param accessType
+   * a value from GnrsProtocol.AclAccessType
+   * @param targetGuid
+   * guid of the field to be modified
+   * @param field
+   * field name
+   * @param accesserGuid
+   * guid to add to the ACL
+   * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
+   * if a protocol error occurs or the list cannot be parsed
+   * @throws java.io.IOException
+   * if a communication error occurs
+   */
+  public void aclAddSecure(AclAccessType accessType, String targetGuid,
+          String field, String accesserGuid) throws ClientException, IOException {
+    execute(GNSCommand.aclAddSecure(accessType, targetGuid, field, accesserGuid));
+  }
+
+  /**
+   * Removes a guid from an access control list of the given user's field on
+   * the GNS server to include the guid specified in the accesser param. The
+   * accesser can be a guid of a user or a group guid or null which means
+   * anyone can access the field. The field can be also be +ALL+ which means
+   * all fields can be read by the reader.
+   * Sent on the mutual auth channel. Can only be sent from a client that
+   * has the correct ssl keys.
+   *
+   * @param accessType
+   * @param targetGuid
+   * @param field
+   * @param accesserGuid
+   * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
+   * if a protocol error occurs or the list cannot be parsed
+   * @throws java.io.IOException
+   * if a communication error occurs
+   */
+  public void aclRemoveSecure(AclAccessType accessType, String targetGuid,
+          String field, String accesserGuid) throws ClientException, IOException {
+    execute(GNSCommand.aclRemoveSecure(accessType, targetGuid, field, accesserGuid));
+  }
+
+  /**
+   * Get an access control list of the given user's field on the GNS server to
+   * include the guid specified in the accesser param. The accesser can be a
+   * guid of a user or a group guid or null which means anyone can access the
+   * field. The field can be also be +ALL+ which means all fields can be read
+   * by the reader. Sent on the mutual auth channel.
+   * Can only be sent from a client that has the correct ssl keys.
+   *
+   * @param accessType
+   * @param targetGuid
+   * @param field
+   * @return list of GUIDs for that ACL
+   * @throws edu.umass.cs.gnscommon.exceptions.client.ClientException
+   * if a protocol error occurs or the list cannot be parsed
+   * @throws java.io.IOException
+   * if a communication error occurs
+   */
+  public JSONArray aclGetSecure(AclAccessType accessType, String targetGuid,
+          String field) throws ClientException, IOException {
+    return execute(GNSCommand.aclGetSecure(accessType, targetGuid, field)).getResultJSONArray();
   }
 
   /**

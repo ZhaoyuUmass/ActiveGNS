@@ -17,25 +17,33 @@
  *  Initial developer(s): Westy
  *
  */
-package edu.umass.cs.gnsclient.client.singletests;
+package edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.secured;
 
-import org.junit.FixMethodOrder;
-import org.junit.runners.MethodSorters;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
+import edu.umass.cs.gnscommon.CommandType;
+import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.data.Read;
 
 /**
- * Comprehensive functionality test for the GNS.
  *
+ * @author westy
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RemoveGuidTestWithReadCoordinationGnsClientCommands 
-        extends RemoveGuidTestWithoutReadCoordinationGnsClientCommands {
+public class ReadSecured extends Read {
 
   /**
-   * Same as RemoveGuidTestWithoutReadCoordinationGnsClientCommands with added ReadCoordination
+   *
+   * @param module
    */
-  public RemoveGuidTestWithReadCoordinationGnsClientCommands() {
-    super();
-    clientCommands.setForceCoordinatedReads(true);
+  public ReadSecured(CommandModule module) {
+    super(module);
   }
-  
+
+  /**
+   *
+   * @return the command type
+   */
+  @Override
+  public CommandType getCommandType() {
+    return CommandType.ReadSecured;
+  }
+
 }
