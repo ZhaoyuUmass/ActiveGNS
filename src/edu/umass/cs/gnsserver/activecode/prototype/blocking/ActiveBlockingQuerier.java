@@ -17,7 +17,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  * readGuid and writeGuid method, so the protected methods will not be
  * exposed to the javascript code.
  * @author gaozy
- *
+ * 
  */
 public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	private final Channel channel;
@@ -53,17 +53,18 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	/**
 	 * @param queriedGuid
-	 * @param field
+	 * @param fields
 	 * @return ValuesMap the code trying to read
 	 * @throws ActiveException
 	 */
 	@Override
-	public ScriptObjectMirror readGuid(String queriedGuid, String field) throws ActiveException{
+	public ScriptObjectMirror readGuid(ScriptObjectMirror fields, String queriedGuid) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
+		String queriedFields = js2String(fields);
 		if(queriedGuid==null)
-			return readValueFromField(currentGuid, currentGuid, field, currentTTL);
-		return readValueFromField(currentGuid, queriedGuid, field, currentTTL);
+			return readValueFromField(currentGuid, currentGuid, queriedFields, currentTTL);
+		return readValueFromField(currentGuid, queriedGuid, queriedFields, currentTTL);
 	}
 	
 	/**
@@ -72,7 +73,7 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	 * @throws ActiveException
 	 */
 	@Override
-	public void writeGuid(String queriedGuid, ScriptObjectMirror value) throws ActiveException{
+	public void writeGuid(ScriptObjectMirror value, String queriedGuid) throws ActiveException{
 		if(currentTTL <=0)
 			throw new ActiveException(); //"Out of query limit"
 		if(queriedGuid==null)
@@ -81,12 +82,20 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			writeValueIntoField(currentGuid, queriedGuid, js2String(value), currentTTL);
 	}
 	
-	
-	private ScriptObjectMirror readValueFromField(String querierGuid, String queriedGuid, String field, int ttl)
+	/**
+	 * 
+	 * @param querierGuid
+	 * @param queriedGuid
+	 * @param fields a JS Array is stringified to this string
+	 * @param ttl
+	 * @return
+	 * @throws ActiveException
+	 */
+	private ScriptObjectMirror readValueFromField(String querierGuid, String queriedGuid, String fields, int ttl)
 			throws ActiveException {
 		ScriptObjectMirror value = null;
 		try{
-			ActiveMessage am = new ActiveMessage(ttl, querierGuid, field, queriedGuid, currentID);
+			ActiveMessage am = new ActiveMessage(ttl, querierGuid, fields, queriedGuid, currentID);
 			channel.sendMessage(am);
 			ActiveMessage response = (ActiveMessage) channel.receiveMessage();
 			
