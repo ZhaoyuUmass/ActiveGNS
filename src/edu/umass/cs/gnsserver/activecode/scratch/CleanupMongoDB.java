@@ -26,7 +26,7 @@ public class CleanupMongoDB {
 		
 		for (String name:dbs){
 			System.out.println(name);
-			if (name.startsWith("UMASS_GNS_DB_GNSApp")){
+			if (name.startsWith("UMASS_GNS_DB_GNSApp") || name.startsWith("UMASS_GNS_DB_frank")){
 				DB db = mongoClient.getDB(name);
 				db.dropDatabase();				
 			}
