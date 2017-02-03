@@ -84,14 +84,14 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private static GuidEntry accountGuid;
 	
 	private final static int default_ttl = 30;
-	private final static String DOMAIN = "activegns.org.";
+	private final static String DOMAIN = "pnsanonymous.org.";
 	private final static String NS1 = "ns1."+DOMAIN;
 	private final static String NS2 = "ns2."+DOMAIN;
 	private final static String NS3 = "ns3."+DOMAIN;
 	
 	private final static String NS1_ADDRESS = "52.43.241.146";
-	private final static String NS2_ADDRESS = "52.44.1.207";
-	private final static String NS3_ADDRESS = "52.203.144.175";
+	private final static String NS2_ADDRESS = "52.203.144.175";
+	private final static String NS3_ADDRESS = "52.14.84.6";
 	
 	private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 	
@@ -161,7 +161,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 		//updateRecord(guid, NS_RECORD_FIELD, ns_records, 120);
 		JSONObject recordObj = new JSONObject();
 		recordObj.put(RECORD_FIELD, ns_records);
-		recordObj.put(TTL_FIELD, 120);
+		recordObj.put(TTL_FIELD, 300);
 		
 		client.execute(GNSCommand.fieldUpdate(guid, NS_RECORD_FIELD, recordObj));
 		
