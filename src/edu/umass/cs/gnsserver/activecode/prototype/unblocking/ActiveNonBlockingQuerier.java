@@ -1,23 +1,21 @@
 package edu.umass.cs.gnsserver.activecode.prototype.unblocking;
 
 import java.io.IOException;
-import java.net.InetAddress;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage.Type;
-import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
+import edu.umass.cs.gnsserver.activecode.prototype.utils.GeoIPUtils;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
@@ -26,7 +24,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  * exposed to the javascript code.
  * @author gaozy
  */
-public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
+public class ActiveNonBlockingQuerier implements Querier,DNSQuerier {
 	private final Channel channel;
 	private final DatabaseReader dbReader;
 	private final ScriptObjectMirror JSON;
@@ -84,10 +82,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			writeValueIntoField(currentGuid, queriedGuid, js2String(value), currentTTL);
 	}
 	
-	@Override
-	public JSONObject lookupUsernameForGuid(String targetGuid) throws ActiveException {
-		throw new RuntimeException("unimplemented");
-	}
 	
 	/**
 	 * 
@@ -212,7 +206,7 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		for(int i=0; i<arr.length(); i++){
 			try {
 				String ip = arr.getString(i);
-				CityResponse loc = getLocation(ip);
+				CityResponse loc = GeoIPUtils.getLocation_City(ip, dbReader);
 				if(loc!=null){
 					JSONObject value = new JSONObject();
 					value.put("latitude", loc.getLocation().getLatitude());
@@ -227,17 +221,6 @@ public class ActiveNonBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 		}
 		
 		return string2JS(obj.toString());
-	}
-	
-	private CityResponse getLocation(String ip) {		
-		try {
-			InetAddress ipAddress = InetAddress.getByName(ip);
-			CityResponse response = dbReader.city(ipAddress);			
-			return response;
-			
-		} catch (IOException | GeoIp2Exception e) {
-			return null;
-		}		
 	}
 	
 	protected ScriptObjectMirror string2JS(String str){

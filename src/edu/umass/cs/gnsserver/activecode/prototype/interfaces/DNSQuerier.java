@@ -6,8 +6,7 @@ import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 
 /**
  * This interface defines the methods that will be used
- * by workers to make DNS-related queries, e.g., GeoIP,
- * EDNS0 and etc.
+ * by workers to make DNS-related queries, e.g., GeoIP.
  * 
  * @author gaozy
  *

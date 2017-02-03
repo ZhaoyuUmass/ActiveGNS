@@ -2,14 +2,19 @@ package edu.umass.cs.gnsserver.activecode.prototype.blocking;
 
 import java.io.IOException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.maxmind.geoip2.DatabaseReader;
+import com.maxmind.geoip2.model.CityResponse;
 
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveException;
 import edu.umass.cs.gnsserver.activecode.prototype.ActiveMessage;
-import edu.umass.cs.gnsserver.activecode.prototype.interfaces.ACLQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Channel;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.DNSQuerier;
 import edu.umass.cs.gnsserver.activecode.prototype.interfaces.Querier;
+import edu.umass.cs.gnsserver.activecode.prototype.utils.GeoIPUtils;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
@@ -19,8 +24,10 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  * @author gaozy
  * 
  */
-public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
+public class ActiveBlockingQuerier implements Querier,DNSQuerier {
+	
 	private final Channel channel;
+	private final DatabaseReader dbReader;
 	private final ScriptObjectMirror JSON;
 	private int currentTTL;
 	private final String currentGuid;
@@ -28,13 +35,15 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	
 	/**
 	 * @param channel
+	 * @param dbReader 
 	 * @param JSON 
 	 * @param ttl 
 	 * @param guid 
 	 * @param id 
 	 */
-	public ActiveBlockingQuerier(Channel channel, ScriptObjectMirror JSON, int ttl, String guid, long id){
+	public ActiveBlockingQuerier(Channel channel, DatabaseReader dbReader, ScriptObjectMirror JSON, int ttl, String guid, long id){
 		this.channel = channel;
+		this.dbReader = dbReader;
 		this.JSON = JSON;
 		this.currentTTL = ttl;
 		this.currentGuid = guid;
@@ -47,7 +56,7 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 	 * @param JSON 
 	 */
 	public ActiveBlockingQuerier(Channel channel, ScriptObjectMirror JSON){
-		this(channel, JSON, 0, null, 0);
+		this(channel, null, JSON, 0, null, 0);
 	}
 
 	
@@ -132,15 +141,38 @@ public class ActiveBlockingQuerier implements Querier,ACLQuerier,DNSQuerier {
 			}
 	}
 
-	@Override
-	public JSONObject lookupUsernameForGuid(String targetGuid) throws ActiveException {
-		throw new RuntimeException("unimplemented");
-	}
 
 	@Override
 	public ScriptObjectMirror getLocations(ScriptObjectMirror ipList) throws ActiveException {
-		// TODO Auto-generated method stub
-		return null;
+		// convert ipList to a JSONArray
+		JSONArray arr = null;
+		try {
+			arr = new JSONArray("["+ipList.callMember("toString")+"]");
+		} catch (JSONException e) {
+			e.printStackTrace();
+			throw new ActiveException(e.getMessage());
+		}
+		
+		// resolve ip one by one
+		JSONObject obj = new JSONObject();
+		for(int i=0; i<arr.length(); i++){
+			try {
+				String ip = arr.getString(i);
+				CityResponse loc = GeoIPUtils.getLocation_City(ip, dbReader);
+				if(loc!=null){
+					JSONObject value = new JSONObject();
+					value.put("latitude", loc.getLocation().getLatitude());
+					value.put("longitude", loc.getLocation().getLongitude());
+					// continent of the location
+					value.put("continent", loc.getContinent().getCode());
+					obj.put(ip, value);
+				}
+			} catch (JSONException e) {
+				continue;
+			}
+		}
+		
+		return string2JS(obj.toString());
 	}
 	
 	protected ScriptObjectMirror string2JS(String str){

@@ -224,6 +224,7 @@ public class ActiveBlockingClient implements Client {
 	    command.add(ofile);
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
+	    command.add(ActiveCodeConfig.activeGeoIPFilePath);
 	    command.add(Boolean.toString(pipeEnable));
 	    command.add("ReconfigurableNode");
 	    command.add(nodeId);
@@ -264,6 +265,7 @@ public class ActiveBlockingClient implements Client {
 	    command.add(""+port2);
 	    command.add(""+id);
 	    command.add(""+workerNumThread);
+	    command.add(ActiveCodeConfig.activeGeoIPFilePath);
 		command.add(Boolean.toString(pipeEnable));
 		command.add("ReconfigurableNode");
 	    command.add(nodeId);
