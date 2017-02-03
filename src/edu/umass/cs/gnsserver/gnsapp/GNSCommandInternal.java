@@ -185,6 +185,27 @@ public class GNSCommandInternal extends InternalCommandPacket {
             GNSProtocol.GUID.toString(), targetGUID,
             GNSProtocol.USER_JSON.toString(), new JSONObject().put(field, value));
   }
+  
+  /**
+   * Identical to
+   * {@link GNSCommand#update(String, JSONObject, GuidEntry)} except
+   * that the last {@code querierGUID} arugment is an InternalRequestHeader.
+   * 
+   * @author gaozy
+   * @param targetGUID 
+   * @param json
+   * @param header
+   * @return InternalCommandPacket
+   * @throws JSONException 
+   * @throws InternalRequestException 
+   */
+  public static InternalCommandPacket update(String targetGUID, 
+		  JSONObject json, InternalRequestHeader header) 
+		  throws JSONException, InternalRequestException {
+	  return getCommand(CommandType.ReplaceUserJSONUnsigned, header,
+	            GNSProtocol.GUID.toString(), targetGUID,
+	            GNSProtocol.USER_JSON.toString(), json);
+  }
 
   /**
    * Generalized update with configurable {@code CommandType} argument.

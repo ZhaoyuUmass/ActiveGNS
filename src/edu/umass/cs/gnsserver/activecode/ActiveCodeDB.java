@@ -43,8 +43,8 @@ public class ActiveCodeDB implements ActiveDBInterface {
 	}
 
 	@Override
-	public void write(InternalRequestHeader header, String targetGUID, String field, JSONObject valuesMap) 
+	public void write(InternalRequestHeader header, String targetGUID, String field, JSONObject json) 
 			throws InternalRequestException, ClientException{
-			client.write(header, targetGUID, field, valuesMap);		
+			client.write(header, targetGUID, field, json);		
 	}
 }
