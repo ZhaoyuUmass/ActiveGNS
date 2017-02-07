@@ -221,6 +221,10 @@ public class ActiveCodeHandler {
         }
         String accessorGuid = header == null ? guid : header.getOriginatingGUID();
         newResult = runCode(header, code, guid, accessorGuid, action, value, 5);
+      }else if(codeMap == null){
+    	  ActiveCodeHandler.getLogger().log(DEBUG_LEVEL,
+                  "OOOOOOOOOOOOO no code to run:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
+                  new Object[]{guid, field, action, value, header});
       }
     }
     ActiveCodeHandler.getLogger().log(DEBUG_LEVEL,
