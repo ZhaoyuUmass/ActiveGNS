@@ -5,7 +5,7 @@
 
 function run(value, field, querier) {
 	var records = value["A"]["record"];
-	var rand = records.get(Math.ceil(Math.random()*records.length())-1);
-	var value["A"]["record"] = [rand];
+	var rand = record[Math.ceil(Math.random()*records.length())-1];
+	value["A"]["record"] = [rand];
 	return value;
 }

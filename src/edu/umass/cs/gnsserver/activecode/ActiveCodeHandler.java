@@ -186,6 +186,9 @@ public class ActiveCodeHandler {
             || (action.equals(ActiveCode.WRITE_ACTION) && 
             		((value != null && containInternalField(value)) || (field !=null && InternalField.isInternalField(field))
             				))) {
+    	ActiveCodeHandler.getLogger().log(DEBUG_LEVEL,
+                "OOOOOOOOOOOOO no need to handle:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
+                new Object[]{guid, field, action, value, header});
       return value;
     }
     JSONObject newResult = value;
