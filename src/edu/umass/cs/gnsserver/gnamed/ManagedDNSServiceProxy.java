@@ -295,6 +295,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 					String code = req.getString(CODE_FIELD);
 					updateCode(guid, code);
 				}
+				break;
 				case REMOVE_CODE:{
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					removeCode(guid);
