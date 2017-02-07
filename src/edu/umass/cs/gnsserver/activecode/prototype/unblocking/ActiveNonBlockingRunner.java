@@ -123,7 +123,7 @@ public class ActiveNonBlockingRunner implements Runner {
 		Object ret = invocable.invokeFunction("run", JSON.callMember("parse", value),
 				accessor, querier);
 		System.out.println(">>>>>>>>>>> The returned value from the user code is:"+ret+", toString:"+ret.toString()+", class:"+ret.getClass());
-		Object ret1 = JSON.callMember("stringify", (ScriptObjectMirror) ret);
+		Object ret1 = JSON.callMember("stringify", ret);
 		System.out.println(">>>>>>>>>>> The stringified result is "+ret1.toString());
 		String result = ret1.toString();
 		
