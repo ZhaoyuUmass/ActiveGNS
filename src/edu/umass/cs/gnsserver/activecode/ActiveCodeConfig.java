@@ -46,7 +46,7 @@ public class ActiveCodeConfig {
 	  /**
 	   * Test performance for active code with trusted code
 	   */
-	  public static boolean activeCodeTrustedMode = true;
+	  public static boolean activeCodeTrustedMode = false;
 	  
 	  /**
 	   * Worker heap size
