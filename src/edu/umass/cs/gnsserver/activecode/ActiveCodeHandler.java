@@ -120,7 +120,6 @@ public class ActiveCodeHandler {
   private static JSONObject runCode(InternalRequestHeader header, String code, String guid, String accessor, 
           String action, JSONObject value, int activeCodeTTL) throws InternalRequestException {
     try {
-      ActiveCodeHandler.getLogger().log(DEBUG_LEVEL, "Start running code: code:{0},accessor:{1},guid:{2}, action:{3}, value:{4}", new Object[]{code, accessor, guid, action, value});
       return handler.runCode(header, guid, accessor, code, value, activeCodeTTL);
     } catch (ActiveException e) {
       ActiveCodeHandler.getLogger().log(Level.INFO, "ActiveGNS request execution failed", e);

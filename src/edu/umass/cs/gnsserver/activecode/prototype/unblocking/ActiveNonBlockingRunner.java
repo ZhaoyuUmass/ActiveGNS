@@ -119,10 +119,11 @@ public class ActiveNonBlockingRunner implements Runner {
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
-		
+		Object ret = invocable.invokeFunction("run", JSON.callMember("parse", value),
+				accessor, querier);
+		System.out.println(">>>>>>>>>>> The returned value from the user code is:"+ret+", toString:"+ret.toString()+", class:"+ret.getClass());
 		String result = (String) JSON.callMember("stringify", (ScriptObjectMirror) 
-				invocable.invokeFunction("run", JSON.callMember("parse", value),
-				accessor, querier));
+				ret);
 		
 		map.remove(id);
 		return result;
