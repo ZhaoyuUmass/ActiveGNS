@@ -126,7 +126,7 @@ public class ActiveNonBlockingRunner implements Runner {
 		
 		System.out.println(">>>>>>>>>>> The returned value from the user code is:"
 				+ret+", toString:"+ret.toString()+", class:"+ret.getClass());		 
-		Object ret1 = (ScriptObjectMirror) JSON.callMember("stringify", ret);
+		Object ret1 = JSON.callMember("stringify", ret);
 		
 		System.out.println(">>>>>>>>>>> The stringified result is "+ret1.toString());
 		String result = ret1.toString();
