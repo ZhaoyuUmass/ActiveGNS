@@ -169,7 +169,7 @@ public class NameResolution {
 
     while (!nameResolved) {
       long resolveStart = System.currentTimeMillis();
-      JSONObject fieldResponseJson = lookupGuidField(addr.toString(), query.getHeader().getID(), nameToResolve, null, fields, handler);
+      JSONObject fieldResponseJson = lookupGuidField(addr.getHostAddress().toString(), query.getHeader().getID(), nameToResolve, null, fields, handler);
       if (fieldResponseJson == null) {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
         return errorMessage(query, Rcode.NXDOMAIN);
