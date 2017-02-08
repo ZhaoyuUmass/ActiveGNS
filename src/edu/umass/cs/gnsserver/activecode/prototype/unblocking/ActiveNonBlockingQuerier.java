@@ -201,7 +201,7 @@ public class ActiveNonBlockingQuerier implements Querier,DNSQuerier {
 			throw new ActiveException(e.getMessage());
 		}
 		
-		System.out.println(">>>>>>>>>>>> The query is "+arr.toString());
+		//System.out.println(">>>>>>>>>>>> The query is "+arr.toString());
 		
 		// resolve ip one by one
 		JSONObject obj = new JSONObject();
@@ -222,7 +222,7 @@ public class ActiveNonBlockingQuerier implements Querier,DNSQuerier {
 			}
 		}
 		
-		System.out.println("The result is "+obj.toString());
+		//System.out.println("The result is "+obj.toString());
 		return string2JS(obj.toString());
 	}
 	
