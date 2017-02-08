@@ -201,6 +201,8 @@ public class ActiveNonBlockingQuerier implements Querier,DNSQuerier {
 			throw new ActiveException(e.getMessage());
 		}
 		
+		System.out.println(">>>>>>>>>>>> The query is "+arr.toString());
+		
 		// resolve ip one by one
 		JSONObject obj = new JSONObject();
 		for(int i=0; i<arr.length(); i++){
