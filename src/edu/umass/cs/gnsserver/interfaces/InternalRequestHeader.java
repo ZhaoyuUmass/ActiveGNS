@@ -76,5 +76,12 @@ public interface InternalRequestHeader {
 	 */
 	default boolean verifyInternal() {
 		return false;
-	}	
+	}
+	
+	/**
+	 * @return IP address
+	 */
+	default String getSourceAddress() {
+		return null;
+	}
 }

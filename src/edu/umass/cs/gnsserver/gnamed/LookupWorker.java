@@ -153,7 +153,7 @@ public class LookupWorker implements Runnable {
 
     // If we're not consulting the DNS server as well just send the query to GNS.
     if (dnsServer == null) {
-      Message result = NameResolution.lookupGnsServer(query, handler);
+      Message result = NameResolution.lookupGnsServer(incomingPacket.getAddress(), query, handler);
       DelayProfiler.updateDelay("generateReply", startTime);
       return result;
     }

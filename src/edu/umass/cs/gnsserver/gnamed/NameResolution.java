@@ -132,12 +132,12 @@ public class NameResolution {
 
   /**
    * Lookup the query in the GNS server.
-   *
+   * @param addr 
    * @param query
    * @param handler
    * @return A message with either a good response or an error.
    */
-  public static Message lookupGnsServer(Message query, ClientRequestHandlerInterface handler) {
+  public static Message lookupGnsServer(InetAddress addr, Message query, ClientRequestHandlerInterface handler) {
     // check for queries we can't handle
     int type = query.getQuestion().getType();
     // Was the query legitimate or implemented?
@@ -169,7 +169,7 @@ public class NameResolution {
 
     while (!nameResolved) {
       long resolveStart = System.currentTimeMillis();
-      JSONObject fieldResponseJson = lookupGuidField(query.getHeader().getID(), nameToResolve, null, fields, handler);
+      JSONObject fieldResponseJson = lookupGuidField(addr.toString(), query.getHeader().getID(), nameToResolve, null, fields, handler);
       if (fieldResponseJson == null) {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
         return errorMessage(query, Rcode.NXDOMAIN);
@@ -235,7 +235,7 @@ public class NameResolution {
           response.addRecord(mxRecord, Section.AUTHORITY);
 
           // Resolve MX Record name to an IP address and add it to ADDITIONAL section 
-          JSONObject mxResponseJson = lookupGuidField(query.getHeader().getID(), mxname, fieldName, null, handler);
+          JSONObject mxResponseJson = lookupGuidField(addr.toString(), query.getHeader().getID(), mxname, fieldName, null, handler);
           //CommandResponse mxResponse = lookupGuidGnsServer(mxname, fieldName, null, handler);
           if (mxResponseJson != null) {
             //if (mxResponse != null && !mxResponse.isError()) {
@@ -277,6 +277,7 @@ public class NameResolution {
    * Lookup the field or fields in the guid.
    * Returns a JSONObject containing the fields and values
    * or null if the domainName doesn't exist.
+   * @param addr 
    * @param id 
    * @param domain - the HRN of the guid
    * @param field - the field to lookup (mutually exclusive with fieldNames)
@@ -284,7 +285,7 @@ public class NameResolution {
    * @param handler
    * @return a JSONObject containing the fields and values or null
    */
-  public static JSONObject lookupGuidField(int id, String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
+  public static JSONObject lookupGuidField(String addr, int id, String domain, String field, ArrayList<String> fields, ClientRequestHandlerInterface handler) {
     /**
      * Querying multiple types together is allowed in DNS protocol, but practically not supported.
      * Therefore, no need for us to implement support for multi-type query.
@@ -312,7 +313,7 @@ public class NameResolution {
      */
     JSONObject value = null;
     if(guid != null){
-    	//zhaoyu: Generate a DNS header for local read 
+    	// Generate a DNS header for local read 
     	InternalRequestHeader header = new InternalRequestHeader(){
 
 			@Override
@@ -338,6 +339,11 @@ public class NameResolution {
 			public boolean hasBeenCoordinatedOnce() {
 				// DNS request does not need coordination
 				return false;
+			}
+			
+			@Override
+			public String getSourceAddress(){
+				return addr;
 			}
     		
     	};

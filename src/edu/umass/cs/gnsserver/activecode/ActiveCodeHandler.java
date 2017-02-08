@@ -61,7 +61,10 @@ public class ActiveCodeHandler {
 
 
   private static final Logger LOGGER = Logger.getLogger(ActiveCodeHandler.class.getName());
-
+  
+  // This is used for DNS query to append source IP address to the value
+  public static final String SOURCE_IP_FIELD = "client_ip";
+  
   /**
    * Debug level
    */
@@ -219,8 +222,22 @@ public class ActiveCodeHandler {
         } catch (JSONException | IllegalArgumentException e) {
           return value;
         }
+        // Prepare values for query
         String accessorGuid = header == null ? guid : header.getOriginatingGUID();
+        if(header.getSourceAddress() != null){
+			try {
+				value.put(SOURCE_IP_FIELD, header.getSourceAddress());
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+        }
+        // Run code
         newResult = runCode(header, code, guid, accessorGuid, action, value, 5);
+        
+        // Strip the appended fields
+        if(newResult.has(SOURCE_IP_FIELD)){
+        	newResult.remove(SOURCE_IP_FIELD);
+        }
       }else if(codeMap == null){
     	  ActiveCodeHandler.getLogger().log(DEBUG_LEVEL,
                   "OOOOOOOOOOOOO no code to run:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
