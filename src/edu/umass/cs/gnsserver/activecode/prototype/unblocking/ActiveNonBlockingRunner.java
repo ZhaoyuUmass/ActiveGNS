@@ -112,7 +112,8 @@ public class ActiveNonBlockingRunner implements Runner {
 	 * @throws NoSuchMethodException
 	 */
         @Override
-	public String runCode(String guid, String accessor, String code, String value, int ttl, long id) throws ScriptException, NoSuchMethodException {		
+	public String runCode(String guid, String accessor, String code, String value, int ttl, long id) 
+			throws ScriptException, NoSuchMethodException {		
 		
         ActiveNonBlockingQuerier querier = new ActiveNonBlockingQuerier(channel, dbReader, JSON, ttl, guid, id);
 		map.put(id, querier);
@@ -122,8 +123,11 @@ public class ActiveNonBlockingRunner implements Runner {
 		System.out.println(">>>>>>>>> value:"+value);
 		Object ret = invocable.invokeFunction("run", JSON.callMember("parse", value),
 				accessor, querier);
-		System.out.println(">>>>>>>>>>> The returned value from the user code is:"+ret+", toString:"+ret.toString()+", class:"+ret.getClass());
-		Object ret1 = JSON.callMember("stringify", ret);
+		
+		System.out.println(">>>>>>>>>>> The returned value from the user code is:"
+				+ret+", toString:"+ret.toString()+", class:"+ret.getClass());		 
+		Object ret1 = (ScriptObjectMirror) JSON.callMember("stringify", ret);
+		
 		System.out.println(">>>>>>>>>>> The stringified result is "+ret1.toString());
 		String result = ret1.toString();
 		
