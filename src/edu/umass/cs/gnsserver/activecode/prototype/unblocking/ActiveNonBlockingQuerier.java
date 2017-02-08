@@ -222,6 +222,7 @@ public class ActiveNonBlockingQuerier implements Querier,DNSQuerier {
 			}
 		}
 		
+		System.out.println("The result is "+obj.toString());
 		return string2JS(obj.toString());
 	}
 	
