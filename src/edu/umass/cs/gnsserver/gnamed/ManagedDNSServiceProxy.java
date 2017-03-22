@@ -33,12 +33,21 @@ import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
 /**
+ * This class is used for a front end to interact with GNS 
+ * as a managed DNS provider server. The front end is maintained
+ * at https://github.com/ZhaoyuUmass/node-express
+ * 
+ * 
  * @author gaozy
  *
  */
 public class ManagedDNSServiceProxy implements Runnable {
 	
 	protected final static String RECORD_FIELD = "record";
+	protected final static String MX_FIELD = "mx";
+	protected final static String NS_FIELD = "ns";
+	protected final static String CNAME_FIELD = "cname";
+	
 	protected final static String TTL_FIELD = "ttl";
 	
 	private final static String ACTION_FIELD = "action";
@@ -54,12 +63,26 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private enum Actions {
 	    CREATE("create"),
 	    UPDATE_FIELD("update_field"),
-	    UPDATE_RECORD("update_record"),
+	    REMOVE_FIELD("remove_field"),
 	    UPDATE_CODE("update_code"),
 	    // remove the code
 	    REMOVE_CODE("remove_code"),
-	    // delete the record
-	    DELETE_RECORD("delete_record")
+	    // update A record
+	    UPDATE_RECORD("update_record"),
+	    // delete A record
+	    DELETE_RECORD("delete_record"),
+	    // update MX record
+	    UPDATE_MX("update_mx"),
+		// delete MX record
+	    DELETE_MX("delete_mx"),
+	    // update CNAME record
+	    UPDATE_CNAME("update_cname"),
+	    // delete CNAME record
+	    DELETE_CNAME("delete_cname"),
+	    // update NS record
+	    UPDATE_NS("update_ns"),
+	    // delete NS record
+	    DELETE_NS("delete_ns")
 	    ;
 
 	    private final String text;
@@ -88,6 +111,8 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private final static String NS1 = "ns1."+DOMAIN;
 	private final static String NS2 = "ns2."+DOMAIN;
 	private final static String NS3 = "ns3."+DOMAIN;
+	
+	private final static String record_file = "conf/activeCode/records";
 	
 	private final static String NS1_ADDRESS = "52.43.241.146";
 	private final static String NS2_ADDRESS = "52.203.144.175";
@@ -141,7 +166,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 		GuidEntry guid = GuidUtils.lookupOrCreateGuid(client, accountGuid, DOMAIN);
 		
 		List<String> records = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("conf/activeCode/records")));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(record_file)));
 		String line = reader.readLine();
 		while(line != null){
             records.add(line);
@@ -190,8 +215,8 @@ public class ManagedDNSServiceProxy implements Runnable {
 		try {
 			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, recordObj));
 		} catch (ClientException | IOException e) {
-			e.printStackTrace();
-			// The update failed			
+			// The update failed	
+			e.printStackTrace();					
 		}	
 	}
 	
@@ -219,8 +244,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	
 	private static void deleteRecord(GuidEntry entry){
 		// clear the code
-		removeCode(entry);
-		
+		// removeCode(entry);		
 		try {
 			client.execute(GNSCommand.fieldRemove(entry, A_RECORD_FIELD));
 		} catch (ClientException | IOException e) {
@@ -268,6 +292,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 		try {
 			Actions action = Actions.valueOf(req.getString(ACTION_FIELD).toUpperCase());
 			switch(action){
+				// create an account for a domain name
 				case CREATE:{
 						String username = req.getString(USERNAME_FIELD);
 						String subdomain = username+"."+DOMAIN;
@@ -276,6 +301,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 						result.put(GUID_FIELD, guid);
 				}
 				break;
+				// update a field
 				case UPDATE_FIELD:{ 
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					Object obj = req.get(VALUE_FIELD); 
@@ -283,6 +309,26 @@ public class ManagedDNSServiceProxy implements Runnable {
 					updateRecord(guid, field, obj);
 				}
 				break;
+				case REMOVE_FIELD:{
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					String field = req.getString(FIELD_NAME);
+					
+				}
+				break;
+				// update active code
+				case UPDATE_CODE:{
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					String code = req.getString(CODE_FIELD);
+					updateCode(guid, code);
+				}
+				break;
+				// remove active code
+				case REMOVE_CODE:{
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					removeCode(guid);
+				}
+				break;
+				// update A record 
 				case UPDATE_RECORD:{
 					String record = req.getString(RECORD_FIELD);
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
@@ -290,20 +336,40 @@ public class ManagedDNSServiceProxy implements Runnable {
 					updateRecord(guid, A_RECORD_FIELD, ips, default_ttl);		
 				}
 				break;
-				case UPDATE_CODE:{
-					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
-					String code = req.getString(CODE_FIELD);
-					updateCode(guid, code);
-				}
-				break;
-				case REMOVE_CODE:{
-					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
-					removeCode(guid);
-				}
-				break;
+				// delete A record
 				case DELETE_RECORD:{
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					deleteRecord(guid);
+				}
+				break;
+				// update MX record
+				case UPDATE_MX:{
+					
+				}
+				break;
+				// delete MX record
+				case DELETE_MX:{
+					
+				}
+				break;
+				// update NS record
+				case UPDATE_NS:{
+					
+				}
+				break;
+				// delete NS record
+				case DELETE_NS:{
+					
+				}
+				break;
+				// update CNAME
+				case UPDATE_CNAME:{
+					
+				}
+				break;
+				// delete CNAME
+				case DELETE_CNAME:{
+					
 				}
 				break;
 				default:
@@ -382,6 +448,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	 * @param args
 	 */
 	public static void main(String[] args){
+		
 		new Thread(new ManagedDNSServiceProxy()).start();
 	}
 }
