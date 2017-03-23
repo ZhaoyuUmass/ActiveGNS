@@ -50,7 +50,7 @@ public class CreateDNSRecordExample {
 		}
 		
 		// use domain name and a random number as account
-		ACCOUNT = DOMAIN + (new Random()).nextInt(Integer.MAX_VALUE);
+		ACCOUNT = DOMAIN;
 		
 		/**
 		 *  default record file is "conf/activeCode/records", it list the IP addresses in separate lines as:

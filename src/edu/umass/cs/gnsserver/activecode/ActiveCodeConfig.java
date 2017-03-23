@@ -49,13 +49,6 @@ public class ActiveCodeConfig {
 	  public static boolean activeCodeTrustedMode = false;
 	  
 	  /**
-	   * FIXME: need to be moved to some other place
-	   * If the DNS server is running as a managed DNS server, this value is true. If it's a recursive local DNS server, then
-	   * set it to false.
-	   */
-	  public static boolean isManagedDNS = false;
-	  
-	  /**
 	   * Worker heap size
 	   */
 	  public static int activeWorkerHeapSize = 128;
@@ -113,8 +106,7 @@ public class ActiveCodeConfig {
 	  
 	  private static final String ACTIVE_CODE_ENABLE_DEBUGGING = "ACTIVE_CODE_ENABLE_DEBUGGING";
 	  
-	  private static final String IS_MANAGED_DNS = "IS_MANAGED_DNS";
-	  
+	
 	/**
 	 * @param allValues
 	 */
@@ -163,9 +155,6 @@ public class ActiveCodeConfig {
 		    	activeCodeTrustedMode = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_TRUSTED_MODE));
 		    }
 		    
-		    if(allValues.containsKey(IS_MANAGED_DNS)) {
-		    	isManagedDNS = Boolean.parseBoolean(allValues.getProperty(IS_MANAGED_DNS));
-		    }
 	  }
 	 
 	/**
