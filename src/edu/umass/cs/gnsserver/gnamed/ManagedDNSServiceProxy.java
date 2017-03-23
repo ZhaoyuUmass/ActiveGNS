@@ -193,7 +193,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 		System.out.println("Create record for "+DOMAIN);
 	}
 	
-	private static JSONObject recordToCreate(List<String> ips, int ttl) {
+	protected static JSONObject recordToCreate(List<String> ips, int ttl) {
 		JSONObject recordObj = new JSONObject();
 		JSONArray records = new JSONArray();
 		for (String ip:ips){
