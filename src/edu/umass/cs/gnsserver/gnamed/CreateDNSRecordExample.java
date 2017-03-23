@@ -85,7 +85,8 @@ public class CreateDNSRecordExample {
 		
 		JSONObject recordObj = ManagedDNSServiceProxy.recordToCreate(records, TTL);
 		
-		client.execute(GNSCommand.fieldUpdate(accountGuid, ManagedDNSServiceProxy.RECORD_FIELD, recordObj));
+		client.execute(GNSCommand.fieldUpdate(accountGuid, 
+				"A", recordObj));
 		
 		System.out.println("A record for domain " + DOMAIN+" has been created.");
 		
