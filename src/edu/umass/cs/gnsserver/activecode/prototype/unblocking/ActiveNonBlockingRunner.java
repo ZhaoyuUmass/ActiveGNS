@@ -31,6 +31,10 @@ import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
+ * This class implements Runner interface.
+ * It has a script engine to execute user code and a in-memory map to cache
+ * evaled user code context. 
+ * 
  * @author gaozy
  *
  */
@@ -120,6 +124,7 @@ public class ActiveNonBlockingRunner implements Runner {
 		
 		updateCache(guid, code);
 		engine.setContext(contexts.get(guid));
+
 		//System.out.println(">>>>>>>>> value:"+value);
 		Object ret = invocable.invokeFunction("run", JSON.callMember("parse", value),
 				accessor, querier);
@@ -129,6 +134,7 @@ public class ActiveNonBlockingRunner implements Runner {
 		Object ret1 = JSON.callMember("stringify", ret);
 		
 		//System.out.println(">>>>>>>>>>> The stringified result is "+ret1.toString());
+		
 		String result = ret1.toString();
 		
 		map.remove(id);

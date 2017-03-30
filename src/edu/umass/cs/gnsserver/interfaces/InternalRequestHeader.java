@@ -79,7 +79,7 @@ public interface InternalRequestHeader {
 	}
 	
 	/**
-	 * @return IP address
+	 * @return source IP address
 	 */
 	default String getSourceAddress() {
 		return null;

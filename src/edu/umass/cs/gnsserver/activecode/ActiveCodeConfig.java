@@ -7,6 +7,9 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
+ * This class contains all config options for active code.
+ * ActiveCodeConfig uses the same config file as GNSConfig. 
+ * 
  * @author gaozy
  *
  */
@@ -41,7 +44,7 @@ public class ActiveCodeConfig {
 	  /**
 	   * switch between blocking and non-blocking design
 	   */
-	  public static boolean acitveCodeBlockingEnabled = false;
+	  public static boolean activeCodeBlockingEnabled = false;
 	  
 	  /**
 	   * Test performance for active code with trusted code
@@ -132,7 +135,7 @@ public class ActiveCodeConfig {
 		    }
 		    
 		    if(allValues.containsKey(ACTIVE_CODE_BLOCKING_ENABLED)) {
-		    	acitveCodeBlockingEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_BLOCKING_ENABLED));
+		    	activeCodeBlockingEnabled = Boolean.parseBoolean(allValues.getProperty(ACTIVE_CODE_BLOCKING_ENABLED));
 		    }
 		    
 		    if(allValues.containsKey(ACTIVE_WORKER_HEAP_SIZE)){

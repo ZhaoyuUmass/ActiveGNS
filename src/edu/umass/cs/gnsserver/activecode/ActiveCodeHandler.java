@@ -54,6 +54,12 @@ import edu.umass.cs.utils.DelayProfiler;
 /**
  * This class is the entry of active code, it provides
  * the interface for GNS to run active code. 
+ * It also checks whether it's necessary to run active code.
+ * The conditions to run active code are:
+ * 1. There is no internal field
+ * 2. There exists a piece of active code on the corresponding action(e.g., read or wrote)
+ * 3. Active code is enabled
+ * 4. The value being passed into active code is not null
  *
  * @author Zhaoyu Gao, Westy
  */
@@ -62,7 +68,9 @@ public class ActiveCodeHandler {
 
   private static final Logger LOGGER = Logger.getLogger(ActiveCodeHandler.class.getName());
   
-  // This is used for DNS query to append source IP address to the value
+  /**
+   *  This is used for DNS query to append source IP address to the value
+   */
   public static final String SOURCE_IP_FIELD = "client_ip";
   
   /**
@@ -90,7 +98,7 @@ public class ActiveCodeHandler {
       }
     }
 
-    handler = new ActiveHandler(nodeId, new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.acitveCodeBlockingEnabled);
+    handler = new ActiveHandler(nodeId, new ActiveCodeDB(), ActiveCodeConfig.activeCodeWorkerCount, ActiveCodeConfig.activeWorkerThreads, ActiveCodeConfig.activeCodeBlockingEnabled);
   }
 
 
