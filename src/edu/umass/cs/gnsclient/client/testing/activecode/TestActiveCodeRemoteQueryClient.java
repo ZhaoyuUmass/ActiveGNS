@@ -318,7 +318,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 */
 	@AfterClass
 	public static void cleanup() throws Exception{
-		/*
+		
 		try {			
 			client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
 			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
@@ -326,7 +326,9 @@ public class TestActiveCodeRemoteQueryClient {
 			client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));			
 		} catch (ClientException e) {
 			e.printStackTrace();
-		}*/
+		}
+		client.execute(GNSCommand.accountGuidRemove(entries[1]));
+		client.execute(GNSCommand.accountGuidRemove(entries[1]));
 		client.close();
 	}
 	
