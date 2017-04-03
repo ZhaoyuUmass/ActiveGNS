@@ -119,7 +119,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws JSONException 
 	 * @throws ClientException 
 	 */
-	@Test
+	//@Test
 	public void test_01_RemoteQueryReadAfterRead() throws IOException, InterruptedException, ClientException, JSONException{
 				
 		String response = null;
@@ -194,13 +194,13 @@ public class TestActiveCodeRemoteQueryClient {
 	}
 	
 	/**
-	 * Case III: test a read followed by a write without ACL allowance
+	 * Case III: test a read followed by a write without ACL
 	 * @throws IOException 
 	 * @throws ClientException 
 	 * @throws InterruptedException 
 	 * @throws JSONException 
 	 */
-	//@Test
+	@Test
 	public void test_03_RemoteQueryWriteAfterReadWithoutACL() throws IOException, ClientException, InterruptedException, JSONException	{	
 		System.out.println("Write after read without ACL");
 		// target guid must set acl to allow accessor to write
@@ -213,7 +213,7 @@ public class TestActiveCodeRemoteQueryClient {
 		try{
 			// someField should not exist in this test
 			client.execute(GNSCommand.fieldRead(entries[1], someField)).getResultJSONObject().getString(someField);
-			fail("Depth query test(a write followed by a read with ACL setup) fails!");
+			fail("Depth query test(a write followed by a read without ACL setup) fails!");
 		}catch(Exception e){
 			System.out.println("Depth query test(a write followed by a read without ACL setup) succeeds!");
 		}
@@ -231,7 +231,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws JSONException 
 	 * 
 	 */
-	//@Test
+	@Test
 	public void test_04_RemoteQueryWriteAfterReadWithACL() throws ClientException, IOException, InterruptedException, JSONException {	
 		System.out.println("Write after read with ACL");
 		System.out.println("start setting up active code for the 1st guid on read op");
@@ -239,13 +239,13 @@ public class TestActiveCodeRemoteQueryClient {
 		System.out.println("start setting up active code for the 2nd guid on write op");
 		client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.WRITE_ACTION, noop_code, entries[1]));
 		
-		//client.aclAdd(AclAccessType.WRITE_WHITELIST, entries[1], GNSProtocol.ENTIRE_RECORD.toString(), entries[0].getGuid());
+		
 		System.out.println("Setup 2nd guid's write ACL for 1st guid");
 		client.execute(GNSCommand.aclAdd(AclAccessType.WRITE_WHITELIST, entries[1], GNSProtocol.ENTIRE_RECORD.toString(), entries[0].getGuid()));
 		Thread.sleep(1000);
 		
 		String response = null;
-
+		
 		response = client.execute(GNSCommand.fieldRead(entries[0], someField)).getResultJSONObject().getString(someField);
 		
 		assertEquals(someValue, response);
