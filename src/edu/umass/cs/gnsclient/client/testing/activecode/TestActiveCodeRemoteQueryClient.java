@@ -30,6 +30,7 @@ import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
+import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
 /**
@@ -112,7 +113,7 @@ public class TestActiveCodeRemoteQueryClient {
 	
 	
 	/** 
-	 * Case I: test a read followed by a read
+	 * Case I: test a read followed by a read with ACL
 	 * 
 	 * @throws IOException 
 	 * @throws InterruptedException 
@@ -120,7 +121,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws ClientException 
 	 */
 	@Test
-	public void test_01_RemoteQueryReadAfterRead() throws IOException, InterruptedException, ClientException, JSONException{
+	public void test_00_RemoteQueryReadAfterRead() throws IOException, InterruptedException, ClientException, JSONException{
 				
 		String response = null;
 		
@@ -133,7 +134,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		Thread.sleep(1000);		
+		Thread.sleep(100);		
 		
 		response = client.execute(GNSCommand.fieldRead(entries[0], someField)).getResultJSONObject().getString(someField);
 		
@@ -145,6 +146,59 @@ public class TestActiveCodeRemoteQueryClient {
 		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
 	}
 		
+	/**
+	 * Case I: test a read after read without ACL
+	 * FIXME: this test does not work because active code could bypass GNS ACL.
+	 * 
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ClientException
+	 * @throws JSONException
+	 */
+	//@Test
+	public void test_01_RemoteQueryReadAfterReadWithoutACL() throws IOException, InterruptedException, ClientException, JSONException{
+		String response = null;
+		
+		try {
+			System.out.println("start setting up active code for the 1st guid on read op");
+			client.execute(GNSCommand.activeCodeSet(entries[0].getGuid(), ActiveCode.READ_ACTION, read_code, entries[0]));
+			
+			System.out.println("start setting up active code for the 2nd guid on read op");
+			client.execute(GNSCommand.activeCodeSet(entries[1].getGuid(), ActiveCode.READ_ACTION, noop_code, entries[1]));
+			
+			System.out.println("remove 1st guid from the 2nd guid's whitelist");			
+			client.execute(GNSCommand.aclRemove(AclAccessType.READ_WHITELIST, entries[1], 
+					GNSProtocol.ENTIRE_RECORD.toString(), GNSProtocol.ALL_GUIDS.toString()));
+			
+		} catch (ClientException e) {
+			e.printStackTrace();
+		}
+		
+		try{
+			response = client.execute(GNSCommand.fieldRead(entries[1].getGuid(), depthField, entries[0])).getResultJSONObject().getString(depthField);
+			fail("After removing +ALL+ from 2nd guid's whitelist, 1st guid should not be allowed to read 2nd guid's field.");
+		}catch (ClientException e){
+			// This operation should not be allowed
+		}
+		
+		Thread.sleep(100);		
+		try{
+			response = client.execute(GNSCommand.fieldRead(entries[0], someField)).getResultJSONObject().getString(someField);
+			fail("Remote query (read) should not be able to bypass the ACL check.");
+		} catch(ClientException e){
+			assertEquals(someValue, response);
+		}
+		
+				
+		System.out.println("Depth query test(a read followed by a read without ACL) succeeds!");
+		System.out.println("Cleaning up code and reset acl for this test ...");
+		
+		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
+		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.READ_ACTION, entries[1]));
+		client.execute(GNSCommand.aclAdd(AclAccessType.READ_WHITELIST, entries[1], 
+				GNSProtocol.ENTIRE_RECORD.toString(), GNSProtocol.ALL_GUIDS.toString()));
+	}
+	
 	/**
 	 * Case II: test a write followed by a read
 	 * @throws IOException 
@@ -195,6 +249,8 @@ public class TestActiveCodeRemoteQueryClient {
 	
 	/**
 	 * Case III: test a read followed by a write without ACL
+	 * FIXME: this test does not work because active code could bypass GNS ACL.
+	 * 
 	 * @throws IOException 
 	 * @throws ClientException 
 	 * @throws InterruptedException 
@@ -311,6 +367,15 @@ public class TestActiveCodeRemoteQueryClient {
 		client.execute(GNSCommand.activeCodeClear(entries[0].getGuid(), ActiveCode.READ_ACTION, entries[0]));
 		client.execute(GNSCommand.activeCodeClear(entries[1].getGuid(), ActiveCode.WRITE_ACTION, entries[1]));
 		System.out.println("Cleaning up code for this test ...");		
+	}
+	
+	/**
+	 * Case VI: test a query 
+	 * 
+	 */
+	@Test
+	public void test_06_FullDepthQuery() {
+		
 	}
 	
 	/**
