@@ -119,7 +119,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws JSONException 
 	 * @throws ClientException 
 	 */
-	//@Test
+	@Test
 	public void test_01_RemoteQueryReadAfterRead() throws IOException, InterruptedException, ClientException, JSONException{
 				
 		String response = null;
@@ -151,7 +151,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws ClientException 
 	 * @throws InterruptedException 
 	 */
-	//@Test
+	@Test
 	public void test_02_RemoteQueryReadAfterWrite() throws IOException, ClientException, InterruptedException {
 		int count = 0;
 		String response = null;		
@@ -200,7 +200,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws InterruptedException 
 	 * @throws JSONException 
 	 */
-	@Test
+	//@Test
 	public void test_03_RemoteQueryWriteAfterReadWithoutACL() throws IOException, ClientException, InterruptedException, JSONException	{	
 		System.out.println("Write after read without ACL");
 		// target guid must set acl to allow accessor to write
@@ -291,7 +291,7 @@ public class TestActiveCodeRemoteQueryClient {
 	 * @throws InterruptedException 
 	 * @throws ClientException 
 	 */
-	//@Test
+	@Test
 	public void test_05_RemoteQueryWriteAfterWrite() throws IOException, InterruptedException, ClientException	{	
 		
 		System.out.println("start setting up active code for the 1st guid on write op");
