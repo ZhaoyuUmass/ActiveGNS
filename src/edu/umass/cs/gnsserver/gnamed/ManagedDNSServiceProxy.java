@@ -59,11 +59,11 @@ public class ManagedDNSServiceProxy implements Runnable {
 	
 	private final static String A_RECORD_FIELD = "A";
 	private final static String NS_RECORD_FIELD = "NS";
+	private final static String MX_RECORD_FIELD = "MX";
+	private final static String CNAME_RECORD_FIELD = "CNAME";
 	
 	private enum Actions {
 	    CREATE("create"),
-	    UPDATE_FIELD("update_field"),
-	    REMOVE_FIELD("remove_field"),
 	    UPDATE_CODE("update_code"),
 	    // remove the code
 	    REMOVE_CODE("remove_code"),
@@ -71,6 +71,10 @@ public class ManagedDNSServiceProxy implements Runnable {
 	    UPDATE_RECORD("update_record"),
 	    // delete A record
 	    DELETE_RECORD("delete_record"),
+	    // update field
+	    UPDATE_FIELD("update_field"),
+	    // delete field
+	    DELETE_FIELD("delete_field"),
 	    // update MX record
 	    UPDATE_MX("update_mx"),
 		// delete MX record
@@ -106,7 +110,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	private static GNSClientCommands client;
 	private static GuidEntry accountGuid;
 	
-	private final static int default_ttl = 30;
+	private final static int default_ttl = 60;
 	private final static String DOMAIN = "pnsanonymous.org.";
 	private final static String NS1 = "ns1."+DOMAIN;
 	private final static String NS2 = "ns2."+DOMAIN;
@@ -183,12 +187,17 @@ public class ManagedDNSServiceProxy implements Runnable {
 		ns_records.add(new JSONArray().put(NS2).put(NS2_ADDRESS));
 		ns_records.add(new JSONArray().put(NS3).put(NS3_ADDRESS));
 		
-		//updateRecord(guid, NS_RECORD_FIELD, ns_records, 120);
-		JSONObject recordObj = new JSONObject();
-		recordObj.put(RECORD_FIELD, ns_records);
-		recordObj.put(TTL_FIELD, 300);
-		
-		client.execute(GNSCommand.fieldUpdate(guid, NS_RECORD_FIELD, recordObj));
+		/**
+		 *  format:
+		 *  {
+		 *  	NS:
+		 *  	{
+		 *  		"record":[]
+		 *  		"ttl": 30
+		 *  	}
+		 *  }
+		 */
+		updateSpecialField(guid, NS_RECORD_FIELD, ns_records, 300);
 		
 		System.out.println("Create record for "+DOMAIN);
 	}
@@ -209,44 +218,24 @@ public class ManagedDNSServiceProxy implements Runnable {
 		return recordObj;
 	}
 	
-	private static void updateRecord(GuidEntry entry, String fieldToUpdate, List<String> ips, int ttl){
-		System.out.println("Ready to update record for "+entry+" field:"+fieldToUpdate);
-		JSONObject recordObj = recordToCreate(ips, ttl);
+	private static JSONObject generateRecordWithListOfJSONArray(List<JSONArray> records, int ttl){
+		JSONObject recordObj = new JSONObject();
 		try {
-			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, recordObj));
-		} catch (ClientException | IOException e) {
-			// The update failed	
-			e.printStackTrace();					
-		}	
-	}
-	
-	private static void updateRecord(GuidEntry entry, String fieldToUpdate, Object obj){		
-		try {		
-			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, obj));
-		} catch (ClientException | IOException e) {
-			e.printStackTrace();
+			recordObj.put(RECORD_FIELD, records);
+			recordObj.put(TTL_FIELD, ttl);
+		} catch (JSONException e) {
+			
 		}
+		return recordObj;
 	}
-	
-	private static void updateCode(GuidEntry entry, String code){
-		try {
-			client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
-		} catch (ClientException | IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	
 	private static GuidEntry createGuidEntryForDomain(String domain) throws Exception{		
 		return GuidUtils.lookupOrCreateGuid(client, accountGuid, domain);
 	}
 	
-	
-	private static void deleteRecord(GuidEntry entry){
-		// clear the code
-		// removeCode(entry);		
+	private static void updateCode(GuidEntry entry, String code){
 		try {
-			client.execute(GNSCommand.fieldRemove(entry, A_RECORD_FIELD));
+			client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
 		} catch (ClientException | IOException e) {
 			e.printStackTrace();
 		}
@@ -258,6 +247,56 @@ public class ManagedDNSServiceProxy implements Runnable {
 		} catch (ClientException | IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private static void updateRecord(GuidEntry entry, String fieldToUpdate, List<String> ips, int ttl){
+		System.out.println("Ready to update record for "+entry+" field:"+fieldToUpdate);
+		JSONObject recordObj = recordToCreate(ips, ttl);
+		try {
+			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, recordObj));
+		} catch (ClientException | IOException e) {
+			// The update failed	
+			e.printStackTrace();					
+		}	
+	}
+	
+	private static void deleteRecord(GuidEntry entry){
+		deleteField(entry, A_RECORD_FIELD);
+	}
+	
+	private static void deleteField(GuidEntry entry, String fieldToDelete){
+		try {
+			client.execute(GNSCommand.fieldRemove(entry, fieldToDelete));
+		} catch (ClientException | IOException e) {
+			// the delete operation failed
+			e.printStackTrace();
+		}
+	}
+	
+	private static void updateField(GuidEntry entry, String fieldToUpdate, Object obj){		
+		try {		
+			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, obj));
+		} catch (ClientException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * This method is used for updating special field: MX and NS records
+	 * 
+	 * @param entry
+	 * @param fieldToUpdate
+	 * @param records
+	 * @param ttl
+	 */
+	private static void updateSpecialField(GuidEntry entry, String fieldToUpdate, List<JSONArray> records, int ttl){
+		JSONObject recordObj = generateRecordWithListOfJSONArray(records, ttl);
+		try {
+			client.execute(GNSCommand.fieldUpdate(entry, fieldToUpdate, recordObj));
+		} catch (ClientException | IOException e) {
+			// The update failed	
+			e.printStackTrace();					
+		}	
 	}
 	
 	private static String serializeGuid(GuidEntry entry){
@@ -294,11 +333,11 @@ public class ManagedDNSServiceProxy implements Runnable {
 			switch(action){
 				// create an account for a domain name
 				case CREATE:{
-						String username = req.getString(USERNAME_FIELD);
-						String subdomain = username+"."+DOMAIN;
-						GuidEntry entry = createGuidEntryForDomain(subdomain);
-						String guid = serializeGuid(entry);
-						result.put(GUID_FIELD, guid);
+					String username = req.getString(USERNAME_FIELD);
+					String subdomain = username+"."+DOMAIN;
+					GuidEntry entry = createGuidEntryForDomain(subdomain);
+					String guid = serializeGuid(entry);
+					result.put(GUID_FIELD, guid);
 				}
 				break;
 				// update a field
@@ -306,13 +345,13 @@ public class ManagedDNSServiceProxy implements Runnable {
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					Object obj = req.get(VALUE_FIELD); 
 					String field = req.getString(FIELD_NAME);
-					updateRecord(guid, field, obj);
+					updateField(guid, field, obj);
 				}
 				break;
-				case REMOVE_FIELD:{
+				case DELETE_FIELD:{
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					String field = req.getString(FIELD_NAME);
-					
+					deleteField(guid, field);
 				}
 				break;
 				// update active code
@@ -344,32 +383,65 @@ public class ManagedDNSServiceProxy implements Runnable {
 				break;
 				// update MX record
 				case UPDATE_MX:{
-					
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					String mx = req.getString(MX_FIELD);
+					List<String> lines = Arrays.asList(mx.split("\\n"));
+					List<JSONArray> mxs = new ArrayList<JSONArray>();
+					for (String line:lines){
+						JSONArray ns_record = new JSONArray();
+						List<String> records = Arrays.asList(line.split(" "));
+						if(records.size() >= 2){
+							ns_record.put(records.get(0)).put(records.get(1));
+						}else{
+							ns_record.put(records.get(0));
+						}
+						mxs.add(ns_record);
+					}
+					updateSpecialField(guid, MX_RECORD_FIELD, mxs, 300);
 				}
 				break;
 				// delete MX record
 				case DELETE_MX:{
-					
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					deleteField(guid, MX_RECORD_FIELD);
 				}
 				break;
 				// update NS record
 				case UPDATE_NS:{
-					
+					String ns = req.getString(NS_FIELD);
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					List<String> lines = Arrays.asList(ns.split("\\n"));
+					List<JSONArray> names = new ArrayList<JSONArray>();
+					for (String line:lines){
+						JSONArray ns_record = new JSONArray();
+						List<String> records = Arrays.asList(line.split(" "));
+						if(records.size() >= 2){
+							ns_record.put(records.get(0)).put(records.get(1));
+						}else{
+							ns_record.put(records.get(0));
+						}
+						names.add(ns_record);
+					}
+					updateSpecialField(guid, NS_RECORD_FIELD, names, 300);
 				}
 				break;
 				// delete NS record
 				case DELETE_NS:{
-					
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					deleteField(guid, NS_RECORD_FIELD);
 				}
 				break;
 				// update CNAME
 				case UPDATE_CNAME:{
-					
+					String cname = req.getString(NS_FIELD);
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					updateField(guid, CNAME_RECORD_FIELD, cname);
 				}
 				break;
 				// delete CNAME
 				case DELETE_CNAME:{
-					
+					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
+					deleteField(guid, CNAME_RECORD_FIELD);
 				}
 				break;
 				default:
