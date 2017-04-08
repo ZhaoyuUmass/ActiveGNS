@@ -146,12 +146,14 @@ public class NameResolution {
     }
 
     // extract the domain (guid) and field from the query
-    //final String fieldName = Type.string(query.getQuestion().getType());
+    final String fieldName = Type.string(query.getQuestion().getType());
+    assert(fieldName != null);
+    
     final Name requestedName = query.getQuestion().getName();
     final byte[] rawName = requestedName.toWire();
     final String domainName = querytoStringForGNS(rawName);
 
-    NameResolution.getLogger().log(Level.FINE, "Trying GNS lookup for domain {0}", domainName);
+    NameResolution.getLogger().log(Level.FINE, "Trying GNS lookup for domain {0}, type {1}", new Object[]{domainName, fieldName});
 
     /* Create a response message and add records later */
     Message response = new Message(query.getHeader().getID());
@@ -162,13 +164,27 @@ public class NameResolution {
     response.addRecord(query.getQuestion(), Section.QUESTION);
     response.getHeader().setFlag(Flags.AA);
 
-    /* Request DNS fields of an alias and prepare a DNS response message */
+    /**
+     * Request DNS fields of an alias and prepare a DNS response message 
+     */
     ArrayList<String> fields = new ArrayList<>(Arrays.asList("A", "NS", "CNAME", "SOA", "PTR", "MX"));
     Boolean nameResolved = false;
     String nameToResolve = domainName;
 
+    /**
+     * RFC 1034: the additional section "carries RRs(Resource Records) which may be helpful in
+     * 			using the RRs in the other section"
+     * RFC 2181: data you put in the additional section can never be promoted into real answers.
+     * 
+     * When a DNS client needs to look up a name used in a program, it queries DNS servers to resolve the name. 
+     * Each query message the client sends contains three pieces of information, specifying a question for the server to answer:
+     * 1. A specified DNS domain name, stated as a fully qualified domain name (FQDN).
+     * 2. A specified query type, which can either specify a resource record (RR) by type or a specialized type of query operation.
+     * 3. A specified class for the DNS domain name. For DNS servers running the Windows operating system, this should always be specified as the Internet (IN) class.
+     */
     while (!nameResolved) {
-      long resolveStart = System.currentTimeMillis();
+      long resolveStart = System.currentTimeMillis();      
+      
       JSONObject fieldResponseJson = lookupGuidField(addr.getHostAddress().toString(), query.getHeader().getID(), nameToResolve, null, fields, handler);
       if (fieldResponseJson == null) {
         NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
@@ -176,7 +192,18 @@ public class NameResolution {
       }
       // Parse the response from GNS and create DNS records 
       try {
-        NameResolution.getLogger().log(Level.FINE, "fieldResponse all field:{0}", fieldResponseJson.toString());
+        NameResolution.getLogger().log(Level.FINE, "fieldResponse all fields (NS, MX, CNAME, A): {0}", fieldResponseJson.toString());
+        
+        /**
+         * Format of A record in GNS:
+         * {
+         * 	"A":
+         * 		{
+         * 			"record": String[ip1, ip2, ...],
+         * 			"ttl": int
+         * 		}
+         * }
+         */
         if (fieldResponseJson.has("A")) {
           JSONObject recordObj = fieldResponseJson.getJSONObject("A");
           JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
@@ -187,9 +214,21 @@ public class NameResolution {
 	        ARecord gnsARecord = new ARecord(new Name(nameToResolve), DClass.IN, ttl, InetAddress.getByName(ip));
 	        response.addRecord(gnsARecord, Section.ANSWER);
       	  }
+          
           nameResolved = true;
         }
         
+        /**
+         * Format of NS record in GNS:
+         * {
+         * 	"NS":
+         * 		{
+         * 			"record":[(ns1,addr1), (ns2,addr2), ...],
+         * 			"ttl":int
+         * 		}
+         * }
+         * 
+         */
         if (fieldResponseJson.has("NS")) {
           JSONObject recordObj = fieldResponseJson.getJSONObject("NS");
           JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
@@ -208,11 +247,23 @@ public class NameResolution {
         		  ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, 60, InetAddress.getByName(address));
         		  response.addRecord(nsARecord, Section.ADDITIONAL);
         	  } else {
-        		  //TODO: try to resolve it through DNS
+        		  // no IP address in the record for the name server
         	  }
           }
           nameResolved = true;
         }
+        
+        /**
+         * Format of MX record in GNS:
+         * {
+         * 	"MX":
+         * 		{
+         * 			"record":[(priority1, host1), (priority2, host2), ...],
+         * 			"ttl":int
+         * 		}
+         * }
+         * 
+         */
         if (fieldResponseJson.has("MX")) {
           JSONObject mxname = fieldResponseJson.getJSONObject("MX");
           JSONArray records = mxname.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
@@ -223,20 +274,33 @@ public class NameResolution {
         	  String pString = record.getString(0);
         	  int priority = Integer.parseInt(pString);
         	  String host = record.getString(1);
+        	  String address = record.getString(2);
         	  
         	  MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, ttl, priority, new Name(host));
         	  response.addRecord(mxRecord, Section.AUTHORITY);
+        	  
+        	  if(address != null){
+	    		  ARecord nsARecord = new ARecord(new Name(host), DClass.IN, 60, InetAddress.getByName(address));
+	    		  response.addRecord(nsARecord, Section.ADDITIONAL);
+        	  } else {
+        		  // no IP address in the record for the name server
+        	  }
           }
           nameResolved = true;          
         }
+        
+        
         if (fieldResponseJson.has("CNAME")) {
           // Resolve CNAME alias to an IP address and add it to ADDITIONAL section 
           String cname = fieldResponseJson.getString("CNAME");
           CNAMERecord cnameRecord = new CNAMERecord(new Name(nameToResolve), DClass.IN, 60, new Name(cname));
           response.addRecord(cnameRecord, Section.ANSWER);
-          nameToResolve = cname;
-          continue;
+          // FIXME: this is wrong as the A record of the cname may not be served by GNS.
+//          nameToResolve = cname;
+//          continue;
         }
+        
+        
         DelayProfiler.updateDelay("ResolveName", resolveStart);
         if (!nameResolved) {
           // We should reach here only if we fail to resolve to an IP address
@@ -246,11 +310,11 @@ public class NameResolution {
         }
       } catch (JSONException e) {
         e.printStackTrace();
-        return errorMessage(query, Rcode.NXDOMAIN);
+        
       } catch (TextParseException | UnknownHostException e) {
         e.printStackTrace();
       }
-      
+    //return errorMessage(query, Rcode.NXDOMAIN);
     }
     NameResolution.getLogger().log(Level.FINER, "Outgoing response from GNS: {0}", response.toString());
     return response;
