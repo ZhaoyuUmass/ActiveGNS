@@ -147,14 +147,19 @@ public class NameResolution {
 
     // extract the domain (guid) and field from the query
     final String fieldName = Type.string(query.getQuestion().getType());
-    assert(fieldName != null);
+    
     
     final Name requestedName = query.getQuestion().getName();
     final byte[] rawName = requestedName.toWire();
     final String domainName = querytoStringForGNS(rawName);
 
     NameResolution.getLogger().log(Level.FINE, "Trying GNS lookup for domain {0}, type {1}", new Object[]{domainName, fieldName});
-
+    
+    // FIXME: debug
+    if(fieldName != null){
+    	return errorMessage(query, Rcode.NXDOMAIN);
+    }
+    
     /* Create a response message and add records later */
     Message response = new Message(query.getHeader().getID());
     response.getHeader().setFlag(Flags.QR);
@@ -250,7 +255,6 @@ public class NameResolution {
         		  // no IP address in the record for the name server
         	  }
           }
-          nameResolved = true;
         }
         
         /**
@@ -285,11 +289,9 @@ public class NameResolution {
         	  } else {
         		  // no IP address in the record for the name server
         	  }
-          }
-          nameResolved = true;          
+          }    
         }
-        
-        
+                
         if (fieldResponseJson.has("CNAME")) {
           // Resolve CNAME alias to an IP address and add it to ADDITIONAL section 
           String cname = fieldResponseJson.getString("CNAME");
@@ -310,11 +312,10 @@ public class NameResolution {
         }
       } catch (JSONException e) {
         e.printStackTrace();
-        
+        return errorMessage(query, Rcode.NXDOMAIN);
       } catch (TextParseException | UnknownHostException e) {
         e.printStackTrace();
       }
-    //return errorMessage(query, Rcode.NXDOMAIN);
     }
     NameResolution.getLogger().log(Level.FINER, "Outgoing response from GNS: {0}", response.toString());
     return response;
