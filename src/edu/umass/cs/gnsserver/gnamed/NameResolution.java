@@ -415,12 +415,12 @@ public class NameResolution {
     	  for(int i=0; i<records.length(); i++){
 			  try{
 	    		  JSONArray record = records.getJSONArray(i);
-	    		  String ns = record.getString(0);
-	    		  String address = record.getString(1);
+	    		  String ns = record.getString(0);	    		  
 	    		  NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, ttl, new Name(ns));
 	    		  nsList.put(nsRecord);
 	    		  // address can be null as the domain name might use other service as its name server
-	          	  if(address != null){
+	          	  if(record.length()==2){
+	          		  String address = record.getString(1);
 	          		  ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, ttl, InetAddress.getByName(address));
 	          		  aList.put(nsARecord);
 	          	  } else {
@@ -476,12 +476,13 @@ public class NameResolution {
 	        	  JSONArray record = records.getJSONArray(i);
 	        	  String pString = record.getString(0);
 	        	  int priority = Integer.parseInt(pString);
-	        	  String host = record.getString(1);
-	        	  String address = record.getString(2);
+	        	  String host = record.getString(1);	        	  
 	        	  
 	        	  MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, ttl, priority, new Name(host));
 	        	  mxList.put(mxRecord);
-	        	  if(address != null){
+	        	  
+	        	  if(record.length() == 3){
+	        		  String address = record.getString(2);
 		    		  ARecord mxARecord = new ARecord(new Name(host), DClass.IN, ttl, InetAddress.getByName(address));
 		    		  aList.put(mxARecord);
 	        	  } else {
