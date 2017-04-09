@@ -150,6 +150,9 @@ public class NameResolution {
     final Name requestedName = query.getQuestion().getName();
     final byte[] rawName = requestedName.toWire();
     final String domainName = querytoStringForGNS(rawName);
+    // The domain name must be an absolute name, i.e., ended with a dot
+    assert(domainName.endsWith(".")):"The domain name "+domainName+"to resolve is not an absolute name!";
+    
     /**
      *  The query type or domain name can't be null, otherwise return an error message
      */
@@ -307,6 +310,10 @@ public class NameResolution {
 	    		// get CNAME alias, no need to resolve it to an IP address
 				try {
 					String cname = fieldResponseJson.getString("CNAME");
+					// The cname must be an absolute name, i.e., ended with a dot
+					if (cname.endsWith(".")){
+						cname = cname +".";
+					}
 					CNAMERecord cnameRecord = new CNAMERecord(new Name(domainName), DClass.IN, 60, new Name(cname));
 					response.addRecord(cnameRecord, Section.ANSWER);
 				} catch (JSONException | TextParseException e) {
@@ -415,7 +422,11 @@ public class NameResolution {
     	  for(int i=0; i<records.length(); i++){
 			  try{
 	    		  JSONArray record = records.getJSONArray(i);
-	    		  String ns = record.getString(0);	    		  
+	    		  String ns = record.getString(0);
+	    		  // It must be an absolute name, i.e., the string must be ended  with a dot, e.g., example.com.
+	    		  if(!ns.endsWith(".")){
+	    			  ns = ns+".";
+	    		  }
 	    		  NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, ttl, new Name(ns));
 	    		  nsList.put(nsRecord);
 	    		  // address can be null as the domain name might use other service as its name server
@@ -476,8 +487,11 @@ public class NameResolution {
 	        	  JSONArray record = records.getJSONArray(i);
 	        	  String pString = record.getString(0);
 	        	  int priority = Integer.parseInt(pString);
-	        	  String host = record.getString(1);	        	  
-	        	  
+	        	  String host = record.getString(1);	
+	        	  // the host must be an absolute name, i.e., ended with a dot
+	        	  if(!host.endsWith(".")){
+	        		  host = host + ".";
+	        	  }
 	        	  MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, ttl, priority, new Name(host));
 	        	  mxList.put(mxRecord);
 	        	  
