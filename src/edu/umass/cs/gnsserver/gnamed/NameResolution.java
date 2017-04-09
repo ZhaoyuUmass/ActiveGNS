@@ -265,6 +265,7 @@ public class NameResolution {
       case Type.MX:
 	      {
 	    	  JSONObject obj = getMXRecordsFromMXField(fieldResponseJson, domainName);
+	    	  NameResolution.getLogger().log(Level.FINE, "MX record for domain {0} is {1}", new Object[]{domainName, obj});
 	    	  if(obj != null){
 	    		  try{
 		    	  JSONArray mxList = obj.getJSONArray("MX");
