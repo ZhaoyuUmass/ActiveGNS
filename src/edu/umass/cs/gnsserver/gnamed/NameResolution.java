@@ -146,21 +146,22 @@ public class NameResolution {
     }
 
     // extract the domain (guid) and field from the query
-    final String fieldName = Type.string(query.getQuestion().getType());
-    
-    
+    final int fieldName = query.getQuestion().getType();
     final Name requestedName = query.getQuestion().getName();
     final byte[] rawName = requestedName.toWire();
     final String domainName = querytoStringForGNS(rawName);
-
-    NameResolution.getLogger().log(Level.FINE, "Trying GNS lookup for domain {0}, type {1}", new Object[]{domainName, fieldName});
-    
-    // FIXME: debug
-    if(fieldName != null){
+    /**
+     *  The query type or domain name can't be null, otherwise return an error message
+     */
+    if(Type.string(fieldName) ==null || domainName==null){
     	return errorMessage(query, Rcode.NXDOMAIN);
     }
+    NameResolution.getLogger().log(Level.FINE, "Trying GNS lookup for domain {0}, type {1}", new Object[]{domainName, Type.string(fieldName)});
     
-    /* Create a response message and add records later */
+    /**
+     *  Create a response message, build the header first.
+     *  The response is constructed later after GNS query.
+     */
     Message response = new Message(query.getHeader().getID());
     response.getHeader().setFlag(Flags.QR);
     if (query.getHeader().getFlag(Flags.RD)) {
@@ -173,154 +174,329 @@ public class NameResolution {
      * Request DNS fields of an alias and prepare a DNS response message 
      */
     ArrayList<String> fields = new ArrayList<>(Arrays.asList("A", "NS", "CNAME", "SOA", "PTR", "MX"));
-    Boolean nameResolved = false;
-    String nameToResolve = domainName;
-
+    
     /**
+     * <p>
      * RFC 1034: the additional section "carries RRs(Resource Records) which may be helpful in
      * 			using the RRs in the other section"
      * RFC 2181: data you put in the additional section can never be promoted into real answers.
      * 
-     * When a DNS client needs to look up a name used in a program, it queries DNS servers to resolve the name. 
+     * <p>When a DNS client needs to look up a name used in a program, it queries DNS servers to resolve the name. 
      * Each query message the client sends contains three pieces of information, specifying a question for the server to answer:
      * 1. A specified DNS domain name, stated as a fully qualified domain name (FQDN).
      * 2. A specified query type, which can either specify a resource record (RR) by type or a specialized type of query operation.
      * 3. A specified class for the DNS domain name. For DNS servers running the Windows operating system, this should always be specified as the Internet (IN) class.
+     * 
+     * <p>The information is retrieved from GNS based on the queried domain.
+     * <p>The response is constructed based on the query type,
+     * 1. A: return A records in ANSWER section, NS records in AUTHORITY section, A records of name servers in ADDITIONAL section
+     * 2. NS: return NS records in ANSWER section, A records of name servers in ADDITIONAL section
+     * 3. MX: return MX records in ANSWER section, NS records in AUTHORITY section, A record of name servers in ADDITIONAL section
+     * 4. CNAME: return CNAME records in in ANSWER section, NS records in AUTHORITY section, A record of name servers in ADDITIONAL section
+     * 
+     * Records in ADDITIONAL section is not required, we do a best-effort resolution for the names in ADDITIONAL section.
      */
-    while (!nameResolved) {
-      long resolveStart = System.currentTimeMillis();      
+	  long resolveStart = System.currentTimeMillis();      
+	  
+	  JSONObject fieldResponseJson = lookupGuidField(addr.getHostAddress().toString(), query.getHeader().getID(), domainName, null, fields, handler);
+	  if (fieldResponseJson == null) {
+	    NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
+	    return errorMessage(query, Rcode.NXDOMAIN);
+	  }
+	  NameResolution.getLogger().log(Level.FINE, "fieldResponse all fields (NS, MX, CNAME, A): {0}", fieldResponseJson.toString());
+	  
+      switch(fieldName){
+      case Type.NS:
+	      {
+	    	  JSONObject obj = getNSRecordsFromNSField(fieldResponseJson, domainName);
+	    	  if(obj != null){
+	    		 try {
+					JSONArray nsList = obj.getJSONArray("NS");
+					JSONArray aList = obj.getJSONArray("A");
+					for (int i=0; i<nsList.length(); i++){
+						response.addRecord((Record) nsList.get(i), Section.ANSWER);
+					}
+					for (int i=0; i<aList.length(); i++){
+						response.addRecord((Record) aList.get(i), Section.ADDITIONAL);
+					}
+				} catch (JSONException e) {
+					// do nothing, this happens only because some record is corrupted
+				}	    		  
+	    	  } else {
+	    		// I don't have the requested A record, you must ask a wrong guy
+	    		return errorMessage(query, Rcode.NXDOMAIN);
+	    	  }
+	      }
+		  break;
+      case Type.A:
+	      {
+	    	  // Get A records from retrieved GNS record
+	    	  JSONArray aList = getARecordsFromAField(fieldResponseJson, domainName);
+	    	  if(aList != null){
+		    	  for (int i=0; i<aList.length(); i++){
+		    		  try {
+						response.addRecord((Record) aList.get(i), Section.ANSWER);
+					} catch (JSONException e) {
+						// trash the record
+					}
+		    	  }
+	    	  } else{
+	    		  // I don't have the requested A record, you must ask a wrong guy
+	    		  return errorMessage(query, Rcode.NXDOMAIN);
+	    	  }
+	    	  //Get NS record if we can
+	    	  JSONObject obj = getNSRecordsFromNSField(fieldResponseJson, domainName);
+	    	  if(obj != null){
+	    		 try {
+					JSONArray nsList = obj.getJSONArray("NS");
+					JSONArray aNSList = obj.getJSONArray("A");
+					for (int i=0; i<nsList.length(); i++){
+						response.addRecord((Record) nsList.get(i), Section.AUTHORITY);
+					}
+					for (int i=0; i<aNSList.length(); i++){
+						response.addRecord((Record) aNSList.get(i), Section.ADDITIONAL);
+					}
+				} catch (JSONException e) {
+					// do nothing, this happens only because some record is corrupted
+				}	    		  
+	    	  }
+	      }
+	      break;
+      case Type.MX:
+	      {
+	    	  JSONObject obj = getMXRecordsFromMXField(fieldResponseJson, domainName);
+	    	  if(obj != null){
+	    		  try{
+		    	  JSONArray mxList = obj.getJSONArray("MX");
+		    	  JSONArray aList = obj.getJSONArray("A");
+		    	  for (int i=0; i<mxList.length(); i++){
+		    		  response.addRecord((Record) mxList.get(i), Section.ANSWER);
+		    	  }
+		    	  for (int i=0; i<aList.length(); i++) {
+		    		  response.addRecord((Record) aList.get(i), Section.ADDITIONAL);
+		    	  }
+	    		  } catch (JSONException e) {
+	    			// do nothing, this happens only because some record is corrupted
+	    		  }
+	    	  } else{
+	    		// I don't have the requested MX record, you must ask a wrong guy
+	    		  return errorMessage(query, Rcode.NXDOMAIN);
+	    	  }
+	    	  //Get NS record if we can
+	    	  obj = getNSRecordsFromNSField(fieldResponseJson, domainName);
+	    	  if(obj != null){
+	    		 try {
+					JSONArray nsList = obj.getJSONArray("NS");
+					JSONArray aNSList = obj.getJSONArray("A");
+					for (int i=0; i<nsList.length(); i++){
+						response.addRecord((Record) nsList.get(i), Section.AUTHORITY);
+					}
+					for (int i=0; i<aNSList.length(); i++){
+						response.addRecord((Record) aNSList.get(i), Section.ADDITIONAL);
+					}
+				} catch (JSONException e) {
+					// do nothing, this happens only because some record is corrupted
+				}	    		  
+	    	  }
+	      }
+    	  break;
+      case Type.CNAME:
+	      {
+	    	  if (fieldResponseJson.has("CNAME")) {
+	    		// get CNAME alias, no need to resolve it to an IP address
+				try {
+					String cname = fieldResponseJson.getString("CNAME");
+					CNAMERecord cnameRecord = new CNAMERecord(new Name(domainName), DClass.IN, 60, new Name(cname));
+					response.addRecord(cnameRecord, Section.ANSWER);
+				} catch (JSONException | TextParseException e) {
+					
+				}
+	              
+	    	  } else {
+	    		// I don't have the requested CNAME record, you must ask a wrong guy
+	    		 return errorMessage(query, Rcode.NXDOMAIN);
+	    	  }
+	      }
+    	  break;
+	  default:
+		  // we haven't implemented yet
+		  return errorMessage(query, Rcode.NOTIMPL);
+      }
       
-      JSONObject fieldResponseJson = lookupGuidField(addr.getHostAddress().toString(), query.getHeader().getID(), nameToResolve, null, fields, handler);
-      if (fieldResponseJson == null) {
-        NameResolution.getLogger().log(Level.FINE, "GNS lookup for domain {0} failed.", domainName);
-        return errorMessage(query, Rcode.NXDOMAIN);
-      }
-      // Parse the response from GNS and create DNS records 
-      try {
-        NameResolution.getLogger().log(Level.FINE, "fieldResponse all fields (NS, MX, CNAME, A): {0}", fieldResponseJson.toString());
-        
-        /**
-         * Format of A record in GNS:
-         * {
-         * 	"A":
-         * 		{
-         * 			"record": String[ip1, ip2, ...],
-         * 			"ttl": int
-         * 		}
-         * }
-         */
-        if (fieldResponseJson.has("A")) {
-          JSONObject recordObj = fieldResponseJson.getJSONObject("A");
-          JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
-          int ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
-          // The records may contain multiple ip addresses
-          for(int i=0; i<records.length(); i++){
-      		String ip = records.getString(i);
-	        ARecord gnsARecord = new ARecord(new Name(nameToResolve), DClass.IN, ttl, InetAddress.getByName(ip));
-	        response.addRecord(gnsARecord, Section.ANSWER);
-      	  }
-          
-          nameResolved = true;
-        }
-        
-        /**
-         * Format of NS record in GNS:
-         * {
-         * 	"NS":
-         * 		{
-         * 			"record":[(ns1,addr1), (ns2,addr2), ...],
-         * 			"ttl":int
-         * 		}
-         * }
-         * 
-         */
-        if (fieldResponseJson.has("NS")) {
-          JSONObject recordObj = fieldResponseJson.getJSONObject("NS");
-          JSONArray records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
-          int ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
-          
-          // The records may contain multiple NS records
-          for(int i=0; i<records.length(); i++){
-        	  JSONArray record = records.getJSONArray(i);
-        	  String ns = record.getString(0);
-        	  String address = record.getString(1);
-        	  NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, ttl, new Name(ns));
-        	  response.addRecord(nsRecord, Section.AUTHORITY);
-        	  
-        	  // address can be null as the domain name might use other service as its name server
-        	  if(address != null){
-        		  ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, 60, InetAddress.getByName(address));
-        		  response.addRecord(nsARecord, Section.ADDITIONAL);
-        	  } else {
-        		  // no IP address in the record for the name server
-        	  }
-          }
-        }
-        
-        /**
-         * Format of MX record in GNS:
-         * {
-         * 	"MX":
-         * 		{
-         * 			"record":[(priority1, host1), (priority2, host2), ...],
-         * 			"ttl":int
-         * 		}
-         * }
-         * 
-         */
-        if (fieldResponseJson.has("MX")) {
-          JSONObject mxname = fieldResponseJson.getJSONObject("MX");
-          JSONArray records = mxname.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
-          int ttl = mxname.getInt(ManagedDNSServiceProxy.TTL_FIELD);
-          // The records may contain multiple NS records
-          for(int i=0; i<records.length(); i++){
-        	  JSONArray record = records.getJSONArray(i);
-        	  String pString = record.getString(0);
-        	  int priority = Integer.parseInt(pString);
-        	  String host = record.getString(1);
-        	  String address = record.getString(2);
-        	  
-        	  MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, ttl, priority, new Name(host));
-        	  response.addRecord(mxRecord, Section.AUTHORITY);
-        	  
-        	  if(address != null){
-	    		  ARecord nsARecord = new ARecord(new Name(host), DClass.IN, 60, InetAddress.getByName(address));
-	    		  response.addRecord(nsARecord, Section.ADDITIONAL);
-        	  } else {
-        		  // no IP address in the record for the name server
-        	  }
-          }    
-        }
-                
-        if (fieldResponseJson.has("CNAME")) {
-          // Resolve CNAME alias to an IP address and add it to ADDITIONAL section 
-          String cname = fieldResponseJson.getString("CNAME");
-          CNAMERecord cnameRecord = new CNAMERecord(new Name(nameToResolve), DClass.IN, 60, new Name(cname));
-          response.addRecord(cnameRecord, Section.ANSWER);
-          // FIXME: this is wrong as the A record of the cname may not be served by GNS.
-//          nameToResolve = cname;
-//          continue;
-        }
-        
-        
-        DelayProfiler.updateDelay("ResolveName", resolveStart);
-        if (!nameResolved) {
-          // We should reach here only if we fail to resolve to an IP address
-          NameResolution.getLogger().log(Level.FINER,
-                  "Couldn''t resolve to an IP address for domain {0}", domainName);
-          break;
-        }
-      } catch (JSONException e) {
-        e.printStackTrace();
-        return errorMessage(query, Rcode.NXDOMAIN);
-      } catch (TextParseException | UnknownHostException e) {
-        e.printStackTrace();
-      }
-    }
+      
+    DelayProfiler.updateDelay("ResolveName", resolveStart);
     NameResolution.getLogger().log(Level.FINER, "Outgoing response from GNS: {0}", response.toString());
     return response;
   }
 
+  /**
+   * retrieve all A records from A field of a JSON object
+   * 
+   * @return
+   */
+  private static JSONArray getARecordsFromAField(JSONObject fieldResponseJson, String nameToResolve){
+	  JSONArray aList = new JSONArray();	  
+      /**
+       * Format of A record in GNS:
+       * {
+       * 	"A":
+       * 		{
+       * 			"record": String[ip1, ip2, ...],
+       * 			"ttl": int
+       * 		}
+       * }
+       */
+      if (fieldResponseJson.has("A")) {
+    	  JSONArray records = null;
+    	  int ttl = 60;
+    	  try{
+    		  JSONObject recordObj = fieldResponseJson.getJSONObject("A");
+	    	  records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
+	    	  ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
+    	  }catch(JSONException e){
+    		  // something is wrong with the JSON object, return null
+    		  return null;
+    	  }
+    	  // The records may contain multiple ip addresses
+    	  for(int i=0; i<records.length(); i++){
+			try {
+				String ip = records.getString(i);
+				ARecord gnsARecord = new ARecord(new Name(nameToResolve), DClass.IN, ttl, InetAddress.getByName(ip));
+				aList.put(gnsARecord);
+			} catch (JSONException | TextParseException | UnknownHostException e) {
+				// do nothing, just trash this record
+			}  		  
+    	  }
+      } else {
+    	  // there is no A record in the original GNS record, so return null
+    	  return null;
+      }	  
+	  return aList;
+  }
+  
+  /**
+   * retrieve all NS records and the corresponding A records from NS field of a JSON object.
+   * the key "NS" contains a list of all NS records
+   * the key "A" contains a list of all A records, which must be put into ADDITIONAL section
+   * 
+   */
+  private static JSONObject getNSRecordsFromNSField(JSONObject fieldResponseJson, String nameToResolve){
+	  JSONObject obj = new JSONObject();
+	  JSONArray aList = new JSONArray();
+	  JSONArray nsList = new JSONArray();
+	  
+	  /**
+       * Format of NS record in GNS:
+       * {
+       * 	"NS":
+       * 		{
+       * 			"record":[(ns1, addr1), (ns2, addr2), ...],
+       * 			"ttl":int
+       * 		}
+       * }
+       * 
+       */
+      if (fieldResponseJson.has("NS")) {
+    	  JSONArray records = null;
+    	  int ttl = 3600;
+    	  try{
+	    	  JSONObject recordObj = fieldResponseJson.getJSONObject("NS");
+	    	  records = recordObj.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
+	    	  ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
+    	  } catch (JSONException e){
+    		  // something is wrong with the JSON object, return null
+    		  return null;
+    	  }
+    	  // The records may contain multiple NS records
+    	  for(int i=0; i<records.length(); i++){
+			  try{
+	    		  JSONArray record = records.getJSONArray(i);
+	    		  String ns = record.getString(0);
+	    		  String address = record.getString(1);
+	    		  NSRecord nsRecord = new NSRecord(new Name(nameToResolve), DClass.IN, ttl, new Name(ns));
+	    		  nsList.put(nsRecord);
+	    		  // address can be null as the domain name might use other service as its name server
+	          	  if(address != null){
+	          		  ARecord nsARecord = new ARecord(new Name(ns), DClass.IN, ttl, InetAddress.getByName(address));
+	          		  aList.put(nsARecord);
+	          	  } else {
+	          		  // no IP address in the record for the name server
+	          	  }
+			  } catch (JSONException | TextParseException | UnknownHostException e) {
+				  // do nothing and trash this record
+			  }
+		  } 
+      } else{
+    	  // No NS record, return null
+      }
+      
+	  try {
+		obj.put("NS", nsList);
+		obj.put("A", aList);
+	  } catch (JSONException e) {
+			// return a null if JSON operation fails
+			return null;
+	  }
+	  return obj;
+  }
+  
+  /**
+   * retrieve MX record from MX field of a JSON object
+   * the key "MX" contains a list of all MX records
+   * the key "A" contains a list of all A records, which must be put into ADDITIONAL section
+   * 
+   * @return
+   */
+  private static JSONObject getMXRecordsFromMXField(JSONObject fieldResponseJson, String nameToResolve){
+	  JSONObject obj = new JSONObject();
+	  JSONArray mxList = new JSONArray();
+	  JSONArray aList = new JSONArray();
+	  
+	  if (fieldResponseJson.has("MX")) {
+		  JSONArray records = null;
+		  int ttl = 3600;
+		  try{
+	          JSONObject mxname = fieldResponseJson.getJSONObject("MX");
+	          records = mxname.getJSONArray(ManagedDNSServiceProxy.RECORD_FIELD);
+	          ttl = mxname.getInt(ManagedDNSServiceProxy.TTL_FIELD);
+		  } catch (JSONException e){
+			  // something is wrong with the JSON object, return null
+			  return null;
+		  }
+          // The records may contain multiple NS records
+          for(int i=0; i<records.length(); i++){
+        	  try{
+	        	  JSONArray record = records.getJSONArray(i);
+	        	  String pString = record.getString(0);
+	        	  int priority = Integer.parseInt(pString);
+	        	  String host = record.getString(1);
+	        	  String address = record.getString(2);
+	        	  
+	        	  MXRecord mxRecord = new MXRecord(new Name(nameToResolve), DClass.IN, ttl, priority, new Name(host));
+	        	  mxList.put(mxRecord);
+	        	  if(address != null){
+		    		  ARecord mxARecord = new ARecord(new Name(host), DClass.IN, ttl, InetAddress.getByName(address));
+		    		  aList.put(mxARecord);
+	        	  } else {
+	        		  // no IP address in the record for the mail server
+	        	  }
+        	  } catch (JSONException | TextParseException | UnknownHostException e) {
+        		  // trash this record, 
+        	  }
+          }    
+        }
+	  
+	  try {
+		  obj.put("MX", mxList);
+		  obj.put("A", aList);
+	  } catch (JSONException e) {
+		  // return a null if JSON operation fails
+		  return null;
+	  }
+	  return obj;
+  }
+  
+  
   /**
    * Lookup the field or fields in the guid.
    * Returns a JSONObject containing the fields and values

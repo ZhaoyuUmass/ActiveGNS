@@ -136,7 +136,7 @@ public class LookupWorker implements Runnable {
    */
   private Message generateReply(Message query) {
     long startTime = System.currentTimeMillis();
-    NameResolution.getLogger().log(Level.FINE, "Incoming request: {0}", query.toString());
+    NameResolution.getLogger().log(Level.FINE, "Incoming request:\n {0}", query.toString());
 
     // If it's not a query we just ignore it.
     if (query.getHeader().getFlag(Flags.QR)) {
