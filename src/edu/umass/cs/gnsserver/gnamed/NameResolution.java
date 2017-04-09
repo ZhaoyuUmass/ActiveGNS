@@ -356,6 +356,7 @@ public class NameResolution {
 	    	  ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
     	  }catch(JSONException e){
     		  // something is wrong with the JSON object, return null
+    		  e.printStackTrace();
     		  return null;
     	  }
     	  // The records may contain multiple ip addresses
@@ -366,6 +367,7 @@ public class NameResolution {
 				aList.put(gnsARecord);
 			} catch (JSONException | TextParseException | UnknownHostException e) {
 				// do nothing, just trash this record
+				e.printStackTrace();
 			}  		  
     	  }
       } else {
@@ -406,6 +408,7 @@ public class NameResolution {
 	    	  ttl = recordObj.getInt(ManagedDNSServiceProxy.TTL_FIELD);
     	  } catch (JSONException e){
     		  // something is wrong with the JSON object, return null
+    		  e.printStackTrace();
     		  return null;
     	  }
     	  // The records may contain multiple NS records
@@ -425,6 +428,7 @@ public class NameResolution {
 	          	  }
 			  } catch (JSONException | TextParseException | UnknownHostException e) {
 				  // do nothing and trash this record
+				  e.printStackTrace();
 			  }
 		  } 
       } else{
@@ -462,8 +466,10 @@ public class NameResolution {
 	          ttl = mxname.getInt(ManagedDNSServiceProxy.TTL_FIELD);
 		  } catch (JSONException e){
 			  // something is wrong with the JSON object, return null
+			  e.printStackTrace();
 			  return null;
 		  }
+		  NameResolution.getLogger().log(Level.FINE, "Get MX records list: {0}", records.toString());
           // The records may contain multiple NS records
           for(int i=0; i<records.length(); i++){
         	  try{
@@ -482,7 +488,8 @@ public class NameResolution {
 	        		  // no IP address in the record for the mail server
 	        	  }
         	  } catch (JSONException | TextParseException | UnknownHostException e) {
-        		  // trash this record, 
+        		  // trash this record
+        		  e.printStackTrace();
         	  }
           }    
         }
