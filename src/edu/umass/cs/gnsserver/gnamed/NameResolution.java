@@ -311,7 +311,7 @@ public class NameResolution {
 				try {
 					String cname = fieldResponseJson.getString("CNAME");
 					// The cname must be an absolute name, i.e., ended with a dot
-					if (cname.endsWith(".")){
+					if (!cname.endsWith(".")){
 						cname = cname +".";
 					}
 					CNAMERecord cnameRecord = new CNAMERecord(new Name(domainName), DClass.IN, 60, new Name(cname));
