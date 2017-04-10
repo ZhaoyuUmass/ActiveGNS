@@ -433,7 +433,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 				break;
 				// update CNAME
 				case UPDATE_CNAME:{
-					String cname = req.getString(NS_FIELD);
+					String cname = req.getString(CNAME_FIELD);
 					GuidEntry guid = deserializeGuid(req.getString(GUID_FIELD));
 					updateField(guid, CNAME_RECORD_FIELD, cname);
 				}
