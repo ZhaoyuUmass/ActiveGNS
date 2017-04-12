@@ -211,7 +211,7 @@ public class ActiveCodeHandler {
     
     long t = System.nanoTime();
     ActiveCodeHandler.getLogger().log(DEBUG_LEVEL,
-            "OOOOOOOOOOOOO handles:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
+            "OOOOOOOOOOOOO ready to handle:[guid:{0},field:{1},action:{2},value:{3},header:{4}]",
             new Object[]{guid, field, action, value, header});
     /**
      * Only execute active code for user field

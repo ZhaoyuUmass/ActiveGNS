@@ -30,7 +30,6 @@ import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
-import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
 
 /**
@@ -392,7 +391,7 @@ public class TestActiveCodeRemoteQueryClient {
 		} catch (ClientException e) {
 			e.printStackTrace();
 		}
-		client.execute(GNSCommand.accountGuidRemove(entries[1]));
+		client.execute(GNSCommand.accountGuidRemove(entries[0]));
 		client.execute(GNSCommand.accountGuidRemove(entries[1]));
 		client.close();
 	}
