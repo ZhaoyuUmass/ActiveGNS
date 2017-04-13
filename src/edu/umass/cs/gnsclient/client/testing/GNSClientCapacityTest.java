@@ -206,7 +206,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 					(someValue));
 			Assert.assertEquals(
 //					clients[numClients > 1 ? 1 : 0].fieldRead(guid, someField),
-					clients[numClients > 1 ? 1 : 0].execute(GNSCommand.fieldRead(guid, someField)),
+					clients[numClients > 1 ? 1 : 0].execute(GNSCommand.fieldRead(guid, someField)).getResultJSONObject().getString(someField),
 					(someValue));
 		} catch (IOException | ClientException e) {
 			// TODO Auto-generated catch block
