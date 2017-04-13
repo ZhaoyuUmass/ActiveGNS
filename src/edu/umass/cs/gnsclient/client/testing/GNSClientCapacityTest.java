@@ -202,7 +202,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 			// verify written value
 //			Assert.assertEquals(clients[0].fieldRead(guid, someField),
 //					(someValue));
-			Assert.assertEquals(clients[0].execute(GNSCommand.fieldRead(guid, someField)),
+			Assert.assertEquals(clients[0].execute(GNSCommand.fieldRead(guid, someField)).getResultJSONObject().getString(someField),
 					(someValue));
 			Assert.assertEquals(
 //					clients[numClients > 1 ? 1 : 0].fieldRead(guid, someField),
@@ -270,13 +270,13 @@ public class GNSClientCapacityTest extends DefaultTest {
 				try {
 					if (signed){
 //						assert(clients[clientIndex].fieldRead(guid, someField).equals(someValue));
-						assert(clients[clientIndex].execute(GNSCommand.fieldRead(guid, someField)).equals(someValue));
+						assert(clients[clientIndex].execute(GNSCommand.fieldRead(guid, someField)).getResultJSONObject().getString(someField).equals(someValue));
 					}
 					else
 //						assert(clients[clientIndex].fieldRead(guid.getGuid(),
 //								someField, null).equals(someValue));
 						assert(clients[clientIndex].execute(GNSCommand.fieldRead(guid.getGuid(), 
-								someField, null)).equals(someValue));
+								someField, null)).getResultJSONObject().getString(someField).equals(someValue));
 					incrFinishedReads();
 				} catch (Exception e) {
 					log.severe("Client " + clientIndex + " failed to read "
