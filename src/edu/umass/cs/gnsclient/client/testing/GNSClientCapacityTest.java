@@ -19,9 +19,11 @@ import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
 import edu.umass.cs.gigapaxos.testing.TESTPaxosConfig.TC;
+import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.GNSClientConfig;
 import edu.umass.cs.gnsclient.client.GNSClientConfig.GNSCC;
+import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.testing.GNSTestingConfig.GNSTC;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
@@ -54,7 +56,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	private static int numAccountGuids;
 	private static GuidEntry[] accountGuidEntries;
 	private static GuidEntry[] guidEntries;
-	private static GNSClientCommands[] clients;
+	private static GNSClient[] clients;
 	private static ScheduledThreadPoolExecutor executor;
 
 	private static Logger log = GNSClientConfig.getLogger();
@@ -150,13 +152,17 @@ public class GNSClientCapacityTest extends DefaultTest {
 				} else
 					try {
 						// batch create
-						clients[0].guidBatchCreate(accountGuidEntries[i
-								/ numGuidsPerAccount], subGuids);
+//						clients[0].guidBatchCreate(accountGuidEntries[i
+//								/ numGuidsPerAccount], subGuids);
+						clients[0].execute(GNSCommand.batchCreateGUIDs(accountGuidEntries[i
+                              /numGuidsPerAccount], subGuids));
 					} catch (Exception e) {
 						for (String subGuid : subGuids) {
-							try {
-								clients[0].guidCreate(accountGuidEntries[i
-										/ numGuidsPerAccount], subGuid);
+							try {								
+//								clients[0].guidCreate(accountGuidEntries[i
+//										/ numGuidsPerAccount], subGuid);
+								clients[0].execute(GNSCommand.createGUID(accountGuidEntries[i
+                                        / numGuidsPerAccount], subGuid));
 							} catch (DuplicateNameException de) {
 								// ignore, will retrieve it locally below
 							}
@@ -191,12 +197,16 @@ public class GNSClientCapacityTest extends DefaultTest {
 	public void test_01_SingleWrite() {
 		GuidEntry guid = guidEntries[0];
 		try {
-			clients[0].fieldUpdate(guid, someField, someValue);
+//			clients[0].fieldUpdate(guid, someField, someValue);
+			clients[0].execute(GNSCommand.fieldUpdate(guid, someField, someValue));
 			// verify written value
-			Assert.assertEquals(clients[0].fieldRead(guid, someField),
+//			Assert.assertEquals(clients[0].fieldRead(guid, someField),
+//					(someValue));
+			Assert.assertEquals(clients[0].execute(GNSCommand.fieldRead(guid, someField)),
 					(someValue));
 			Assert.assertEquals(
-					clients[numClients > 1 ? 1 : 0].fieldRead(guid, someField),
+//					clients[numClients > 1 ? 1 : 0].fieldRead(guid, someField),
+					clients[numClients > 1 ? 1 : 0].execute(GNSCommand.fieldRead(guid, someField)),
 					(someValue));
 		} catch (IOException | ClientException e) {
 			// TODO Auto-generated catch block
@@ -217,7 +227,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 		long t = System.currentTimeMillis();
 		for (int i = 0; i < numReads; i++) {
 			long t1 = System.nanoTime();
-			clients[0].fieldRead(guidEntries[0], someField);
+//			clients[0].fieldRead(guidEntries[0], someField);
+			clients[0].execute(GNSCommand.fieldRead(guidEntries[0], someField));
 			DelayProfiler.updateDelayNano("e2eLatency", t1);
 		}
 		System.out.print("sequential_read_rate="
@@ -235,7 +246,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 		long t = System.currentTimeMillis();
 		for (int i = 0; i < numReads; i++) {
 			long t1 = System.nanoTime();
-			clients[0].fieldRead(guidEntries[0].getGuid(), someField, null);
+//			clients[0].fieldRead(guidEntries[0].getGuid(), someField, null);
+			clients[0].execute(GNSCommand.fieldRead(guidEntries[0].getGuid(), someField, null));
 			DelayProfiler.updateDelayNano("e2eLatency", t1);
 		}
 		System.out.print("sequential_read_rate="
@@ -256,12 +268,15 @@ public class GNSClientCapacityTest extends DefaultTest {
 		executor.submit(new Runnable() {
 			public void run() {
 				try {
-					if (signed)
-						assert(clients[clientIndex].fieldRead(guid, someField).equals(someValue));
+					if (signed){
+//						assert(clients[clientIndex].fieldRead(guid, someField).equals(someValue));
+						assert(clients[clientIndex].execute(GNSCommand.fieldRead(guid, someField)).equals(someValue));
+					}
 					else
-						assert(clients[clientIndex].fieldRead(guid.getGuid(),
-								someField, null).equals(someValue));
-
+//						assert(clients[clientIndex].fieldRead(guid.getGuid(),
+//								someField, null).equals(someValue));
+						assert(clients[clientIndex].execute(GNSCommand.fieldRead(guid.getGuid(), 
+								someField, null)).equals(someValue));
 					incrFinishedReads();
 				} catch (Exception e) {
 					log.severe("Client " + clientIndex + " failed to read "
@@ -349,7 +364,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 				try {
 					log.log(Level.FINE, "About to delete sub-guid {0}",
 							new Object[] { guidEntry });
-					clients[0].guidRemove(guidEntry);
+//					clients[0].guidRemove(guidEntry);
+					clients[0].execute(GNSCommand.removeGUID(guidEntry));
 					log.log(Level.FINE, "Deleted sub-guid {0}",
 							new Object[] { guidEntry });
 				} catch (Exception e) {
@@ -366,7 +382,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 			try {
 				log.log(Level.FINE, "About to delete account guid {0}",
 						new Object[] { accGuidEntry });
-				clients[0].accountGuidRemove(accGuidEntry);
+//				clients[0].accountGuidRemove(accGuidEntry);
+				clients[0].execute(GNSCommand.accountGuidRemove(accGuidEntry));
 				log.log(Level.FINE, "Deleted account guid {0}",
 						new Object[] { accGuidEntry });
 			} catch (Exception e) {
@@ -376,7 +393,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 				// continue with rest
 			}
 		}
-		for (GNSClientCommands client : clients)
+		for (GNSClient client : clients)
 			client.close();
 		executor.shutdown();
 		System.out.println(DelayProfiler.getStats());
