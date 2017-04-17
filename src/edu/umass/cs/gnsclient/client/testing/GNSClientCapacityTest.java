@@ -133,7 +133,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 		guidEntries = new GuidEntry[numGuids];
 		Set<String> subGuids = new HashSet<String>();
 		for (int i = 0, j = 0; i < numGuids; i++) {
-			subGuids.add(Config.getGlobalString(TC.TEST_GUID_PREFIX) + i);
+			subGuids.add(accountGUIDPrefix+Config.getGlobalString(TC.TEST_GUID_PREFIX) + i);
 
 			if (subGuids.size() == numGuidsPerAccount || i == numGuids - 1) {
 				// because batch creation seems buggy
