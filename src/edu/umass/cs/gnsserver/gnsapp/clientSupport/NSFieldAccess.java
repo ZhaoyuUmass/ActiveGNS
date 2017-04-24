@@ -93,6 +93,7 @@ public class NSFieldAccess {
   public static ValuesMap lookupJSONFieldLocalNoAuth(InternalRequestHeader header, String guid, String field,
           GNSApplicationInterface<String> gnsApp, boolean handleActiveCode)
           throws FailedDBOperationException {
+	  long startTime = System.nanoTime();
     ValuesMap valuesMap = lookupFieldLocalNoAuth(guid, field, ColumnFieldType.USER_JSON, gnsApp.getDB());
 
     if (handleActiveCode) {
@@ -103,6 +104,7 @@ public class NSFieldAccess {
         // Active code field lookup failed, do nothing and return the original value
       }
     }
+    DelayProfiler.updateDelayNano("lookupJSONFieldLocalNoAuth", startTime);
     return valuesMap;
   }
 

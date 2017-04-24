@@ -85,7 +85,7 @@ public class CommandHandler {
           boolean doNotReplyToClient, GNSApplicationInterface<String> app) {
     JSONObject jsonFormattedCommand = PacketUtils.getCommand(commandPacket);
     try {
-      long receiptTime = System.currentTimeMillis(); // instrumentation
+      long receiptTime = System.nanoTime(); // instrumentation
       final Long executeCommandStart = System.currentTimeMillis(); // instrumentation
       // Other than this line, one below and some catches all of this
       // method is instrumentation.
@@ -96,12 +96,12 @@ public class CommandHandler {
       assert (commandPacket.getCommandType() != null) : "command type is null";
       assert (command != null) : "command is null";
       // instrumentation
-      DelayProfiler.updateDelay("executeCommand", executeCommandStart);
-      if (System.currentTimeMillis() - executeCommandStart > LONG_DELAY_THRESHOLD) {
-        DelayProfiler.updateDelay(commandPacket.getRequestType() + "."
+//      DelayProfiler.updateDelay("executeCommand", executeCommandStart);
+      //if (System.currentTimeMillis() - executeCommandStart > LONG_DELAY_THRESHOLD) {
+        DelayProfiler.updateDelayNano(commandPacket.getRequestType() + "."
                 + command.getCommandType(),
                 executeCommandStart);
-      }
+//      }
       if (System.currentTimeMillis() - executeCommandStart > LONG_DELAY_THRESHOLD) {
         ClientCommandProcessorConfig
                 .getLogger()
