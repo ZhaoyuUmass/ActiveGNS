@@ -85,8 +85,8 @@ public class CommandHandler {
           boolean doNotReplyToClient, GNSApplicationInterface<String> app) {
     JSONObject jsonFormattedCommand = PacketUtils.getCommand(commandPacket);
     try {
-      long receiptTime = System.nanoTime(); // instrumentation
-      final Long executeCommandStart = System.currentTimeMillis(); // instrumentation
+      long receiptTime = System.currentTimeMillis(); // instrumentation
+      final Long executeCommandStart = System.nanoTime(); // instrumentation
       // Other than this line, one below and some catches all of this
       // method is instrumentation.
       CommandResponse returnValue = executeCommand(command,
