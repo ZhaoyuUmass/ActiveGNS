@@ -91,7 +91,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	private static void setupClientsAndGuids() throws Exception {
 		clients = new GNSClientCommands[numClients];
 		executor = (ScheduledThreadPoolExecutor) Executors
-				.newScheduledThreadPool(numClients);
+				.newScheduledThreadPool(10*numClients);
 		for (int i = 0; i < numClients; i++)
 			clients[i] = new GNSClientCommands();
 		String gnsInstance = clients[0].getGNSProvider();
@@ -364,8 +364,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 				try {
 					log.log(Level.FINE, "About to delete sub-guid {0}",
 							new Object[] { guidEntry });
-//					clients[0].guidRemove(guidEntry);
-					clients[0].execute(GNSCommand.removeGUID(guidEntry));
+					if(guidEntry!=null)
+						clients[0].execute(GNSCommand.removeGUID(guidEntry));
 					log.log(Level.FINE, "Deleted sub-guid {0}",
 							new Object[] { guidEntry });
 				} catch (Exception e) {
@@ -382,8 +382,8 @@ public class GNSClientCapacityTest extends DefaultTest {
 			try {
 				log.log(Level.FINE, "About to delete account guid {0}",
 						new Object[] { accGuidEntry });
-//				clients[0].accountGuidRemove(accGuidEntry);
-				clients[0].execute(GNSCommand.accountGuidRemove(accGuidEntry));
+				if(accGuidEntry != null)
+					clients[0].execute(GNSCommand.accountGuidRemove(accGuidEntry));
 				log.log(Level.FINE, "Deleted account guid {0}",
 						new Object[] { accGuidEntry });
 			} catch (Exception e) {
