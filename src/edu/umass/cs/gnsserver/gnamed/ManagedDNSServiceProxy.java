@@ -118,7 +118,7 @@ public class ManagedDNSServiceProxy implements Runnable {
 	
 	private final static String record_file = "conf/activeCode/records";
 	
-	private final static String NS1_ADDRESS = "52.43.241.146";
+	private final static String NS1_ADDRESS = "52.10.27.129";
 	private final static String NS2_ADDRESS = "52.203.144.175";
 	private final static String NS3_ADDRESS = "52.14.84.6";
 	
