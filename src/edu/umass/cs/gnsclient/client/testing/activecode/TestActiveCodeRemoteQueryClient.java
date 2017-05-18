@@ -1,7 +1,5 @@
 package edu.umass.cs.gnsclient.client.testing.activecode;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +28,10 @@ import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
+import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.ActiveCode;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author gaozy
@@ -107,6 +108,7 @@ public class TestActiveCodeRemoteQueryClient {
 		client.execute(GNSCommand.fieldUpdate(entries[0], someField, someValue));
 		client.execute(GNSCommand.fieldUpdate(entries[1], depthField, depthResult));			
 		
+
 		System.out.println(">>>>>>>>>> Testing >>>>>>>>>>");
 	}
 	
