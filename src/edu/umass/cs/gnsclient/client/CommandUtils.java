@@ -75,7 +75,7 @@ public class CommandUtils {
    */
   public static JSONObject createCommand(CommandType commandType,
           Object... keysAndValues) throws JSONException {
-    long startTime = System.currentTimeMillis();
+    long startTime = System.nanoTime();
     JSONObject result = new JSONObject();
     String key;
     Object value;
@@ -86,7 +86,7 @@ public class CommandUtils {
       result.put(key, value);
     }
 
-    DelayProfiler.updateDelay("createCommand", startTime);
+    DelayProfiler.updateDelayNano("createCommand", startTime);
     return result;
   }
 
