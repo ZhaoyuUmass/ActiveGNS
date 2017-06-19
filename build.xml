@@ -317,7 +317,7 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
 	
   <target name="singlenodethruputtest" description="Starts servers specified in properties file"
           depends="compile, compiletest">
-    <property name="gigapaxosConfig" value="conf/gnsserver.1local.thruputtest.properties"/>
+    <property name="gigapaxosConfig" value="conf/gnsserver.1local.properties"/>
     <property name="java.util.logging.config.file" value="conf/logging.gns.unittest.properties"/>
     <property name="singleJVM" value="false"/>
     <property name="waitTillAllServersReady" value="000"/>
@@ -326,6 +326,13 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
     <property name="forceclear" value="false"/>
     <junit printsummary="yes" fork="true" forkmode="once" haltonfailure="on" showoutput="yes">
       <formatter type="plain" usefile="false"/>
+   	  <jvmarg value="-ea"/>
+      <jvmarg value="-Djavax.net.ssl.trustStorePassword=qwerty"/>
+      <jvmarg value="-Djavax.net.ssl.trustStore=conf/trustStore/node100.jks"/>
+      <jvmarg value="-Djavax.net.ssl.keyStorePassword=qwerty"/>
+      <jvmarg value="-Djavax.net.ssl.keyStore=conf/keyStore/node100.jks"/>
+      <jvmarg value="-DgigapaxosConfig=${gigapaxosConfig}"/>
+      <!--
       <jvmarg value="-ea"/>
       <jvmarg value="-Djavax.net.ssl.trustStorePassword=qwerty"/>
       <jvmarg value="-Djavax.net.ssl.trustStore=conf/trustStore/node100.jks"/>
@@ -339,6 +346,7 @@ ${build.major.number}.${build.minor.number}.${build.revision.number})</h1>]]>
       <jvmarg value="-DsingleJVM=${singleJVM}"/>
       <jvmarg value="-Dforceclear=${forceclear}"/>
       <jvmarg value="-Dserver.command=bin/gpServer.sh"/>
+      -->
       <classpath>
         <pathelement location="${build.test.classes.dir}"/>
       </classpath>

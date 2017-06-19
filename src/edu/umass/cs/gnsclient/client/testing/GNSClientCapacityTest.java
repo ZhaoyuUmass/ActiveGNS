@@ -32,7 +32,6 @@ import edu.umass.cs.gnscommon.AclAccessType;
 import edu.umass.cs.gnscommon.GNSProtocol;
 import edu.umass.cs.gnscommon.exceptions.client.ClientException;
 import edu.umass.cs.gnscommon.exceptions.client.DuplicateNameException;
-import edu.umass.cs.gnscommon.packets.CommandPacket;
 import edu.umass.cs.utils.Config;
 import edu.umass.cs.utils.DefaultTest;
 import edu.umass.cs.utils.DelayProfiler;
@@ -191,12 +190,13 @@ public class GNSClientCapacityTest extends DefaultTest {
 
 	private static final String someField = "someField";
 	private static final String someValue = "someValue";
-
+	
+	
 	/**
 	 * Verifies a single write is successful.
 	 */
 	@Test
-	public void test_01_SingleWrite() {
+	public void test_00_SingleWrite() {
 		GuidEntry guid = guidEntries[0];
 		try {
 			clients[0].execute(GNSCommand.fieldUpdate(guid, someField, someValue));
@@ -210,7 +210,33 @@ public class GNSClientCapacityTest extends DefaultTest {
 			e.printStackTrace();
 		} 
 	}
-
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void test_00_SequentialWrite(){
+		long start_time = System.nanoTime();
+		for(int i=0; i< 10000; i++){
+			blockingWrite(0, guidEntries[0]);
+		}
+		long elapsed = System.nanoTime() - start_time;
+		System.out.println("It takes "+elapsed/1000+"us to send 10000 write requests, the avergae is "+elapsed/1000/10000.0+"us");
+	}
+	
+	/**
+	 * 
+	 */
+	@Test
+	public void test_01_SequentialRead(){
+		long start_time = System.nanoTime();
+		for(int i=0; i< 10000; i++){
+			blockingRead(0, guidEntries[0], false);
+		}
+		long elapsed = System.nanoTime() - start_time;
+		System.out.println("It takes "+elapsed/1000+"us to send 10000 read requests, the avergae is "+elapsed/1000/10000.0+"us");
+	}
+	
 	private static int numFinishedOps = 0;
 	private static long lastOpFinishedTime = System.currentTimeMillis();
 
@@ -255,7 +281,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 		});
 	}
 	
-	private void blockingWrite(int clientIndex, GuidEntry guid, int reqID) {
+	private void blockingWrite(int clientIndex, GuidEntry guid) {
 		executor.submit(new Runnable() {
 
 			@Override
@@ -316,11 +342,11 @@ public class GNSClientCapacityTest extends DefaultTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void test_02_ParralelWriteCapacity() throws Exception {
+	public void test_02_ParallelWriteCapacity() throws Exception {
 		int numWrites = numWriteAndRemove;
 		long t = System.currentTimeMillis();
 		for (int i=0; i<numWrites; i++){
-			blockingWrite(i % numClients, guidEntries[0], i);
+			blockingWrite(i % numClients, guidEntries[0]);
 		}
 		System.out.print("[total_writes=" + numWrites+": ");
 		int lastCount = 0;
@@ -345,7 +371,7 @@ public class GNSClientCapacityTest extends DefaultTest {
 	 * @throws IOException
 	 */
 	@Test
-	public void test_03_ParrallelWriteWithACLCapacity() throws InterruptedException, ClientException, IOException{
+	public void test_03_ParallelWriteWithACLCapacity() throws InterruptedException, ClientException, IOException{
 		reset();
 		// The old GNS ACL implementation does not allow a GUID in ENTIRE_RECORD's ACL to write into a sub field.
 		clients[0].execute(GNSCommand.aclAdd(AclAccessType.WRITE_WHITELIST, 
