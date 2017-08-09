@@ -18,8 +18,8 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
-import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
 import edu.umass.cs.gnsclient.client.util.GuidUtils;
 import edu.umass.cs.gnscommon.exceptions.client.EncryptionException;
@@ -115,9 +115,9 @@ public class Donar {
 		}
 				
 		// create a client
-		GNSClientCommands client = null;
+		GNSClient client = null;
 		try {
-			client = new GNSClientCommands();
+			client = new GNSClient();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

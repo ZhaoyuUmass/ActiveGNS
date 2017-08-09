@@ -50,9 +50,15 @@ public class NSFieldMetaData {
    * @param key
    * @param database
    * @return a set of objects
+<<<<<<< HEAD
    * @throws FailedDBOperationException 
    * @throws FieldNotFoundException 
    * @throws RecordNotFoundException 
+=======
+ * @throws FailedDBOperationException 
+ * @throws FieldNotFoundException 
+ * @throws RecordNotFoundException 
+>>>>>>> upstream/master
    */
   public static Set<Object> lookupLocally(MetaDataTypeName type, GuidInfo guidInfo, String key,
           BasicRecordMap database) 

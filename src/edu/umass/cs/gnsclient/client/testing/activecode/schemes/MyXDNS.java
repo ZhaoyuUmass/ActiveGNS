@@ -18,6 +18,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import edu.umass.cs.gnsclient.client.GNSClient;
 import edu.umass.cs.gnsclient.client.GNSClientCommands;
 import edu.umass.cs.gnsclient.client.GNSCommand;
 import edu.umass.cs.gnsclient.client.util.GuidEntry;
@@ -76,9 +77,9 @@ public class MyXDNS {
 		}
 				
 		// create a client
-		GNSClientCommands client = null;
+		GNSClient client = null;
 		try {
-			client = new GNSClientCommands();
+			client = new GNSClient();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
@@ -136,7 +137,7 @@ public class MyXDNS {
 		client.execute(GNSCommand.fieldUpdate(entry, "testIp", client_ip));
 		
 		// 4. update code
-		client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
+//		client.activeCodeSet(entry.getGuid(), ActiveCode.READ_ACTION, code, entry);
 		
 		System.exit(0);
 	}

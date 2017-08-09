@@ -23,7 +23,6 @@ import edu.umass.cs.gnscommon.utils.Format;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.ClientRequestHandlerInterface;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.CommandResponse;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.FieldAccess;
-import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.FieldAccessV2;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commandSupport.InternalField;
 import edu.umass.cs.gnsserver.gnsapp.clientCommandProcessor.commands.CommandModule;
 import edu.umass.cs.gnscommon.CommandType;
@@ -104,7 +103,7 @@ public class Read extends AbstractCommand {
     	return FieldAccess.lookupSingleField(internalHeader, commandPacket, guid, field, reader, signature,
              message, timestamp, handler);
     	}else{
-    	return FieldAccessV2.lookupSingleField(internalHeader, commandPacket, guid, field, reader, signature,
+    	return FieldAccess.lookupSingleField(internalHeader, commandPacket, guid, field, reader, signature,
     		             message, timestamp, handler);
     	}
     } else { // multi-field lookup
