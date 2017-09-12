@@ -88,6 +88,21 @@ public interface InternalRequestHeader {
 	}
 	
 	/**
+	 * Returns the source port.
+	 * {@link #getSourceAddress()} and {@link #getSourcePort()} 
+	 * methods are separate to maintain the backward compatibility, i.e.,
+	 * at many places in the GNS
+	 * only {@link #getSourceAddress()} is used.
+	 * 
+	 * @return Returns the source port.
+	 */
+	default int getSourcePort()
+	{
+		return -1;
+	}
+
+	
+	/**
 	 * The variable doNotReplyToClient is a parameter in Replicable.execute method,
 	 * and here is its document quoted from Replicable:
 	 * 			  "If true, the application is expected to not send a response
@@ -108,19 +123,4 @@ public interface InternalRequestHeader {
 	default boolean getDoNotReplyToClient(){
 		return false;
 	}
-	
-	/**
-	 * Returns the source port.
-	 * {@link #getSourceAddress()} and {@link #getSourcePort()} 
-	 * methods are separate to maintain the backward compatibility, i.e.,
-	 * at many places in the GNS
-	 * only {@link #getSourceAddress()} is used.
-	 * 
-	 * @return Returns the source port.
-	 */
-	default int getSourcePort()
-	{
-		return -1;
-	}
 }
-

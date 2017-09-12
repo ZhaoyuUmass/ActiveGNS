@@ -34,7 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.umass.cs.gnsclient.client.GNSClientConfig;
-import edu.umass.cs.gnsclient.console.commands.Select;
 import edu.umass.cs.gnsserver.extensions.sanitycheck.NullSanityCheck;
 import edu.umass.cs.gnsserver.gnsapp.AbstractSelector;
 import edu.umass.cs.reconfiguration.reconfigurationutils.ReconfigurationRecord;
@@ -274,6 +273,14 @@ public class GNSConfig {
      * Class name of select implementation.
      */
     ABSTRACT_SELECTOR(edu.umass.cs.gnsserver.gnsapp.Select.class.getCanonicalName()),
+    
+    /**
+     * If the flag is true then the update 
+     * requests are logged in the GNS logs as INFO log
+     * statements. For experiments measuring the update capacity
+     * this flag should be false. 
+     */
+    ENABLE_UPDATE_LOGGING(false),
     ;
 
     final Object defaultValue;

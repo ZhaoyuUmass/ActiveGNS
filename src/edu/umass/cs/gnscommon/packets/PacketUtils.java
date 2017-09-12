@@ -73,6 +73,7 @@ public class PacketUtils {
 	}
 	/**
 	 * @param commandPacket
+	 * @param doNotReplyToClient 
 	 * @return {@link InternalRequestHeader} if {@code commandPacket} is an
 	 *         internal request.
 	 */
@@ -168,10 +169,6 @@ public class PacketUtils {
 						return GNSConfig.getInternalOpSecret().equals(proof);
 					}
 					
-					@Override
-					public boolean getDoNotReplyToClient(){
-						return doNotReplyToClient;
-					}
 
 					/**
 					 * Returns the client IP address of the client that
@@ -193,6 +190,15 @@ public class PacketUtils {
 					public int getSourcePort()
 					{
 						return commandPacket.getClientAddress().getPort();
+					}
+					
+					/**
+					 * Returns the value of doNotReplyToClient passed 
+					 * down from paxos execute method.
+					 */
+					@Override
+					public boolean getDoNotReplyToClient(){
+						return doNotReplyToClient;
 					}
 					
 				};
